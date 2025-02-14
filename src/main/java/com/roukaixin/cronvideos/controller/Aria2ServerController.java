@@ -57,7 +57,11 @@ public class Aria2ServerController {
         BeanUtils.copyProperties(aria2ServerDto, aria2Server);
         aria2ServerService.save(aria2Server);
         StandardWebSocketClient client = new StandardWebSocketClient();
-        WebSocketConnectionManager manager = new WebSocketConnectionManager(client, new Aria2Handler(aria2DownloadTasksMapper), "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc");
+        WebSocketConnectionManager manager = new WebSocketConnectionManager(
+                client,
+                new Aria2Handler(aria2DownloadTasksMapper, aria2Server.getId(), aria2WebSocketPool),
+                "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc"
+        );
         manager.start();
         aria2WebSocketPool.put(aria2Server.getId(), manager);
         smoothWeightedRoundRobin.put(aria2Server.getId(), aria2Server.getWeight());
@@ -71,6 +75,7 @@ public class Aria2ServerController {
         if (manager != null) {
             manager.stop();
         }
+        aria2WebSocketPool.remove(id);
         smoothWeightedRoundRobin.remove(id);
         return R.<String>builder().code(200).message("删除成功").build();
     }
@@ -86,7 +91,11 @@ public class Aria2ServerController {
             manager.stop();
         }
         StandardWebSocketClient client = new StandardWebSocketClient();
-        manager = new WebSocketConnectionManager(client, new Aria2Handler(aria2DownloadTasksMapper), "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc");
+        manager = new WebSocketConnectionManager(
+                client,
+                new Aria2Handler(aria2DownloadTasksMapper, aria2Server.getId(), aria2WebSocketPool),
+                "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc"
+        );
         manager.start();
         aria2WebSocketPool.put(aria2Server.getId(), manager);
         smoothWeightedRoundRobin.update(aria2Server.getId(), aria2Server.getWeight());

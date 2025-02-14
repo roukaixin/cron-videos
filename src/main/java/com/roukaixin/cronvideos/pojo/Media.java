@@ -65,15 +65,15 @@ public class Media {
     private String episodeRegex;
 
     /**
+     * 创建时间
+     */
+    private LocalDateTime createdAt;
+
+    /**
      * 更新时间
      */
     @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updatedAt;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createdAt;
 
     /**
      * 逻辑删除字段（0未删除,1已删除）

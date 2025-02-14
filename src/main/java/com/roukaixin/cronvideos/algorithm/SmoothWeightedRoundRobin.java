@@ -32,9 +32,7 @@ public class SmoothWeightedRoundRobin {
     public void init() {
         List<Aria2Server> aria2Servers = aria2ServerMapper.selectList(null);
         if (!aria2Servers.isEmpty()) {
-            aria2Servers.forEach(aria2Connection -> {
-                weightMap.put(aria2Connection.getId(), new Weight(aria2Connection.getId(), aria2Connection.getWeight(), 0));
-            });
+            aria2Servers.forEach(aria2Connection -> weightMap.put(aria2Connection.getId(), new Weight(aria2Connection.getId(), aria2Connection.getWeight(), 0)));
         }
 
     }
@@ -76,16 +74,12 @@ public class SmoothWeightedRoundRobin {
 
     public void put(Long key, Integer weight) {
         weightMap.put(key, new Weight(key, weight, 0));
-        weightMap.forEach((k,v) -> {
-            v.setCurrentWeight(0);
-        });
+        weightMap.forEach((k,v) -> v.setCurrentWeight(0));
     }
 
     public void remove(Long key) {
         weightMap.remove(key);
-        weightMap.forEach((k, v) -> {
-            v.setCurrentWeight(0);
-        });
+        weightMap.forEach((k, v) -> v.setCurrentWeight(0));
     }
 
     public void update(Long key, Integer weight) {

@@ -34,13 +34,17 @@ public class Aria2WebSocketClient implements CommandLineRunner {
     public void run(String... args) throws Exception {
         List<Aria2Server> aria2Servers = aria2ServerMapper.selectList(null);
         if (!aria2Servers.isEmpty()) {
-            aria2Servers.forEach(aria2Connection -> {
+            aria2Servers.forEach(aria2Server -> {
                 // ws://127.0.0.1:6800/jsonrpc
-                String wsUri = "ws://" + aria2Connection.getIp() + ":" + aria2Connection.getPort() + "/jsonrpc";
+                String wsUri = "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc";
                 StandardWebSocketClient client = new StandardWebSocketClient();
-                WebSocketConnectionManager manager = new WebSocketConnectionManager(client, new Aria2Handler(aria2DownloadTasksMapper), wsUri);
+                WebSocketConnectionManager manager = new WebSocketConnectionManager(
+                        client,
+                        new Aria2Handler(aria2DownloadTasksMapper, aria2Server.getId(), aria2WebSocketPool),
+                        "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc"
+                );
                 manager.start();
-                aria2WebSocketPool.put(aria2Connection.getId(), manager);
+                aria2WebSocketPool.put(aria2Server.getId(), manager);
             });
         }
     }
