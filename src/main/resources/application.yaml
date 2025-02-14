@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: cron-videos
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cron_videos
+    username: root
+    password: 12345678
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+logging:
+  level:
+    com.roukaixin.cronvideos.mapper: debug
+    com.roukaixin.cronvideos.service: debug

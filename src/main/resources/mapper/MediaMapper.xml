@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.roukaixin.cronvideos.mapper.MediaMapper">
+
+    <resultMap id="BaseResultMap" type="com.roukaixin.cronvideos.pojo.Media">
+            <id property="id" column="id" />
+            <result property="title" column="title" />
+            <result property="type" column="type" />
+            <result property="seasonNumber" column="season_number" />
+            <result property="totalEpisodes" column="total_episodes" />
+            <result property="currentEpisode" column="current_episode" />
+            <result property="updateDays" column="update_days" />
+            <result property="releaseDate" column="release_date" />
+            <result property="storageType" column="storage_type" />
+            <result property="episodeRegex" column="episode_regex" />
+            <result property="updateAt" column="update_at" />
+            <result property="createdAt" column="created_at" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,title,type,season_number,total_episodes,current_episode,
+        update_days,release_date,storage_type,episode_regex,update_at,
+        created_at,is_deleted
+    </sql>
+</mapper>
