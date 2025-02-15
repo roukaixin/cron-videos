@@ -51,16 +51,18 @@ public class Aria2DownloadTask {
     /**
      * 任务创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 任务更新时间
      */
-    @TableField(fill = FieldFill.UPDATE)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
     /**
      * 逻辑删除字段（0未删除,1已删除）
      */
+    @TableLogic
     private Integer isDeleted;
 }

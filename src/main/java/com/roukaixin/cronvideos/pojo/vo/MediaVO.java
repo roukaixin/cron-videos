@@ -1,25 +1,18 @@
-package com.roukaixin.cronvideos.pojo;
+package com.roukaixin.cronvideos.pojo.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * 影视列表
- *
- * @TableName media
- */
-@TableName(value = "media", autoResultMap = true)
-@Data
-public class Media {
+@Setter
+@Getter
+public class MediaVO {
 
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -55,7 +48,6 @@ public class Media {
     /**
      * 电视剧更新日（仅电视剧用）
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<String> updateDays;
 
     /**
@@ -67,22 +59,4 @@ public class Media {
      * 匹配集数规则（仅电视剧用）
      */
     private String episodeRegex;
-
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
-
-    /**
-     * 逻辑删除字段（0未删除,1已删除）
-     */
-    @TableLogic
-    private Integer isDeleted;
 }

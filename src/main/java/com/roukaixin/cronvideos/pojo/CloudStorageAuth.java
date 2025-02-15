@@ -1,11 +1,9 @@
 package com.roukaixin.cronvideos.pojo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 网盘认证信息存储
@@ -45,15 +43,17 @@ public class CloudStorageAuth {
     /**
      * 创建时间
      */
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 更新时间
      */
-    private Date updatedAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 
     /**
      * 逻辑删除字段（0: 正常, 1: 已删除）
      */
+    @TableLogic
     private Integer isDeleted;
 }

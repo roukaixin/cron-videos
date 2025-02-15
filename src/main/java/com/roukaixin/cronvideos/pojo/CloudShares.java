@@ -45,18 +45,20 @@ public class CloudShares {
     private LocalDateTime expiredAt;
 
     /**
-     * 逻辑删除 (0=正常, 1=删除)
-     */
-    private Integer isDeleted;
-
-    /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.UPDATE)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
+
+    /**
+     * 逻辑删除 (0=正常, 1=删除)
+     */
+    @TableLogic
+    private Integer isDeleted;
 }

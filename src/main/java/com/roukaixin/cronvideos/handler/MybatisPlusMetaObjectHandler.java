@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
-
+        this.strictInsertFill(metaObject, "createdAt", LocalDateTime.class, LocalDateTime.now());
     }
 
     @Override
