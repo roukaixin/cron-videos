@@ -32,4 +32,9 @@ public class Aria2ServerVO {
      */
     private Integer weight;
 
+    /**
+     * aria2 在线状态（1: 在线, 0: 离线）
+     */
+    private Integer isOnline;
+
 }

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
@@ -80,15 +79,6 @@ public class SmoothWeightedRoundRobin {
     public void remove(Long key) {
         weightMap.remove(key);
         weightMap.forEach((k, v) -> v.setCurrentWeight(0));
-    }
-
-    public void update(Long key, Integer weight) {
-        weightMap.forEach((k, v) -> {
-            if (Objects.equals(k, key)) {
-                v.setWeight(weight);
-            }
-            v.setCurrentWeight(0);
-        });
     }
 
 }
