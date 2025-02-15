@@ -1,7 +1,7 @@
-package com.roukaixin.cronvideos.pojo;
+package com.roukaixin.cronvideos.pojo.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
  *
  * @TableName cloud_shares
  */
-@TableName(value = "cloud_shares")
-@Data
-public class CloudShares {
+@Setter
+@Getter
+public class CloudSharesVO {
+
     /**
      * 唯一 ID
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -48,22 +48,4 @@ public class CloudShares {
      * 用于提取文件的正则表达式
      */
     private String fileRegex;
-
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
-
-    /**
-     * 逻辑删除 (0=正常, 1=删除)
-     */
-    @TableLogic
-    private Integer isDeleted;
 }

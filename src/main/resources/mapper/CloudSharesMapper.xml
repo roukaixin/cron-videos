@@ -11,13 +11,14 @@
             <result property="shareId" column="share_id" />
             <result property="shareCode" column="share_code" />
             <result property="expiredAt" column="expired_at" />
-            <result property="isDeleted" column="is_deleted" />
+            <result property="fileRegex" column="file_regex" />
             <result property="createdAt" column="created_at" />
             <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
     </resultMap>
 
     <sql id="Base_Column_List">
         id,media_id,provider,share_id,share_code,expired_at,
-        is_deleted,created_at,updated_at
+        file_regex,created_at,updated_at,is_deleted
     </sql>
 </mapper>
