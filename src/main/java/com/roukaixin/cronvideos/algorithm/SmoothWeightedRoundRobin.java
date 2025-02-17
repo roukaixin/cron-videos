@@ -1,5 +1,6 @@
 package com.roukaixin.cronvideos.algorithm;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.mapper.Aria2ServerMapper;
 import com.roukaixin.cronvideos.pojo.Aria2Server;
 import jakarta.annotation.PostConstruct;
@@ -29,7 +30,7 @@ public class SmoothWeightedRoundRobin {
 
     @PostConstruct
     public void init() {
-        List<Aria2Server> aria2Servers = aria2ServerMapper.selectList(null);
+        List<Aria2Server> aria2Servers = aria2ServerMapper.selectList(Wrappers.<Aria2Server>lambdaQuery().eq(Aria2Server::getIsOnline, 1));
         if (!aria2Servers.isEmpty()) {
             aria2Servers.forEach(aria2Connection -> weightMap.put(aria2Connection.getId(), new Weight(aria2Connection.getId(), aria2Connection.getWeight(), 0)));
         }

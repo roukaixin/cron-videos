@@ -80,7 +80,6 @@ public class Aria2Handler extends TextWebSocketHandler {
      */
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
-        log.info("处理信息 {} {}", session.getId(), id);
         log.info("aria2 返回消息: {}", message.getPayload());
         JSONObject aria2Repose = JSON.parseObject(message.getPayload());
         String method = aria2Repose.getString("method");
@@ -88,14 +87,17 @@ public class Aria2Handler extends TextWebSocketHandler {
             JSONArray params = aria2Repose.getJSONArray("params");
             String gid = params.getJSONObject(0).getString("gid");
             if (method.equals("aria2.onDownloadStart")) {
+                TimeUnit.SECONDS.sleep(1);
                 // 任务开始下载,修改状态
                 updateAria2TaskStatus(id, 1, gid);
             }
             if (method.equals("aria2.onDownloadComplete")) {
+                TimeUnit.SECONDS.sleep(1);
                 // 任务下载完成,修改状态
                 updateAria2TaskStatus(id, 2, gid);
             }
             if (method.equals("aria2.onDownloadError")) {
+                TimeUnit.SECONDS.sleep(1);
                 // 重新处理下载失败的任务
                 updateAria2TaskStatus(id, 3, gid);
             }
