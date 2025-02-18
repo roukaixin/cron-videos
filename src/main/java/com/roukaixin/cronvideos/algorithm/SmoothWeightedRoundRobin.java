@@ -56,19 +56,16 @@ public class SmoothWeightedRoundRobin {
             value.setCurrentWeight(value.getCurrentWeight() + value.getWeight());
             totalWeight.updateAndGet(v -> v + value.getWeight());
         });
-
         Weight maxWeight = null;
         for (Map.Entry<Long, Weight> entry : weightMap.entrySet()) {
             if (maxWeight == null || entry.getValue().getCurrentWeight() > maxWeight.getCurrentWeight()) {
                 maxWeight = entry.getValue();
             }
         }
-
         if (maxWeight != null) {
             maxWeight.setCurrentWeight(maxWeight.getCurrentWeight() - totalWeight.get());
             id = maxWeight.getId();
         }
-
         return id;
     }
 

@@ -39,7 +39,7 @@ public class MediaDownloadScheduled {
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
     }
 
-    @Scheduled(fixedDelay = 1000 * 60 * 10)
+    @Scheduled(fixedDelay = 1000 * 60 * 10, initialDelay = 1000 * 3)
     public void scheduled() {
         // 查询全部影视信息(未下载完的)
         LocalDateTime now = LocalDateTime.now();

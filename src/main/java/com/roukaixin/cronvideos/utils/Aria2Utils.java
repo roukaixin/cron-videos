@@ -4,13 +4,11 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Base64Util;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
 import java.net.URI;
 
 @Slf4j
@@ -61,17 +59,24 @@ public class Aria2Utils {
                 .buildAndExpand(id, method, Base64Util.encode(paramsJsonString))
                 .toUri();
 
-        return restClient
+        ResponseEntity<String> response = restClient
                 .get()
                 .uri(uri)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, Aria2Utils::print)
-                .body(String.class);
-    }
+                .toEntity(String.class);
 
-    private static void print(HttpRequest request, ClientHttpResponse response) throws IOException {
-        log.info("请求失败 {} {}", response.getStatusCode(), response.getStatusText());
-        log.info("具体原因 {}", new String(response.getBody().readAllBytes()));
+        log.info("==================ARIA2=================");
+        log.info("请求 URL : {}", getUri(ip, port));
+        log.info("请求方法 : {}", HttpMethod.GET.name());
+        log.info("请求参数 : {}", JSONObject.of(
+                "id", id,
+                "method", method,
+                "params", paramsJsonString
+        ));
+        log.info("响应状态 : {}", response.getStatusCode().value());
+        log.info("响应结果 : {}", response.getBody());
+        log.info("========================================");
+        return response.getBody();
     }
 
 }
