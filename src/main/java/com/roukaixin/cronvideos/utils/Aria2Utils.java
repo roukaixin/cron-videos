@@ -32,25 +32,11 @@ public class Aria2Utils {
     }
 
     private static String getUri(String ip, Integer port) {
-        return "http://" + ip + ":" + port + "/jsonrpc";
+        return getUri("http", ip, port);
     }
 
-    private static String getBody(String method, JSONArray params) {
-        return getBody(System.currentTimeMillis(), method, params);
-    }
-
-    private static String getBody(Long id, String method, JSONArray params) {
-        return JSONObject.of(
-                "id", id,
-                "jsonrpc", "2.0",
-                "method", method,
-                "params", params
-        ).toJSONString();
-    }
-
-    private static void print(HttpRequest request, ClientHttpResponse response) throws IOException {
-        log.info("请求失败 {} {}", response.getStatusCode(), response.getStatusText());
-        log.info("具体原因 {}", new String(response.getBody().readAllBytes()));
+    public static String getUri(String scheme, String ip, Integer port) {
+        return  scheme + "://" + ip + ":" + port + "/jsonrpc";
     }
 
     public static String addUri(String ip, Integer port, String paramsJsonString) {
@@ -81,6 +67,11 @@ public class Aria2Utils {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, Aria2Utils::print)
                 .body(String.class);
+    }
+
+    private static void print(HttpRequest request, ClientHttpResponse response) throws IOException {
+        log.info("请求失败 {} {}", response.getStatusCode(), response.getStatusText());
+        log.info("具体原因 {}", new String(response.getBody().readAllBytes()));
     }
 
 }

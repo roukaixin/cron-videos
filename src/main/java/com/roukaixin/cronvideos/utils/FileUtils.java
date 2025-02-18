@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class FileUtils {
 
     private static String getSuffix(String mimeType, String fileName) {
-        String suffix = "";
+        String suffix;
         try {
             suffix = MimeTypes.getDefaultMimeTypes().forName(mimeType).getExtension();
         } catch (MimeTypeException e) {
@@ -23,7 +23,7 @@ public class FileUtils {
     }
 
     public static String getName(String title, Integer season,String fileName, String episodeRegex, String mimeType) {
-        String out = "";
+        String out;
         String suffix = getSuffix(mimeType, fileName);
         try {
             Integer numer = Integer.valueOf(episodeRegex);
