@@ -8,37 +8,19 @@ import java.util.List;
 
 @Setter
 @Getter
-public class MediaDTO {
+public class MediaUpdateDTO {
 
-    /**
-     * 电影/电视剧名称
-     */
-    private String title;
-
-    /**
-     * 类型: 电影 (movie) / 电视剧 (tv)
-     */
-    private String type;
 
     /**
      * 类型别名（如 电影=影片，电视剧=剧集）
      */
     private String typeAlias;
 
-    /**
-     * 电视剧季号/部数（仅电视剧用）
-     */
-    private Integer seasonNumber;
 
     /**
      * 总集数（电影可以为 NULL）
      */
     private Integer totalEpisodes;
-
-    /**
-     * 已更新集数（仅电视剧用）
-     */
-    private Integer currentEpisode;
 
     /**
      * 电视剧更新日（仅电视剧用）

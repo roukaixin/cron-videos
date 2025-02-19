@@ -3,6 +3,7 @@ package com.roukaixin.cronvideos.controller;
 import com.roukaixin.cronvideos.pojo.Media;
 import com.roukaixin.cronvideos.pojo.R;
 import com.roukaixin.cronvideos.pojo.dto.MediaDTO;
+import com.roukaixin.cronvideos.pojo.dto.MediaUpdateDTO;
 import com.roukaixin.cronvideos.pojo.vo.CloudSharesVO;
 import com.roukaixin.cronvideos.pojo.vo.MediaVO;
 import com.roukaixin.cronvideos.service.MediaService;
@@ -45,5 +46,14 @@ public class MediaController {
     @GetMapping("/list/{id}")
     public R<List<CloudSharesVO>> shares(@PathVariable String id){
         return mediaService.shares(id);
+    }
+
+    @PutMapping("/update/{id}")
+    public R<String> update(@PathVariable Long id, @RequestBody MediaUpdateDTO dto){
+        Media media = new Media();
+        BeanUtils.copyProperties(dto, media);
+        media.setId(id);
+        mediaService.updateById(media);
+        return R.<String>builder().code(200).message("更新成功").build();
     }
 }

@@ -19,10 +19,11 @@ public class FileUtils {
             log.info("根据 mime 类型获取失败 {} {}", mimeType, e.getMessage());
             suffix = FilenameUtils.getSuffixFromPath(fileName);
         }
-        return suffix;
+        log.info("获取后缀 -> 文件名 {} -> 文件类型 {} -> 结果 {}", fileName, mimeType, suffix);
+        return suffix.isEmpty() ? FilenameUtils.getSuffixFromPath(fileName) : suffix;
     }
 
-    public static String getName(String title, Integer season,String fileName, String episodeRegex, String mimeType) {
+    public static String getName(String title, Integer season, String fileName, String episodeRegex, String mimeType) {
         String out;
         String suffix = getSuffix(mimeType, fileName);
         try {
@@ -59,5 +60,9 @@ public class FileUtils {
             numer = 1;
         }
         return numer;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getSuffix("video/x-matroska", ""));
     }
 }

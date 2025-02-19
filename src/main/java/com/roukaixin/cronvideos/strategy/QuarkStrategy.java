@@ -14,6 +14,7 @@ import com.roukaixin.cronvideos.utils.Aria2Utils;
 import com.roukaixin.cronvideos.utils.FileUtils;
 import com.roukaixin.cronvideos.utils.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -39,16 +40,20 @@ public class QuarkStrategy implements CloudDrive {
 
     private final QuarkApi quarkApi;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+
     public QuarkStrategy(CloudStorageAuthMapper cloudStorageAuthMapper,
                          SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                          Aria2ServerMapper aria2ServerMapper,
                          Aria2DownloadTasksMapper aria2DownloadTasksMapper,
-                         QuarkApi quarkApi) {
+                         QuarkApi quarkApi,
+                         RedisTemplate<String, Object> redisTemplate) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.aria2ServerMapper = aria2ServerMapper;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
         this.quarkApi = quarkApi;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -65,7 +70,11 @@ public class QuarkStrategy implements CloudDrive {
             log.info("过滤后分享文件列表 : {}", JSONObject.toJSONString(fileInfoList));
             for (FileInfo info : fileInfoList) {
                 // 在自己网盘中创建文件夹(如果没有),现在默认保存路径都在跟路经下的 `来自：分享`
-                String saveFolderFid = getSaveFolderFid(media.getTitle(), media.getSeasonNumber());
+                String saveFolderFid = (String) redisTemplate.opsForValue().get("target-save-folder-id");
+                if (ObjectUtils.isEmpty(saveFolderFid)) {
+                    saveFolderFid = getSaveFolderFid(media.getTitle(), media.getSeasonNumber());
+                    redisTemplate.opsForValue().set("target-save-folder-id", saveFolderFid);
+                }
                 if (!saveFolderFid.isEmpty()) {
                     // 保存文件到自己网盘,并返回文件ID(fid),调用保存接口返回一个任务id(task_id),在根据任务id获取文件id
                     String saveTaskId = saveFile(info, cloudShares.getShareId(), shareToken, saveFolderFid);
@@ -92,6 +101,9 @@ public class QuarkStrategy implements CloudDrive {
                 }
                 ThreadUtils.sleep(TimeUnit.MILLISECONDS, 500);
             }
+            // 删除redis数据
+            redisTemplate.delete("target-save-folder-id");
+            redisTemplate.delete("cookies");
         }
     }
 
@@ -260,20 +272,27 @@ public class QuarkStrategy implements CloudDrive {
     }
 
     private MultiValueMap<String, String> getCookies() {
-        CloudStorageAuth cloudStorageAuth = cloudStorageAuthMapper.selectOne(
-                Wrappers.<CloudStorageAuth>lambdaQuery().eq(CloudStorageAuth::getProvider, 1));
-        MultiValueMap<String, String> cookies = new LinkedMultiValueMap<>();
-        if (!ObjectUtils.isEmpty(cloudStorageAuth)) {
-            String cookie = cloudStorageAuth.getCookie();
-            for (String s : cookie.split(";")) {
-                String[] split = s.split("=", 2);
-                cookies.add(split[0], split[1]);
+        String cookies = (String) redisTemplate.opsForValue().get("cookies");
+        MultiValueMap<String, String> cookiesMap = new LinkedMultiValueMap<>();
+        if (ObjectUtils.isEmpty(cookies)) {
+            CloudStorageAuth cloudStorageAuth = cloudStorageAuthMapper.selectOne(
+                    Wrappers.<CloudStorageAuth>lambdaQuery().eq(CloudStorageAuth::getProvider, 1));
+            if (!ObjectUtils.isEmpty(cloudStorageAuth)) {
+                cookies = cloudStorageAuth.getCookie();
+                redisTemplate.opsForValue().set("cookies", cookies);
+            } else {
+                return cookiesMap;
             }
         }
-        return cookies;
+
+        for (String s : cookies.split(";")) {
+            String[] split = s.split("=", 2);
+            cookiesMap.add(split[0], split[1]);
+        }
+        return cookiesMap;
     }
 
-    private String getDownloadFid(String taskId, int retryCount,final int maxRetries) {
+    private String getDownloadFid(String taskId, int retryCount, final int maxRetries) {
         ThreadUtils.sleep(TimeUnit.SECONDS, 1);
         // 避免递归过多，达到最大重试次数时退出
         if (retryCount >= maxRetries) {

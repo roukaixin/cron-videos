@@ -48,7 +48,7 @@ public class MediaVO {
     /**
      * 电视剧更新日（仅电视剧用）
      */
-    private List<String> updateDays;
+    private List<Integer> updateDays;
 
     /**
      * 首播/上映日期
