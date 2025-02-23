@@ -39,7 +39,7 @@ public class MediaDownloadScheduled {
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
     }
 
-    @Scheduled(fixedDelay = 1000 * 60 * 10, initialDelay = 1000 * 3)
+    @Scheduled(fixedDelay = 1000 * 60 * 10, initialDelay = 1000)
     public void scheduled() {
         // 查询全部影视信息(未下载完的)
         LocalDateTime now = LocalDateTime.now();
@@ -63,13 +63,17 @@ public class MediaDownloadScheduled {
                         if (!ObjectUtils.isEmpty(cloudShares)) {
                             cloudDriveContext.getCloudDrive(cloudShares.getProvider())
                                     .download(cloudShares, resultMedia);
+                            // 更新下载总数
+                            Long count = aria2DownloadTasksMapper.selectCount(
+                                    Wrappers.<Aria2DownloadTask>lambdaQuery().eq(Aria2DownloadTask::getMediaId, resultMedia.getId())
+                            );
+                            resultMedia.setCurrentEpisode(Math.toIntExact(count));
+                            mediaMapper.updateById(resultMedia);
+                        } else {
+                            if (log.isInfoEnabled()) {
+                                log.info("该影视没有网盘分享链接 -> {}", resultMedia.getTitle());
+                            }
                         }
-                        // 更新下载总数
-                        Long count = aria2DownloadTasksMapper.selectCount(
-                                Wrappers.<Aria2DownloadTask>lambdaQuery().eq(Aria2DownloadTask::getMediaId, resultMedia.getId())
-                        );
-                        resultMedia.setCurrentEpisode(Math.toIntExact(count));
-                        mediaMapper.updateById(resultMedia);
                     }
                 }
         );

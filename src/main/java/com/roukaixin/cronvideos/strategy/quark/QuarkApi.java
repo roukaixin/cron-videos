@@ -3,13 +3,14 @@ package com.roukaixin.cronvideos.strategy.quark;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,17 +30,21 @@ public class QuarkApi {
 
 
     public String shareSharepageToken(String pwdId) {
-        ResponseEntity<String> response = restClient
+        return restClient
                 .post()
                 .uri("https://drive-h.quark.cn/1/clouddrive/share/sharepage/token")
                 .body(JSONObject.of(
                         "pwd_id", pwdId,
                         "passcode", ""
                 ))
-                .retrieve()
-                .toEntity(String.class);
-        log("https://drive-h.quark.cn/1/clouddrive/share/sharepage/token", HttpMethod.GET.name(), response);
-        return response.getBody();
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    return responseBody;
+                });
     }
 
     public String shareSharepageDetail(String pwdId, String stoken, String pdirFid) {
@@ -53,48 +58,50 @@ public class QuarkApi {
                 .build()
                 .expand(pwdId, stoken, pdirFid)
                 .toUri();
-        ResponseEntity<String> response = restClient
+        return restClient
                 .get()
                 .uri(uri)
-                .retrieve().toEntity(String.class);
-        log("https://drive-h.quark.cn/1/clouddrive/share/sharepage/detail", HttpMethod.GET.name(), response);
-        return response.getBody();
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    return responseBody;
+                });
     }
 
     public String fileSort(String pdirFid, MultiValueMap<String, String> cookies) {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/file/sort")
                 .queryParam("pdir_fid", "{pdir_fid}")
                 .encode().build().expand(pdirFid).toUri();
-        ResponseEntity<String> response = restClient
-                .get()
-                .uri(uri)
-                .cookies(c -> c.addAll(cookies))
-                .retrieve()
-                .toEntity(String.class);
-        log("https://drive-pc.quark.cn/1/clouddrive/file/sort", HttpMethod.GET.name(), response);
-        return response.getBody();
+        return exchange(cookies, uri);
     }
 
     public String file(String pdirFid, String fileName, MultiValueMap<String, String> cookies) {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/file")
                 .build()
                 .toUri();
-        ResponseEntity<String> response = restClient
+        return restClient
                 .post()
                 .uri(uri)
                 .cookies(cookie -> cookie.addAll(cookies))
                 .body(JSONObject.of("pdir_fid", pdirFid, "file_name", fileName))
-                .retrieve()
-                .toEntity(String.class);
-        log("https://drive-pc.quark.cn/1/clouddrive/file", HttpMethod.POST.name(), response);
-        return response.getBody();
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    return responseBody;
+                });
     }
 
     public String shareSharepageSave(String pwdId, String stoken, String toPdirFid, List<String> fidList, MultiValueMap<String, String> cookies) {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/share/sharepage/save")
                 .build()
                 .toUri();
-        ResponseEntity<String> response = restClient
+        return restClient
                 .post()
                 .uri(uri)
                 .cookies(c -> c.addAll(cookies))
@@ -105,46 +112,49 @@ public class QuarkApi {
                                 "fid_list", fidList
                         )
                 )
-                .retrieve()
-                .toEntity(String.class);
-        log("https://drive-pc.quark.cn/1/clouddrive/share/sharepage/save", HttpMethod.POST.name(), response);
-        return response.getBody();
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    return responseBody;
+                });
     }
 
-    public String task(String taskId, MultiValueMap<String, String> cookies) {
+    public String task(String taskId, Integer retryIndex, MultiValueMap<String, String> cookies) {
         URI taskUri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/task")
                 .queryParam("task_id", "{task_id}")
+                .queryParam("retry_index", "{retry_index}")
+                .queryParam("uc_param_str", "{uc_param_str}")
                 .encode()
                 .build()
-                .expand(taskId)
+                .expand(taskId, retryIndex, "")
                 .toUri();
-        ResponseEntity<String> response = restClient
-                .get()
-                .uri(taskUri)
-                .cookies(c -> c.addAll(cookies))
-                .retrieve()
-                .toEntity(String.class);
-        log("https://drive-pc.quark.cn/1/clouddrive/task", HttpMethod.GET.name(), response);
-        return response.getBody();
+        return exchange(cookies, taskUri);
     }
 
     public String fileDelete(List<String> filelist, MultiValueMap<String, String> cookies) {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/file/delete")
                 .build()
                 .toUri();
-        ResponseEntity<String> response = restClient
+        return restClient
                 .post()
                 .uri(uri)
                 .body(JSONObject.of(
-                        "action_type", 2,
+                        "action_type", 1,
                         "filelist", filelist,
                         "exclude_fids", new JSONArray())
                 )
                 .cookies(c -> c.addAll(cookies))
-                .retrieve()
-                .toEntity(String.class);
-        log("https://drive-pc.quark.cn/1/clouddrive/file/delete", HttpMethod.POST.name(), response);
-        return response.getBody();
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    return responseBody;
+                });
     }
 
     public Map<String, String> download(List<String> fids, MultiValueMap<String, String> cookies) {
@@ -152,28 +162,32 @@ public class QuarkApi {
                 .build()
                 .toUri();
         String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) quark-cloud-drive/2.5.20 Chrome/100.0.4896.160 Electron/18.3.5.4-b478491100 Safari/537.36 Channel/pckk_other_ch";
-        ResponseEntity<String> response = restClient
+        Map<String, String> map = new HashMap<>();
+        String response = restClient
                 .post()
                 .uri(uri)
                 .header("User-Agent", userAgent)
                 .cookies(c -> c.addAll(cookies))
                 .body(JSONObject.of("fids", fids))
-                .retrieve()
-                .toEntity(String.class);
-        log("https://drive.quark.cn/1/clouddrive/file/download", HttpMethod.POST.name(), response);
-        String responseBody = response.getBody();
-        Map<String, String> map = new HashMap<>();
-        map.put("cookies", getSetCookie(response.getHeaders().get("set-cookie")));
-        map.put("response", responseBody);
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody  = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    map.put("cookies", getSetCookie(clientResponse.getHeaders().get("set-cookie")));
+                    return responseBody;
+                });
+        map.put("response", response);
         return map;
     }
 
-    private <T> void log(String url, String method, ResponseEntity<T> response) {
+    private void log(HttpRequest request, RestClient.RequestHeadersSpec.ConvertibleClientHttpResponse response) throws IOException {
         log.info("================QuarkApi================");
-        log.info("请求 URL : {}", url);
-        log.info("请求方法 : {}", method);
-        log.info("响应状态 : {}", response.getStatusCode().value());
-        log.info("响应结果 : {}", response.getBody());
+        log.info("请求 URL : {}", request.getURI());
+        log.info("请求方法 : {}", request.getMethod());
+        log.info("响应状态 : {}", response.getStatusCode());
+        log.info("响应结果 : {}", response.bodyTo(String.class));
         log.info("========================================");
     }
 
@@ -195,5 +209,20 @@ public class QuarkApi {
             }
         }
         return cookie;
+    }
+
+    private String exchange(MultiValueMap<String, String> cookies, URI uri) {
+        return restClient
+                .get()
+                .uri(uri)
+                .cookies(c -> c.addAll(cookies))
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    return responseBody;
+                });
     }
 }

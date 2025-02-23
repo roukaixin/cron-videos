@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 网盘分享链接
@@ -48,6 +49,16 @@ public class CloudShares {
      * 用于提取文件的正则表达式
      */
     private String fileRegex;
+
+    /**
+     * 只在指定目录下有效的目录路径
+     */
+    private String onlyInDir;
+
+    /**
+     * 排除的目录
+     */
+    private List<String> excludedDirs;
 
     /**
      * 创建时间

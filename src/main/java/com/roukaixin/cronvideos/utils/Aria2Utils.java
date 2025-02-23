@@ -4,8 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Base64Util;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -59,24 +58,30 @@ public class Aria2Utils {
                 .buildAndExpand(id, method, Base64Util.encode(paramsJsonString))
                 .toUri();
 
-        ResponseEntity<String> response = restClient
+
+        return restClient
                 .get()
                 .uri(uri)
-                .retrieve()
-                .toEntity(String.class);
-
-        log.info("==================ARIA2=================");
-        log.info("请求 URL : {}", getUri(ip, port));
-        log.info("请求方法 : {}", HttpMethod.GET.name());
-        log.info("请求参数 : {}", JSONObject.of(
-                "id", id,
-                "method", method,
-                "params", paramsJsonString
-        ));
-        log.info("响应状态 : {}", response.getStatusCode().value());
-        log.info("响应结果 : {}", response.getBody());
-        log.info("========================================");
-        return response.getBody();
+                .exchange((clientRequest, clientResponse) -> {
+                    String response = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        response = clientResponse.bodyTo(String.class);
+                    }
+                    if (log.isInfoEnabled()) {
+                        log.info("==================ARIA2=================");
+                        log.info("请求 URL : {}", clientRequest.getURI());
+                        log.info("请求方法 : {}", clientRequest.getMethod());
+                        log.info("请求参数 : {}", JSONObject.of(
+                                "id", id,
+                                "method", method,
+                                "params", paramsJsonString
+                        ));
+                        log.info("响应状态 : {}", clientResponse.getStatusCode());
+                        log.info("响应结果 : {}", clientResponse.bodyTo(String.class));
+                        log.info("========================================");
+                    }
+                    return response;
+                });
     }
 
 }
