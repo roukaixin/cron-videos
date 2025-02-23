@@ -3,10 +3,10 @@ package com.roukaixin.cronvideos.scheduling;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
-import com.roukaixin.cronvideos.mapper.CloudSharesMapper;
+import com.roukaixin.cronvideos.mapper.CloudShareMapper;
 import com.roukaixin.cronvideos.mapper.MediaMapper;
 import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
-import com.roukaixin.cronvideos.pojo.CloudShares;
+import com.roukaixin.cronvideos.pojo.CloudShare;
 import com.roukaixin.cronvideos.pojo.Media;
 import com.roukaixin.cronvideos.strategy.CloudDriveContext;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Slf4j
 public class MediaDownloadScheduled {
 
-    private final CloudSharesMapper cloudSharesMapper;
+    private final CloudShareMapper cloudShareMapper;
 
     private final MediaMapper mediaMapper;
 
@@ -29,11 +29,11 @@ public class MediaDownloadScheduled {
     private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
 
 
-    public MediaDownloadScheduled(CloudSharesMapper cloudSharesMapper,
+    public MediaDownloadScheduled(CloudShareMapper cloudShareMapper,
                                   MediaMapper mediaMapper,
                                   CloudDriveContext cloudDriveContext,
                                   Aria2DownloadTasksMapper aria2DownloadTasksMapper) {
-        this.cloudSharesMapper = cloudSharesMapper;
+        this.cloudShareMapper = cloudShareMapper;
         this.mediaMapper = mediaMapper;
         this.cloudDriveContext = cloudDriveContext;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
@@ -55,14 +55,14 @@ public class MediaDownloadScheduled {
                     if (resultMedia.getUpdateDays().contains(today) ||
                             resultMedia.getUpdateDays().contains(yesterday)) {
                         log.info("更新视频 {}", resultMedia.getTitle());
-                        CloudShares cloudShares = cloudSharesMapper.selectOne(
+                        CloudShare cloudShare = cloudShareMapper.selectOne(
                                 Wrappers
-                                        .<CloudShares>lambdaQuery()
-                                        .eq(CloudShares::getMediaId, resultMedia.getId())
+                                        .<CloudShare>lambdaQuery()
+                                        .eq(CloudShare::getMediaId, resultMedia.getId())
                         );
-                        if (!ObjectUtils.isEmpty(cloudShares)) {
-                            cloudDriveContext.getCloudDrive(cloudShares.getProvider())
-                                    .download(cloudShares, resultMedia);
+                        if (!ObjectUtils.isEmpty(cloudShare)) {
+                            cloudDriveContext.getCloudDrive(cloudShare.getProvider())
+                                    .download(cloudShare, resultMedia);
                             // 更新下载总数
                             Long count = aria2DownloadTasksMapper.selectCount(
                                     Wrappers.<Aria2DownloadTask>lambdaQuery().eq(Aria2DownloadTask::getMediaId, resultMedia.getId())

@@ -69,6 +69,29 @@ public class FileUtils {
     }
 
     public static void main(String[] args) {
-        System.out.println(getSuffix("video/x-matroska", ""));
+        Pattern p = Pattern.compile("^\\d+");
+        String a = "03 4K.mp4";
+        // ^\d{2}\s4K\.(mp4|mkv)$
+        // (?i)^\d+.4K\.(mp4|mkv)$
+        String input = "24-4k.mp4"; // 输入文件名
+
+        // 正则表达式，忽略大小写，匹配数字后跟 4K 和扩展名 mp4 或 mkv
+        // (?i)^\d+-4K\.(mp4|mkv)$
+        Pattern pattern = Pattern.compile("(?i)^\\d+-4K\\.(mp4|mkv)$");
+
+        // 创建匹配器
+        Matcher matcher = pattern.matcher(input);
+
+        // 使用 matches() 确保整个字符串匹配
+        System.out.println(matcher.matches());  // 输出 true，如果完全匹配
+
+        // 只在完全匹配时提取数字部分
+        if (matcher.matches()) {
+            String number = input.split("-")[0];  // 获取数字部分
+            System.out.println(number);  // 输出提取的数字部分
+        } else {
+            System.out.println("文件名格式不匹配");
+        }
+
     }
 }

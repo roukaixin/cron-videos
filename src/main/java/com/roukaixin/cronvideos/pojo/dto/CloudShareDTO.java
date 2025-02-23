@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.pojo.vo;
+package com.roukaixin.cronvideos.pojo.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,12 +12,7 @@ import java.time.LocalDateTime;
  */
 @Setter
 @Getter
-public class CloudSharesVO {
-
-    /**
-     * 唯一 ID
-     */
-    private Long id;
+public class CloudShareDTO {
 
     /**
      * 关联的影视 ID

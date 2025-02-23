@@ -11,9 +11,9 @@ import java.util.List;
  *
  * @TableName cloud_shares
  */
-@TableName(value = "cloud_shares")
+@TableName(value = "cloud_share")
 @Data
-public class CloudShares {
+public class CloudShare {
     /**
      * 唯一 ID
      */

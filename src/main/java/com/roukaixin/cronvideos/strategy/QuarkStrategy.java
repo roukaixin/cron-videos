@@ -57,14 +57,14 @@ public class QuarkStrategy implements CloudDrive {
     }
 
     @Override
-    public void download(CloudShares cloudShares, Media media) {
+    public void download(CloudShare cloudShare, Media media) {
         // 根据分享 pwd_id 获取 stoken
-        String shareToken = getShareToken(cloudShares.getShareId());
+        String shareToken = getShareToken(cloudShare.getShareId());
         if (!ObjectUtils.isEmpty(shareToken)) {
             // 分享文件列表
-            List<FileInfo> sharepageFileList = getSharepageFileList(cloudShares, shareToken, "0");
+            List<FileInfo> sharepageFileList = getSharepageFileList(cloudShare, shareToken, "0");
             // 分享链接获取的文件列表(过滤后)
-            List<FileInfo> fileInfoList = videoList(sharepageFileList, cloudShares.getFileRegex());
+            List<FileInfo> fileInfoList = videoList(sharepageFileList, cloudShare.getFileRegex());
             if (log.isInfoEnabled()) {
                 log.info("分享文件列表 -> {}", JSONObject.toJSONString(fileInfoList));
             }
@@ -82,7 +82,7 @@ public class QuarkStrategy implements CloudDrive {
                 }
                 if (!saveFolderFid.isEmpty()) {
                     // 保存文件到自己网盘,并返回文件ID(fid),调用保存接口返回一个任务id(task_id),在根据任务id获取文件id
-                    String saveTaskId = saveFile(info, cloudShares.getShareId(), shareToken, saveFolderFid);
+                    String saveTaskId = saveFile(info, cloudShare.getShareId(), shareToken, saveFolderFid);
                     if (!saveTaskId.isEmpty()) {
                         // 通过 task_id 获取需要下载的文件id
                         String downloadFid = getDownloadFid(saveTaskId, 0, 10);
@@ -162,8 +162,8 @@ public class QuarkStrategy implements CloudDrive {
         return fileInfoList;
     }
 
-    private List<FileInfo> getSharepageFileList(CloudShares cloudShares, String stoken, String pdirFid) {
-        String response = quarkApi.shareSharepageDetail(cloudShares.getShareId(), stoken, pdirFid);
+    private List<FileInfo> getSharepageFileList(CloudShare cloudShare, String stoken, String pdirFid) {
+        String response = quarkApi.shareSharepageDetail(cloudShare.getShareId(), stoken, pdirFid);
         List<FileInfo> fileInfoList = new ArrayList<>();
         if (!ObjectUtils.isEmpty(response)) {
             JSONObject responseJson = JSONObject.parseObject(response);
@@ -171,21 +171,21 @@ public class QuarkStrategy implements CloudDrive {
                 JSONObject data = responseJson.getJSONObject("data");
                 List<FileInfo> dataList = data.getList("list", FileInfo.class);
                 for (FileInfo info : dataList) {
-                    if (!ObjectUtils.isEmpty(cloudShares.getOnlyInDir()) &&
-                            info.getFileName().equalsIgnoreCase(cloudShares.getOnlyInDir()) &&
+                    if (!ObjectUtils.isEmpty(cloudShare.getOnlyInDir()) &&
+                            info.getFileName().equalsIgnoreCase(cloudShare.getOnlyInDir()) &&
                             info.getCategory().equals(0)) {
                         // 如果是目录,递归调用获取文件
                         fileInfoList.clear();
-                        fileInfoList.addAll(getSharepageFileList(cloudShares, stoken, info.getFid()));
+                        fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, info.getFid()));
                         break;
                     } else {
                         if (info.getCategory().equals(0)) {
-                            if (!ObjectUtils.isEmpty(cloudShares.getExcludedDirs()) &&
-                                    cloudShares.getExcludedDirs().contains(info.getFileName())) {
+                            if (!ObjectUtils.isEmpty(cloudShare.getExcludedDirs()) &&
+                                    cloudShare.getExcludedDirs().contains(info.getFileName())) {
                                 continue;
                             }
                             // 如果是目录,递归调用获取文件
-                            fileInfoList.addAll(getSharepageFileList(cloudShares, stoken, info.getFid()));
+                            fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, info.getFid()));
                         } else {
                             fileInfoList.add(info);
                         }

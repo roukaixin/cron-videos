@@ -4,7 +4,7 @@ import com.roukaixin.cronvideos.pojo.Media;
 import com.roukaixin.cronvideos.pojo.R;
 import com.roukaixin.cronvideos.pojo.dto.MediaDTO;
 import com.roukaixin.cronvideos.pojo.dto.MediaUpdateDTO;
-import com.roukaixin.cronvideos.pojo.vo.CloudSharesVO;
+import com.roukaixin.cronvideos.pojo.vo.CloudShareVO;
 import com.roukaixin.cronvideos.pojo.vo.MediaVO;
 import com.roukaixin.cronvideos.service.MediaService;
 import org.springframework.beans.BeanUtils;
@@ -44,7 +44,7 @@ public class MediaController {
     }
 
     @GetMapping("/list/{id}")
-    public R<List<CloudSharesVO>> shares(@PathVariable String id){
+    public R<List<CloudShareVO>> shares(@PathVariable String id){
         return mediaService.shares(id);
     }
 

@@ -3,12 +3,12 @@ package com.roukaixin.cronvideos.utils;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Base64Util;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Base64;
 
 @Slf4j
 public class Aria2Utils {
@@ -55,7 +55,7 @@ public class Aria2Utils {
                 .queryParam("id", "{id}")
                 .queryParam("method", "{method}")
                 .queryParam("params", "{params}")
-                .buildAndExpand(id, method, Base64Util.encode(paramsJsonString))
+                .buildAndExpand(id, method, Base64.getEncoder().encodeToString(paramsJsonString.getBytes()))
                 .toUri();
 
 

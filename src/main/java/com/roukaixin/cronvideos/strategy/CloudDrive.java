@@ -1,9 +1,9 @@
 package com.roukaixin.cronvideos.strategy;
 
-import com.roukaixin.cronvideos.pojo.CloudShares;
+import com.roukaixin.cronvideos.pojo.CloudShare;
 import com.roukaixin.cronvideos.pojo.Media;
 
 public interface CloudDrive {
 
-    void download(CloudShares cloudShares, Media media);
+    void download(CloudShare cloudShares, Media media);
 }
