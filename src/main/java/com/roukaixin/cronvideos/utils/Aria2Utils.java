@@ -64,11 +64,11 @@ public class Aria2Utils {
         return exchange(id, ip, port, "aria2.addUri", paramsJsonString);
     }
 
-    private static String exchange(String ip, Integer port, String method, String paramsJsonString) {
+    public static String exchange(String ip, Integer port, String method, String paramsJsonString) {
         return exchange(System.currentTimeMillis(), ip, port, method, paramsJsonString);
     }
 
-    private static String exchange(Long id, String ip, Integer port, String method, String paramsJsonString) {
+    public static String exchange(Long id, String ip, Integer port, String method, String paramsJsonString) {
         URI uri = UriComponentsBuilder
                 .fromUriString(getUri(ip, port))
                 .queryParam("id", "{id}")

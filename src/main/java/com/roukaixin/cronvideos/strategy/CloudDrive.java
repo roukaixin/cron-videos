@@ -5,5 +5,5 @@ import com.roukaixin.cronvideos.pojo.Media;
 
 public interface CloudDrive {
 
-    void download(CloudShare cloudShares, Media media);
+    Integer download(CloudShare cloudShares, Media media);
 }

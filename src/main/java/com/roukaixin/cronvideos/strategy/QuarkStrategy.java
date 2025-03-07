@@ -25,6 +25,7 @@ import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component(value = "cloud_drive_1")
@@ -57,12 +58,13 @@ public class QuarkStrategy implements CloudDrive {
     }
 
     @Override
-    public void download(CloudShare cloudShare, Media media) {
+    public Integer download(CloudShare cloudShare, Media media) {
+        Integer count = 0;
         // 根据分享 pwd_id 获取 stoken
         String shareToken = getShareToken(cloudShare.getShareId());
         if (!ObjectUtils.isEmpty(shareToken)) {
             // 分享文件列表
-            List<FileInfo> sharepageFileList = getSharepageFileList(cloudShare, shareToken, "0");
+            List<FileInfo> sharepageFileList = getSharepageFileList(cloudShare, shareToken, "0", 1);
             // 分享链接获取的文件列表(过滤后)
             List<FileInfo> fileInfoList = videoList(sharepageFileList, cloudShare.getFileRegex());
             if (log.isInfoEnabled()) {
@@ -90,6 +92,7 @@ public class QuarkStrategy implements CloudDrive {
                             // 发送失败不考虑先,gid 为空就是失败
                             String gid = sendDownload(downloadFid, info, media, aria2DownloadTask, pattern);
                             log.info("提交到 aria2 下载了, 返回 GID 为 `{}`", gid);
+                            count++;
                             // 删除原文件
                             String taskId = deleteSourceFile(downloadFid);
                             if (!taskId.isEmpty()) {
@@ -110,6 +113,7 @@ public class QuarkStrategy implements CloudDrive {
             redisTemplate.delete("target-save-folder-id");
             redisTemplate.delete("cookies");
         }
+        return count;
     }
 
     private List<Aria2DownloadTask> getAria2DownloadTask(Long mediaId) {
@@ -121,16 +125,20 @@ public class QuarkStrategy implements CloudDrive {
     private List<FileInfo> downloadedFileExclude(List<FileInfo> fileInfoList,
                                                  List<Aria2DownloadTask> aria2DownloadTasks,
                                                  Pattern pattern) {
-        List<Integer> episodeNumber = aria2DownloadTasks.stream()
-                .filter(e -> !e.getStatus().equals(3))
-                .map(Aria2DownloadTask::getEpisodeNumber)
-                .toList();
+        Map<Integer, Long> episodeNumberMap = aria2DownloadTasks.stream()
+                .filter(e -> !e.getStatus().equals(3) && !ObjectUtils.isEmpty(e.getSize()))
+                .collect(Collectors.toMap(Aria2DownloadTask::getEpisodeNumber, Aria2DownloadTask::getSize));
         return fileInfoList
                 .stream()
-                .filter(e -> !episodeNumber
-                        .contains(FileUtils
-                                .getEpisodeNumber(FileUtils
-                                        .episodeRegex(pattern, e.getFileName()))))
+                .filter(e -> {
+                    String episodeRegex = FileUtils.episodeRegex(pattern, e.getFileName());
+                    if (ObjectUtils.isEmpty(episodeRegex)) {
+                        return false;
+                    }
+                    Integer episodeNumber = FileUtils.getEpisodeNumber(episodeRegex);
+                    Long size = episodeNumberMap.get(episodeNumber);
+                    return ObjectUtils.isEmpty(size) || e.getSize() > size;
+                })
                 .toList();
     }
 
@@ -162,8 +170,8 @@ public class QuarkStrategy implements CloudDrive {
         return fileInfoList;
     }
 
-    private List<FileInfo> getSharepageFileList(CloudShare cloudShare, String stoken, String pdirFid) {
-        String response = quarkApi.shareSharepageDetail(cloudShare.getShareId(), stoken, pdirFid);
+    private List<FileInfo> getSharepageFileList(CloudShare cloudShare, String stoken, String pdirFid, Integer page) {
+        String response = quarkApi.shareSharepageDetail(cloudShare.getShareId(), stoken, pdirFid, page);
         List<FileInfo> fileInfoList = new ArrayList<>();
         if (!ObjectUtils.isEmpty(response)) {
             JSONObject responseJson = JSONObject.parseObject(response);
@@ -171,27 +179,21 @@ public class QuarkStrategy implements CloudDrive {
                 JSONObject data = responseJson.getJSONObject("data");
                 List<FileInfo> dataList = data.getList("list", FileInfo.class);
                 for (FileInfo info : dataList) {
-                    if (!ObjectUtils.isEmpty(cloudShare.getOnlyInDir()) &&
-                            info.getFileName().equalsIgnoreCase(cloudShare.getOnlyInDir()) &&
-                            info.getCategory().equals(0)) {
-                        // 如果是目录,递归调用获取文件
-                        fileInfoList.clear();
-                        fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, info.getFid()));
-                        break;
-                    } else {
-                        if (info.getCategory().equals(0)) {
-                            if (!ObjectUtils.isEmpty(cloudShare.getExcludedDirs()) &&
-                                    cloudShare.getExcludedDirs().contains(info.getFileName())) {
-                                continue;
-                            }
-                            // 如果是目录,递归调用获取文件
-                            fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, info.getFid()));
-                        } else {
-                            fileInfoList.add(info);
+                    if (info.getCategory().equals(0)) {
+                        if (!ObjectUtils.isEmpty(cloudShare.getExcludedDirs()) &&
+                                cloudShare.getExcludedDirs().contains(info.getFileName())) {
+                            continue;
                         }
-
+                        // 如果是目录,递归调用获取文件
+                        fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, info.getFid(), page));
+                    } else {
+                        fileInfoList.add(info);
                     }
 
+                }
+                Integer total = responseJson.getJSONObject("metadata").getInteger("_total");
+                if (total > page * 100) {
+                    fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, pdirFid, page + 1));
                 }
             }
         }
@@ -304,7 +306,7 @@ public class QuarkStrategy implements CloudDrive {
     }
 
     private String getDownloadFid(String taskId, int retryCount, final int maxRetries) {
-        ThreadUtils.sleep(TimeUnit.SECONDS, 1);
+        ThreadUtils.sleep(TimeUnit.MILLISECONDS, 1500);
         // 避免递归过多，达到最大重试次数时退出
         if (retryCount >= maxRetries) {
             return "";
@@ -348,47 +350,61 @@ public class QuarkStrategy implements CloudDrive {
         if (!downloadUrl.isEmpty() && !cookie.isEmpty()) {
             // 获取下载直链返回 `__puus=` cookie(下载需要)
             Long aria2ServerId = smoothWeightedRoundRobin.getAria2ServerId();
+            if (log.isDebugEnabled()) {
+                log.debug("aria2 数据库 id -> {}", aria2ServerId);
+            }
             if (!ObjectUtils.isEmpty(aria2ServerId)) {
                 Aria2Server aria2Server = aria2ServerMapper.selectById(aria2ServerId);
                 if (!ObjectUtils.isEmpty(aria2Server)) {
                     // 根据正则表达式匹配出来的结果
                     String regex = FileUtils.episodeRegex(p, fileinfo.getFileName());
-                    String dir = Aria2Utils.getDir(
-                            aria2Server.getIp(),
-                            aria2Server.getPort(),
-                            aria2Server.getSecret()
-                    );
-                    String aria2SavePath = getAria2SavePath(dir, media.getTitle(), media.getSeasonNumber());
-                    // 保存在数据库中
-                    Integer episodeNumber = FileUtils.getEpisodeNumber(regex);
-                    Aria2DownloadTask aria2DownloadTask =
-                            aria2DownloadTasks
-                                    .stream()
-                                    .filter(e -> e.getEpisodeNumber().equals(episodeNumber))
-                                    .findFirst()
-                                    .orElseGet(Aria2DownloadTask::new);
-                    aria2DownloadTask.setMediaId(media.getId());
-                    aria2DownloadTask.setAria2ServiceId(aria2ServerId);
-                    aria2DownloadTask.setEpisodeNumber(episodeNumber);
-                    aria2DownloadTask.setSavePath(aria2SavePath);
-                    aria2DownloadTask.setGid(gid);
-                    aria2DownloadTasksMapper.insertOrUpdate(aria2DownloadTask);
-                    String mimeType = downloadInfo.getString("format_type");
-                    String out = FileUtils.getName(
-                            media.getTitle(),
-                            media.getSeasonNumber(),
-                            media.getTotalEpisodes(),
-                            fileinfo.getFileName(),
-                            regex,
-                            mimeType
-                    );
-                    String response = aria2Download(
-                            aria2Server, downloadUrl, aria2SavePath, out, cookie
-                    );
-                    gid = JSONObject.parseObject(response).getString("result");
-                    // 暂时不考虑发生到aria2失败,更新数据
-                    aria2DownloadTask.setGid(gid);
-                    aria2DownloadTasksMapper.updateById(aria2DownloadTask);
+                    if (!ObjectUtils.isEmpty(regex)) {
+                        String dir = Aria2Utils.getDir(
+                                aria2Server.getIp(),
+                                aria2Server.getPort(),
+                                aria2Server.getSecret()
+                        );
+                        String aria2SavePath = getAria2SavePath(dir, media.getTitle(), media.getSeasonNumber());
+                        // 保存在数据库中
+                        Integer episodeNumber = FileUtils.getEpisodeNumber(regex);
+                        String mimeType = downloadInfo.getString("format_type");
+                        String out = FileUtils.getName(
+                                media.getTitle(),
+                                media.getSeasonNumber(),
+                                media.getTotalEpisodes(),
+                                fileinfo.getFileName(),
+                                regex,
+                                mimeType
+                        );
+                        Aria2DownloadTask aria2DownloadTask =
+                                aria2DownloadTasks
+                                        .stream()
+                                        .filter(e -> e.getEpisodeNumber().equals(episodeNumber))
+                                        .findFirst()
+                                        .orElseGet(Aria2DownloadTask::new);
+                        aria2DownloadTask.setMediaId(media.getId());
+                        aria2DownloadTask.setAria2ServiceId(aria2ServerId);
+                        aria2DownloadTask.setEpisodeNumber(episodeNumber);
+                        aria2DownloadTask.setSavePath(aria2SavePath);
+                        aria2DownloadTask.setGid(gid);
+                        aria2DownloadTask.setSize(fileinfo.getSize());
+                        aria2DownloadTask.setStatus(0);
+                        aria2DownloadTask.setOutName(out);
+                        aria2DownloadTasksMapper.insertOrUpdate(aria2DownloadTask);
+                        // 下载之前先判断任务是否在等待下载
+                        if (!taskIsWaiting(aria2Server, aria2DownloadTask.getGid())) {
+                            // 现保存任务到数据库,防止 aria2 发生数据过来无法判断
+                            String response = aria2Download(
+                                    aria2Server, downloadUrl, aria2SavePath, out, cookie
+                            );
+                            gid = JSONObject.parseObject(response).getString("result");
+                            // 暂时不考虑发生到aria2失败,更新数据
+                            aria2DownloadTask.setGid(gid);
+                            aria2DownloadTasksMapper.updateById(aria2DownloadTask);
+                        } else {
+                            gid = aria2DownloadTask.getGid();
+                        }
+                    }
                 }
             } else {
                 log.error("获取 aria2 服务器失败");
@@ -437,6 +453,7 @@ public class QuarkStrategy implements CloudDrive {
                 "split", "16",
                 "max-connection-per-server", 16,
                 "out", out,
+                "allow-overwrite", true,
                 "header", JSONArray.of("Cookie:" + cookies)
         ));
         String s = Aria2Utils.addUri(aria2Server.getIp(), aria2Server.getPort(), params.toJSONString());
@@ -483,5 +500,26 @@ public class QuarkStrategy implements CloudDrive {
         }
         return flag;
 
+    }
+
+    private boolean taskIsWaiting(Aria2Server aria2Server, String gid) {
+        boolean wait = false;
+        if (!ObjectUtils.isEmpty(gid)) {
+            JSONArray params = new JSONArray();
+            params.add("token:" + aria2Server.getSecret());
+            params.add(gid);
+            params.add(new ArrayList<>().add("status"));
+            String tellStatus = Aria2Utils.tellStatus(aria2Server.getIp(), aria2Server.getPort(), params.toJSONString());
+            if (!ObjectUtils.isEmpty(tellStatus)) {
+                JSONObject result = JSONObject.parseObject(tellStatus).getJSONObject("result");
+                if (!ObjectUtils.isEmpty(result)) {
+                    String status = result.getString("status");
+                    if (!ObjectUtils.isEmpty(status) && status.equals("waiting")) {
+                        wait = true;
+                    }
+                }
+            }
+        }
+        return wait;
     }
 }

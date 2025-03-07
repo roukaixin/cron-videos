@@ -41,22 +41,24 @@ public class QuarkApi {
                     String responseBody = "";
                     if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
                         responseBody = clientResponse.bodyTo(String.class);
+                    } else {
+                        // 发生短信
                     }
                     log(clientRequest, clientResponse);
                     return responseBody;
                 });
     }
 
-    public String shareSharepageDetail(String pwdId, String stoken, String pdirFid) {
+    public String shareSharepageDetail(String pwdId, String stoken, String pdirFid, Integer page) {
         URI uri = getUriComponentsBuilder("https://drive-h.quark.cn/1/clouddrive/share/sharepage/detail")
                 .queryParam("pwd_id", "{pwd_id}")
                 .queryParam("stoken", "{stoken}")
                 .queryParam("pdir_fid", "{pdir_fid}")
-                .queryParam("_page", 1)
-                .queryParam("_size", 1000)
+                .queryParam("_page", "{page}")
+                .queryParam("_size", 100)
                 .encode()
                 .build()
-                .expand(pwdId, stoken, pdirFid)
+                .expand(pwdId, stoken, pdirFid, page)
                 .toUri();
         return restClient
                 .get()
@@ -70,6 +72,31 @@ public class QuarkApi {
                     return responseBody;
                 });
     }
+
+    public String shareSharepageDetail(String pwdId, String pdirFid, Integer page) {
+        URI uri = getUriComponentsBuilder("https://pan.quark.cn/1/clouddrive/share/sharepage/v2/detail")
+                .build()
+                .toUri();
+        // size 最大支持 100
+        return restClient
+                .post()
+                .uri(uri)
+                .body(JSONObject.of(
+                        "pwd_id", pwdId,
+                        "pdir_fid", pdirFid,
+                        "page", page,
+                        "size", 100
+                ))
+                .exchange((clientRequest, clientResponse) -> {
+                    String responseBody = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        responseBody = clientResponse.bodyTo(String.class);
+                    }
+                    log(clientRequest, clientResponse);
+                    return responseBody;
+                });
+    }
+
 
     public String fileSort(String pdirFid, MultiValueMap<String, String> cookies) {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/file/sort")
@@ -172,7 +199,7 @@ public class QuarkApi {
                 .exchange((clientRequest, clientResponse) -> {
                     String responseBody = "";
                     if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
-                        responseBody  = clientResponse.bodyTo(String.class);
+                        responseBody = clientResponse.bodyTo(String.class);
                     }
                     log(clientRequest, clientResponse);
                     map.put("cookies", getSetCookie(clientResponse.getHeaders().get("set-cookie")));

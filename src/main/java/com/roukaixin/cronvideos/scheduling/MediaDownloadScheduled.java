@@ -61,14 +61,17 @@ public class MediaDownloadScheduled {
                                         .eq(CloudShare::getMediaId, resultMedia.getId())
                         );
                         if (!ObjectUtils.isEmpty(cloudShare)) {
-                            cloudDriveContext.getCloudDrive(cloudShare.getProvider())
+                            // 当前下载数量
+                            Integer downloadCount = cloudDriveContext.getCloudDrive(cloudShare.getProvider())
                                     .download(cloudShare, resultMedia);
-                            // 更新下载总数
-                            Long count = aria2DownloadTasksMapper.selectCount(
-                                    Wrappers.<Aria2DownloadTask>lambdaQuery().eq(Aria2DownloadTask::getMediaId, resultMedia.getId())
-                            );
-                            resultMedia.setCurrentEpisode(Math.toIntExact(count));
-                            mediaMapper.updateById(resultMedia);
+                            if (downloadCount > 0) {
+                                // 更新下载总数
+                                Long count = aria2DownloadTasksMapper.selectCount(
+                                        Wrappers.<Aria2DownloadTask>lambdaQuery().eq(Aria2DownloadTask::getMediaId, resultMedia.getId())
+                                );
+                                resultMedia.setCurrentEpisode(Math.toIntExact(count));
+                                mediaMapper.updateById(resultMedia);
+                            }
                         } else {
                             if (log.isInfoEnabled()) {
                                 log.info("该影视没有网盘分享链接 -> {}", resultMedia.getTitle());
