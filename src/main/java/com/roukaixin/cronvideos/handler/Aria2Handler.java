@@ -10,6 +10,7 @@ import com.roukaixin.cronvideos.mapper.Aria2ServerMapper;
 import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
 import com.roukaixin.cronvideos.pojo.Aria2Server;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
+import com.roukaixin.cronvideos.utils.Aria2Utils;
 import jakarta.annotation.Nonnull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -95,11 +96,13 @@ public class Aria2Handler extends TextWebSocketHandler {
                 TimeUnit.SECONDS.sleep(1);
                 // 任务下载完成,修改状态
                 updateAria2TaskStatus(id, 2, gid);
+                removeDownloadResult(session, gid);
             }
             if (method.equals("aria2.onDownloadError")) {
                 TimeUnit.SECONDS.sleep(1);
                 // 重新处理下载失败的任务
                 updateAria2TaskStatus(id, 3, gid);
+                removeDownloadResult(session, gid);
             }
         }
         super.handleTextMessage(session, message);
@@ -154,6 +157,23 @@ public class Aria2Handler extends TextWebSocketHandler {
     private void cancelTimeout() {
         if (scheduler != null) {
             scheduler.shutdownNow();
+        }
+    }
+
+    private void removeDownloadResult(@NonNull WebSocketSession session, String gid){
+        // 删除 aria2 任务
+        Long aria2ServiceId = aria2WebSocketPool.getAria2ServiceId(session);
+        Aria2Server aria2Server = aria2ServerMapper.selectById(aria2ServiceId);
+        String removeDownloadResult = Aria2Utils.removeDownloadResult(
+                aria2Server.getIp(),
+                aria2Server.getPort(),
+                JSONArray.of(
+                        "token:" + aria2Server.getSecret(),
+                        gid
+                ).toJSONString()
+        );
+        if (log.isDebugEnabled()) {
+            log.debug("aria2 删除错误任务 -> {}", removeDownloadResult);
         }
     }
 

@@ -49,10 +49,10 @@ public class FileUtils {
         String group = "";
         Matcher matcher = p.matcher(fileName);
         if (matcher.find()) {
-            group = matcher.group();
+            group = matcher.group(1);
         }
         if (log.isInfoEnabled() && group.isEmpty()) {
-            log.info("影视名字匹配不成功 -> {}", fileName);
+            log.info("影视名字匹配不成功 -> 规则 -> {} 文件名 -> {}",p.pattern(), fileName);
         }
         return group;
     }
@@ -63,6 +63,7 @@ public class FileUtils {
             numer = Integer.parseInt(episodeRegex);
         } catch (NumberFormatException e) {
             log.error("匹配结果不能转化成数字 {}", episodeRegex);
+            // 比如: 如果电影名字不是数字,相当于电影的第一集
             numer = 1;
         }
         return numer;

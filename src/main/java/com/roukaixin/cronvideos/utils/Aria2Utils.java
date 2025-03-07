@@ -4,6 +4,8 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -13,7 +15,9 @@ import java.util.Base64;
 @Slf4j
 public class Aria2Utils {
 
-    private final static RestClient restClient = RestClient.create();
+    private final static RestClient restClient = RestClient.builder()
+            .requestFactory(new BufferingClientHttpRequestFactory(new JdkClientHttpRequestFactory()))
+            .build();
 
     public static String getDir(String ip, Integer port, String secret) {
         JSONArray params = new JSONArray();
@@ -36,6 +40,22 @@ public class Aria2Utils {
         return  scheme + "://" + ip + ":" + port + "/jsonrpc";
     }
 
+    public static String removeDownloadResult(String ip, Integer port, String paramsJsonString) {
+        return removeDownloadResult(System.currentTimeMillis(), ip, port, paramsJsonString);
+    }
+
+    public static String removeDownloadResult(Long id, String ip, Integer port, String paramsJsonString) {
+        return exchange(id, ip, port, "aria2.removeDownloadResult", paramsJsonString);
+    }
+
+    public static String tellStatus(String ip, Integer port, String paramsJsonString) {
+        return tellStatus(System.currentTimeMillis(), ip, port, paramsJsonString);
+    }
+
+    public static String tellStatus(Long id, String ip, Integer port, String paramsJsonString) {
+        return exchange(id, ip, port, "aria2.tellStatus", paramsJsonString);
+    }
+
     public static String addUri(String ip, Integer port, String paramsJsonString) {
         return addUri(System.currentTimeMillis(), ip, port, paramsJsonString);
     }
@@ -49,7 +69,6 @@ public class Aria2Utils {
     }
 
     private static String exchange(Long id, String ip, Integer port, String method, String paramsJsonString) {
-
         URI uri = UriComponentsBuilder
                 .fromUriString(getUri(ip, port))
                 .queryParam("id", "{id}")
@@ -57,8 +76,6 @@ public class Aria2Utils {
                 .queryParam("params", "{params}")
                 .buildAndExpand(id, method, Base64.getEncoder().encodeToString(paramsJsonString.getBytes()))
                 .toUri();
-
-
         return restClient
                 .get()
                 .uri(uri)

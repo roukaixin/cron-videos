@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -35,6 +36,6 @@ public class Aria2DownloadTaskController {
             BeanUtils.copyProperties(e, vo);
             vos.add(vo);
         });
-        return R.<List<Aria2DownloadTaskVO>>builder().data(vos).code(200).build();
+        return R.<List<Aria2DownloadTaskVO>>builder().data(vos.stream().sorted(Comparator.comparingInt(Aria2DownloadTaskVO::getEpisodeNumber)).toList()).code(200).build();
     }
 }
