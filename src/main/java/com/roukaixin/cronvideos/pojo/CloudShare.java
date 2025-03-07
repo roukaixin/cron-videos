@@ -1,6 +1,7 @@
 package com.roukaixin.cronvideos.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import java.util.List;
  *
  * @TableName cloud_shares
  */
-@TableName(value = "cloud_share")
+@TableName(value = "cloud_share", autoResultMap = true)
 @Data
 public class CloudShare {
     /**
@@ -58,6 +59,7 @@ public class CloudShare {
     /**
      * 排除的目录
      */
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<String> excludedDirs;
 
     /**

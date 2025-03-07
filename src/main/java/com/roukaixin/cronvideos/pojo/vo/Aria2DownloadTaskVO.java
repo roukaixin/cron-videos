@@ -36,6 +36,11 @@ public class Aria2DownloadTaskVO {
     private String savePath;
 
     /**
+     * 文件大小
+     */
+    private Long size;
+
+    /**
      * 任务状态（0: 等待中, 1: 下载中, 2: 已完成, 3: 失败）
      */
     private Integer status;

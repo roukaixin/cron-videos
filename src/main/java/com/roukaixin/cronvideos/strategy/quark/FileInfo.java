@@ -20,4 +20,9 @@ public class FileInfo {
 
     @JsonAlias("share_fid_token")
     private String shareFidToken;
+
+    /**
+     * 文件大小
+     */
+    private Long size;
 }
