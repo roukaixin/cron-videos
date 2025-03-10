@@ -81,7 +81,7 @@ public class Aria2Handler extends TextWebSocketHandler {
      */
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
-        log.info("aria2 返回消息: {}", message.getPayload());
+        log.info("{} -> aria2 返回消息: {}",message.toString(), message.getPayload());
         JSONObject aria2Repose = JSON.parseObject(message.getPayload());
         String method = aria2Repose.getString("method");
         if (method != null) {

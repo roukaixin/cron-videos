@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.websocker;
+package com.roukaixin.cronvideos.runner;
 
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class Aria2WebSocketClient implements CommandLineRunner {
+public class ConnectionAria2Runner implements CommandLineRunner {
 
     private final Aria2ServerMapper aria2ServerMapper;
 
@@ -30,10 +30,10 @@ public class Aria2WebSocketClient implements CommandLineRunner {
 
     private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
 
-    public Aria2WebSocketClient(Aria2ServerMapper aria2ServerMapper,
-                                Aria2DownloadTasksMapper aria2DownloadTasksMapper,
-                                Aria2WebSocketPool aria2WebSocketPool,
-                                SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+    public ConnectionAria2Runner(Aria2ServerMapper aria2ServerMapper,
+                                 Aria2DownloadTasksMapper aria2DownloadTasksMapper,
+                                 Aria2WebSocketPool aria2WebSocketPool,
+                                 SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
         this.aria2ServerMapper = aria2ServerMapper;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
