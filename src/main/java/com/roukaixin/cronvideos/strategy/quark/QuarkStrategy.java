@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.strategy;
+package com.roukaixin.cronvideos.strategy.quark;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
 import com.roukaixin.cronvideos.mapper.Aria2ServerMapper;
+import com.roukaixin.cronvideos.mapper.CloudShareMapper;
 import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
 import com.roukaixin.cronvideos.pojo.*;
-import com.roukaixin.cronvideos.strategy.quark.FileInfo;
-import com.roukaixin.cronvideos.strategy.quark.QuarkApi;
+import com.roukaixin.cronvideos.strategy.CloudDrive;
 import com.roukaixin.cronvideos.utils.Aria2Utils;
 import com.roukaixin.cronvideos.utils.FileUtils;
 import com.roukaixin.cronvideos.utils.ThreadUtils;
@@ -39,6 +39,8 @@ public class QuarkStrategy implements CloudDrive {
 
     private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
 
+    private final CloudShareMapper cloudShareMapper;
+
     private final QuarkApi quarkApi;
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -48,20 +50,22 @@ public class QuarkStrategy implements CloudDrive {
                          Aria2ServerMapper aria2ServerMapper,
                          Aria2DownloadTasksMapper aria2DownloadTasksMapper,
                          QuarkApi quarkApi,
-                         RedisTemplate<String, Object> redisTemplate) {
+                         RedisTemplate<String, Object> redisTemplate,
+                         CloudShareMapper cloudShareMapper) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.aria2ServerMapper = aria2ServerMapper;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
         this.quarkApi = quarkApi;
         this.redisTemplate = redisTemplate;
+        this.cloudShareMapper = cloudShareMapper;
     }
 
     @Override
     public Integer download(CloudShare cloudShare, Media media) {
         Integer count = 0;
         // 根据分享 pwd_id 获取 stoken
-        String shareToken = getShareToken(cloudShare.getShareId());
+        String shareToken = getShareToken(cloudShare.getShareId(), cloudShare.getId());
         if (!ObjectUtils.isEmpty(shareToken)) {
             // 分享文件列表
             List<FileInfo> sharepageFileList = getSharepageFileList(cloudShare, shareToken, "0", 1);
@@ -143,7 +147,7 @@ public class QuarkStrategy implements CloudDrive {
     }
 
     // 获取 stoken(分享token)
-    private String getShareToken(String shareId) {
+    private String getShareToken(String shareId, Long id) {
         String response = quarkApi.shareSharepageToken(shareId);
         String shareToken = "";
         if (!ObjectUtils.isEmpty(response)) {
@@ -151,6 +155,13 @@ public class QuarkStrategy implements CloudDrive {
             if (responseJson.getInteger("status").equals(200)) {
                 shareToken = responseJson.getObject("data", JSONObject.class)
                         .getString("stoken");
+            } else {
+                // 连接已经失效
+                CloudShare cloudShare = new CloudShare();
+                cloudShare.setId(id);
+                cloudShare.setIsLapse(1);
+                cloudShare.setLapseCause(response);
+                cloudShareMapper.updateById(cloudShare);
             }
         }
         return shareToken;

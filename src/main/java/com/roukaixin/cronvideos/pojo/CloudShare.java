@@ -63,6 +63,16 @@ public class CloudShare {
     private List<String> excludedDirs;
 
     /**
+     *  是否失效（0:否、1:是）
+     */
+    private Integer isLapse;
+
+    /**
+     * 失效原因
+     */
+    private String lapseCause;
+
+    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)

@@ -60,7 +60,7 @@ public class MediaDownloadScheduled {
                                         .<CloudShare>lambdaQuery()
                                         .eq(CloudShare::getMediaId, resultMedia.getId())
                         );
-                        if (!ObjectUtils.isEmpty(cloudShare)) {
+                        if (!ObjectUtils.isEmpty(cloudShare) && cloudShare.getIsLapse().equals(0)) {
                             // 当前下载数量
                             Integer downloadCount = cloudDriveContext.getCloudDrive(cloudShare.getProvider())
                                     .download(cloudShare, resultMedia);
@@ -73,9 +73,17 @@ public class MediaDownloadScheduled {
                                 mediaMapper.updateById(resultMedia);
                             }
                         } else {
-                            if (log.isInfoEnabled()) {
-                                log.info("该影视没有网盘分享链接 -> {}", resultMedia.getTitle());
+                            if (cloudShare.getIsLapse() == 1) {
+                                if (log.isInfoEnabled()) {
+                                    log.info("分享链接已经失效 -> {}", resultMedia.getTitle());
+                                }
+                                // 发生邮箱
+                            } else {
+                                if (log.isInfoEnabled()) {
+                                    log.info("该影视没有网盘分享链接 -> {}", resultMedia.getTitle());
+                                }
                             }
+
                         }
                     }
                 }
