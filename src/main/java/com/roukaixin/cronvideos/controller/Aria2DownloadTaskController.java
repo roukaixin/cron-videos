@@ -3,17 +3,16 @@ package com.roukaixin.cronvideos.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
 import com.roukaixin.cronvideos.pojo.R;
+import com.roukaixin.cronvideos.pojo.dto.Aria2DownloadTaskDTO;
 import com.roukaixin.cronvideos.pojo.vo.Aria2DownloadTaskVO;
 import com.roukaixin.cronvideos.service.Aria2DownloadTasksService;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/download/task")
@@ -37,5 +36,16 @@ public class Aria2DownloadTaskController {
             vos.add(vo);
         });
         return R.<List<Aria2DownloadTaskVO>>builder().data(vos.stream().sorted(Comparator.comparingInt(Aria2DownloadTaskVO::getEpisodeNumber)).toList()).code(200).build();
+    }
+
+    @GetMapping("/list")
+    public R<Map<String, Object>> list(Aria2DownloadTaskDTO dto) {
+        return aria2DownloadTasksService.list(dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public R<String> delete(@PathVariable Long id) {
+        aria2DownloadTasksService.removeById(id);
+        return R.<String>builder().code(200).message("删除成功").build();
     }
 }

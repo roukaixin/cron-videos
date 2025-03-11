@@ -3,7 +3,7 @@ package com.roukaixin.cronvideos.pojo.vo;
 import lombok.Data;
 
 @Data
-public class Aria2DownloadTaskVO {
+public class Aria2DownloadTaskPageVO {
 
     /**
      * 任务唯一ID
@@ -16,14 +16,9 @@ public class Aria2DownloadTaskVO {
     private String gid;
 
     /**
-     * 关联的媒体 ID
+     * 电影/电视剧名称
      */
-    private Long mediaId;
-
-    /**
-     * 关联的 aria2 服务 ID
-     */
-    private Long aria2ServiceId;
+    private String title;
 
     /**
      * 集数

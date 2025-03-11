@@ -20,4 +20,43 @@
          id,gid,media_id,episode_number,save_path,status,
         created_at,updated_at,is_deleted
     </sql>
+
+    <select id="list" resultType="com.roukaixin.cronvideos.pojo.vo.Aria2DownloadTaskPageVO">
+        <bind name="offset" value="(page -1) * pageSize"/>
+        select
+            a.id id,
+            a.gid gid,
+            b.title title,
+            a.episode_number episodeNumber,
+            a.save_path savePath,
+            a.out_name outName,
+            a.size size,
+            a.status status
+        from aria2_download_task a
+        left join media b on a.media_id = b.id
+        <where>
+            <if test="status != null">
+                a.status = #{status}
+            </if>
+            <if test="title != '' and title != null">
+                and b.title like "%#{title}%"
+            </if>
+        </where>
+        limit #{offset} , #{pageSize}
+    </select>
+
+    <select id="listCount" resultType="java.lang.Integer">
+        select
+            count(1)
+        from aria2_download_task a
+        left join media b on a.media_id = b.id
+        <where>
+            <if test="status != null">
+                a.status = #{status}
+            </if>
+            <if test="title != '' and title != null">
+                and b.title like "%#{title}%"
+            </if>
+        </where>
+    </select>
 </mapper>
