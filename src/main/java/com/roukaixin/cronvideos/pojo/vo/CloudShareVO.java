@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 网盘分享链接
@@ -48,4 +49,24 @@ public class CloudShareVO {
      * 用于提取文件的正则表达式
      */
     private String fileRegex;
+
+    /**
+     * 只在指定目录下有效的目录路径
+     */
+    private String onlyInDir;
+
+    /**
+     * 排除的目录
+     */
+    private List<String> excludedDirs;
+
+    /**
+     *  是否失效（0:否、1:是）
+     */
+    private Integer isLapse;
+
+    /**
+     * 失效原因
+     */
+    private String lapseCause;
 }

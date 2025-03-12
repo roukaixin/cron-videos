@@ -2,6 +2,10 @@ package com.roukaixin.cronvideos.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.roukaixin.cronvideos.pojo.CloudShare;
+import com.roukaixin.cronvideos.pojo.R;
+import com.roukaixin.cronvideos.pojo.vo.CloudShareVO;
+
+import java.util.List;
 
 /**
  * @author pankx
@@ -9,4 +13,11 @@ import com.roukaixin.cronvideos.pojo.CloudShare;
  */
 public interface CloudShareService extends IService<CloudShare> {
 
+    /**
+     * 获取分享列表
+     *
+     * @param mediaId 影视id
+     * @return R<List < CloudSharesVO>>
+     */
+    R<List<CloudShareVO>> share(String mediaId);
 }
