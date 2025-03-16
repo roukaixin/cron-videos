@@ -40,7 +40,10 @@ public class LocalDateTimeConfig {
         @Override
         public LocalDateTime deserialize(JsonParser parser, DeserializationContext deserializationContext) throws IOException {
             long timestamp = parser.getValueAsLong();
-            return timestamp < 0 ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
+            return timestamp < 0 ?
+                    null :
+                    timestamp == 0 && parser.getValueAsString().isEmpty() ? null :
+                    LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
         }
     }
 }

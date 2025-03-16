@@ -73,7 +73,7 @@ public class MediaDownloadScheduled {
                                 mediaMapper.updateById(resultMedia);
                             }
                         } else {
-                            if (cloudShare.getIsLapse() == 1) {
+                            if (cloudShare != null && cloudShare.getIsLapse() == 1) {
                                 if (log.isInfoEnabled()) {
                                     log.info("分享链接已经失效 -> {}", resultMedia.getTitle());
                                 }
