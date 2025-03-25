@@ -80,9 +80,9 @@ public class Aria2Handler extends TextWebSocketHandler {
      * @throws Exception 异常
      */
     @Override
-    protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
+    protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
         if (log.isDebugEnabled()) {
-            log.debug("{} -> aria2 返回消息: {}", message.toString(), message.getPayload());
+            log.debug("{} -> aria2 返回消息: {}", message, message.getPayload());
         }
         JSONObject aria2Repose = JSON.parseObject(message.getPayload());
         String method = aria2Repose.getString("method");
