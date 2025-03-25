@@ -29,8 +29,9 @@ public class QuarkApi {
     }
 
 
-    public String shareSharepageToken(String pwdId) {
-        return restClient
+    public Map<String, Object> shareSharepageToken(String pwdId) {
+        Map<String, Object> map = new HashMap<>();
+        String responseBody = restClient
                 .post()
                 .uri("https://drive-h.quark.cn/1/clouddrive/share/sharepage/token")
                 .body(JSONObject.of(
@@ -38,15 +39,12 @@ public class QuarkApi {
                         "passcode", ""
                 ))
                 .exchange((clientRequest, clientResponse) -> {
-                    String responseBody = "";
-                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
-                        responseBody = clientResponse.bodyTo(String.class);
-                    } else {
-                        // 发生短信
-                    }
+                    map.put("is_ok", clientResponse.getStatusCode().equals(HttpStatus.OK));
                     log(clientRequest, clientResponse);
-                    return responseBody;
+                    return clientResponse.bodyTo(String.class);
                 });
+        map.put("data", responseBody);
+        return map;
     }
 
     public String shareSharepageDetail(String pwdId, String stoken, String pdirFid, Integer page) {
@@ -210,12 +208,14 @@ public class QuarkApi {
     }
 
     private void log(HttpRequest request, RestClient.RequestHeadersSpec.ConvertibleClientHttpResponse response) throws IOException {
-        log.info("================QuarkApi================");
-        log.info("请求 URL : {}", request.getURI());
-        log.info("请求方法 : {}", request.getMethod());
-        log.info("响应状态 : {}", response.getStatusCode());
-        log.info("响应结果 : {}", response.bodyTo(String.class));
-        log.info("========================================");
+        if (log.isDebugEnabled()) {
+            log.debug("================QuarkApi================");
+            log.debug("请求 URL : {}", request.getURI());
+            log.debug("请求方法 : {}", request.getMethod());
+            log.debug("响应状态 : {}", response.getStatusCode());
+            log.debug("响应结果 : {}", response.bodyTo(String.class));
+            log.debug("========================================");
+        }
     }
 
     private UriComponentsBuilder getUriComponentsBuilder(String uri) {
