@@ -81,7 +81,9 @@ public class Aria2Handler extends TextWebSocketHandler {
      */
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
-        log.info("{} -> aria2 返回消息: {}",message.toString(), message.getPayload());
+        if (log.isDebugEnabled()) {
+            log.debug("{} -> aria2 返回消息: {}", message.toString(), message.getPayload());
+        }
         JSONObject aria2Repose = JSON.parseObject(message.getPayload());
         String method = aria2Repose.getString("method");
         if (method != null) {
@@ -160,7 +162,7 @@ public class Aria2Handler extends TextWebSocketHandler {
         }
     }
 
-    private void removeDownloadResult(@NonNull WebSocketSession session, String gid){
+    private void removeDownloadResult(@NonNull WebSocketSession session, String gid) {
         // 删除 aria2 任务
         Long aria2ServiceId = aria2WebSocketPool.getAria2ServiceId(session);
         Aria2Server aria2Server = aria2ServerMapper.selectById(aria2ServiceId);
