@@ -59,6 +59,11 @@ public class Aria2DownloadTask {
     private Integer status;
 
     /**
+     * 资源状态。0无、1只保留视频和音频、2已经自动到影视目录
+     */
+    private Integer resourceStatus;
+
+    /**
      * 任务创建时间
      */
     @TableField(fill = FieldFill.INSERT)
@@ -70,9 +75,4 @@ public class Aria2DownloadTask {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
-    /**
-     * 逻辑删除字段（0未删除,1已删除）
-     */
-    @TableLogic
-    private Integer isDeleted;
 }
