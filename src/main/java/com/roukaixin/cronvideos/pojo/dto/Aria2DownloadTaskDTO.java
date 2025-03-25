@@ -8,7 +8,7 @@ public class Aria2DownloadTaskDTO {
     /**
      * 电影/电视剧名称
      */
-    private String title;
+    private String name;
 
     /**
      * 任务状态（0: 等待中, 1: 下载中, 2: 已完成, 3: 失败）

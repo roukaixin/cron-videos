@@ -20,12 +20,12 @@ public class MediaUpdateDTO {
     /**
      * 总集数（电影可以为 NULL）
      */
-    private Integer totalEpisodes;
+    private Integer totalEpisode;
 
     /**
      * 电视剧更新日（仅电视剧用）
      */
-    private List<Integer> updateDays;
+    private List<Integer> updateDay;
 
     /**
      * 首播/上映日期

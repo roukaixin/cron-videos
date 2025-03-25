@@ -2,6 +2,7 @@ package com.roukaixin.cronvideos.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.roukaixin.cronvideos.enums.MediaTypeEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -25,48 +26,50 @@ public class Media {
     /**
      * 电影/电视剧名称
      */
-    private String title;
+    private String name;
 
     /**
-     * 类型: 电影 (movie) / 电视剧 (tv)
+     * 媒体类型: movie / show
+     *
+     * @see MediaTypeEnum
      */
-    private String type;
+    private MediaTypeEnum type;
 
     /**
-     * 类型别名（如 电影=影片，电视剧=剧集）
+     * 媒体列别（如 电影=影片，电视剧=剧集）
      */
     private String typeAlias;
 
     /**
-     * 电视剧季号/部数（仅电视剧用）
+     * 电视剧季号/部数（仅电视剧用、电影为 NULL）
      */
-    private Integer seasonNumber;
+    private Integer season;
 
     /**
-     * 总集数（电影可以为 NULL）
+     * 总集数（电影默认为1）
      */
-    private Integer totalEpisodes;
+    private Integer totalEpisode;
 
     /**
-     * 已更新集数（仅电视剧用）
+     * 开始集数（beginEpisode）
+     */
+    private Integer startEpisode;
+
+    /**
+     * 已更新集数
      */
     private Integer currentEpisode;
 
     /**
-     * 电视剧更新日（仅电视剧用）
+     * 电视剧更新日（仅电视剧用、电影为 NULL）
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Integer> updateDays;
+    private List<Integer> updateDay;
 
     /**
      * 首播/上映日期
      */
     private LocalDateTime releaseDate;
-
-    /**
-     * 匹配集数规则（仅电视剧用）
-     */
-    private String episodeRegex;
 
     /**
      * 创建时间

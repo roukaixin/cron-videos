@@ -1,5 +1,6 @@
 package com.roukaixin.cronvideos.pojo.vo;
 
+import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,7 +29,7 @@ public class CloudShareVO {
     /**
      * 网盘提供商（1: 夸克, 2: 阿里云盘, 3: 百度网盘 等）
      */
-    private Integer provider;
+    private CloudShareProviderEnum provider;
 
     /**
      * 分享 ID (路径 ID 或链接)
@@ -49,6 +50,11 @@ public class CloudShareVO {
      * 用于提取文件的正则表达式
      */
     private String fileRegex;
+
+    /**
+     * 匹配集数规则（用于匹配出重命名后文件名）
+     */
+    private String episodeRegex;
 
     /**
      * 只在指定目录下有效的目录路径

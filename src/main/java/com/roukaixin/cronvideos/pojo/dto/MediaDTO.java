@@ -1,5 +1,6 @@
 package com.roukaixin.cronvideos.pojo.dto;
 
+import com.roukaixin.cronvideos.enums.MediaTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,9 +17,9 @@ public class MediaDTO {
     private String title;
 
     /**
-     * 类型: 电影 (movie) / 电视剧 (tv)
+     * 类型: movie / show
      */
-    private String type;
+    private MediaTypeEnum type;
 
     /**
      * 类型别名（如 电影=影片，电视剧=剧集）
@@ -33,7 +34,7 @@ public class MediaDTO {
     /**
      * 总集数（电影可以为 NULL）
      */
-    private Integer totalEpisodes;
+    private Integer totalEpisode;
 
     /**
      * 已更新集数（仅电视剧用）
@@ -43,7 +44,7 @@ public class MediaDTO {
     /**
      * 电视剧更新日（仅电视剧用）
      */
-    private List<Integer> updateDays;
+    private List<Integer> updateDay;
 
     /**
      * 首播/上映日期

@@ -2,6 +2,7 @@ package com.roukaixin.cronvideos.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -27,9 +28,11 @@ public class CloudShare {
     private Long mediaId;
 
     /**
-     * 网盘提供商（1: 夸克, 2: 阿里云盘, 3: 百度网盘 等）
+     * 网盘提供商（1: 夸克, 2: 阿里云盘, 3: 百度网盘 等
+     *
+     * @see CloudShareProviderEnum
      */
-    private Integer provider;
+    private CloudShareProviderEnum provider;
 
     /**
      * 分享 ID (路径 ID 或链接)
@@ -50,6 +53,11 @@ public class CloudShare {
      * 用于提取文件的正则表达式
      */
     private String fileRegex;
+
+    /**
+     * 匹配集数规则（用于匹配出重命名后文件名）
+     */
+    private String episodeRegex;
 
     /**
      * 只在指定目录下有效的目录路径

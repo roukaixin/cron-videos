@@ -1,5 +1,6 @@
 package com.roukaixin.cronvideos.pojo.dto;
 
+import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,7 +23,7 @@ public class CloudShareDTO {
     /**
      * 网盘提供商（1: 夸克, 2: 阿里云盘, 3: 百度网盘 等）
      */
-    private Integer provider;
+    private CloudShareProviderEnum provider;
 
     /**
      * 分享 ID (路径 ID 或链接)

@@ -79,4 +79,8 @@ public class SmoothWeightedRoundRobin {
         weightMap.forEach((k, v) -> v.setCurrentWeight(0));
     }
 
+    public int size() {
+        return weightMap.size();
+    }
+
 }

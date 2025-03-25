@@ -18,7 +18,7 @@ public class Aria2DownloadTaskPageVO {
     /**
      * 电影/电视剧名称
      */
-    private String title;
+    private String name;
 
     /**
      * 集数

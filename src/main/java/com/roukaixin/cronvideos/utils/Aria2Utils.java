@@ -84,18 +84,18 @@ public class Aria2Utils {
                     if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
                         response = clientResponse.bodyTo(String.class);
                     }
-                    if (log.isInfoEnabled()) {
-                        log.info("==================ARIA2=================");
-                        log.info("请求 URL : {}", clientRequest.getURI());
-                        log.info("请求方法 : {}", clientRequest.getMethod());
-                        log.info("请求参数 : {}", JSONObject.of(
+                    if (log.isDebugEnabled()) {
+                        log.debug("==================ARIA2=================");
+                        log.debug("请求 URL : {}", clientRequest.getURI());
+                        log.debug("请求方法 : {}", clientRequest.getMethod());
+                        log.debug("请求参数 : {}", JSONObject.of(
                                 "id", id,
                                 "method", method,
                                 "params", paramsJsonString
                         ));
-                        log.info("响应状态 : {}", clientResponse.getStatusCode());
-                        log.info("响应结果 : {}", clientResponse.bodyTo(String.class));
-                        log.info("========================================");
+                        log.debug("响应状态 : {}", clientResponse.getStatusCode());
+                        log.debug("响应结果 : {}", clientResponse.bodyTo(String.class));
+                        log.debug("========================================");
                     }
                     return response;
                 });
