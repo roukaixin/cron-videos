@@ -12,6 +12,10 @@ spring:
       password: 12345678
       database: 0
       port: 6379
+  task:
+    scheduling:
+      pool:
+        size: 5
 mybatis-plus:
   global-config:
     db-config:
