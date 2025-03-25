@@ -71,31 +71,6 @@ public class QuarkApi {
                 });
     }
 
-    public String shareSharepageDetail(String pwdId, String pdirFid, Integer page) {
-        URI uri = getUriComponentsBuilder("https://pan.quark.cn/1/clouddrive/share/sharepage/v2/detail")
-                .build()
-                .toUri();
-        // size 最大支持 100
-        return restClient
-                .post()
-                .uri(uri)
-                .body(JSONObject.of(
-                        "pwd_id", pwdId,
-                        "pdir_fid", pdirFid,
-                        "page", page,
-                        "size", 100
-                ))
-                .exchange((clientRequest, clientResponse) -> {
-                    String responseBody = "";
-                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
-                        responseBody = clientResponse.bodyTo(String.class);
-                    }
-                    log(clientRequest, clientResponse);
-                    return responseBody;
-                });
-    }
-
-
     public String fileSort(String pdirFid, MultiValueMap<String, String> cookies) {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/file/sort")
                 .queryParam("pdir_fid", "{pdir_fid}")

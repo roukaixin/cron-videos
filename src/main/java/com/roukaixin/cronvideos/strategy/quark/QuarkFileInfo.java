@@ -30,9 +30,6 @@ public class QuarkFileInfo {
      */
     private Integer category;
 
-    @JsonAlias("share_fid_token")
-    private String shareFidToken;
-
     /**
      * 视频宽度
      */
