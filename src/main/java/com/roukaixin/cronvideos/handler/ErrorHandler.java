@@ -11,7 +11,6 @@ public class ErrorHandler {
 
     @ExceptionHandler(Exception.class)
     public void exception(Exception e) {
-        log.error("{}", e.getMessage());
-        e.printStackTrace();
+        log.error("全局异样捕获 -> ", e);
     }
 }

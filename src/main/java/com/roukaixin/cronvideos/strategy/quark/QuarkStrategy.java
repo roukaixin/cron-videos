@@ -104,7 +104,7 @@ public class QuarkStrategy implements CloudDrive {
         // 过滤正则匹配失败的数据
         return fileInfos.stream()
                 .sorted(Comparator.comparingInt(FileInfo::getEpisodeNumber))
-                .filter(e -> e.getEpisodeNumber() < 0)
+                .filter(e -> e.getEpisodeNumber() > 0)
                 .toList();
     }
 
@@ -144,8 +144,8 @@ public class QuarkStrategy implements CloudDrive {
                 List<QuarkFileInfo> dataList = data.getList("list", QuarkFileInfo.class);
                 for (QuarkFileInfo info : dataList) {
                     if (info.getCategory().equals(0)) {
-                        if (!ObjectUtils.isEmpty(cloudShare.getExcludedDirs()) &&
-                                cloudShare.getExcludedDirs().contains(info.getFileName())) {
+                        if (!ObjectUtils.isEmpty(cloudShare.getExcludedDir()) &&
+                                cloudShare.getExcludedDir().contains(info.getFileName())) {
                             continue;
                         }
                         // 如果是目录,递归调用获取文件

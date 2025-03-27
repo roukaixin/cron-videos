@@ -1,5 +1,7 @@
 package com.roukaixin.cronvideos.pojo.vo;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,6 +51,7 @@ public class CloudShareVO {
     /**
      * 用于提取文件的正则表达式
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String fileRegex;
 
     /**
@@ -64,7 +67,7 @@ public class CloudShareVO {
     /**
      * 排除的目录
      */
-    private List<String> excludedDirs;
+    private List<String> excludedDir;
 
     /**
      *  是否失效（0:否、1:是）

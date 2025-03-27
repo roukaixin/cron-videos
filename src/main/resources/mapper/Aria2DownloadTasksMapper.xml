@@ -30,7 +30,9 @@
             a.save_path savePath,
             a.out_name outName,
             a.size size,
-            a.status status
+            a.status status,
+            a.video_width,
+            a.video_height
         from aria2_download_task a
         left join media b on a.media_id = b.id
         <where>

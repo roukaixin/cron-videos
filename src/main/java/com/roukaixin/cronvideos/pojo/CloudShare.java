@@ -68,7 +68,7 @@ public class CloudShare {
      * 排除的目录
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<String> excludedDirs;
+    private List<String> excludedDir;
 
     /**
      *  是否失效（0:否、1:是）
