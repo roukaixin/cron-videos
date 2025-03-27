@@ -23,6 +23,11 @@ public class MediaUpdateDTO {
     private Integer totalEpisode;
 
     /**
+     * 开始集数（beginEpisode）
+     */
+    private Integer startEpisode;
+
+    /**
      * 电视剧更新日（仅电视剧用）
      */
     private List<Integer> updateDay;
@@ -32,8 +37,4 @@ public class MediaUpdateDTO {
      */
     private LocalDateTime releaseDate;
 
-    /**
-     * 匹配集数规则（仅电视剧用）
-     */
-    private String episodeRegex;
 }

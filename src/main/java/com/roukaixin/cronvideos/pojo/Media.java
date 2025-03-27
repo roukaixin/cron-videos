@@ -53,6 +53,7 @@ public class Media {
     /**
      * 开始集数（beginEpisode）
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Integer startEpisode;
 
     /**

@@ -12,12 +12,12 @@ import java.util.List;
 public class MediaDTO {
 
     /**
-     * 电影/电视剧名称
+     * 媒体名称
      */
-    private String title;
+    private String name;
 
     /**
-     * 类型: movie / show
+     * 媒体类型: movie / show
      */
     private MediaTypeEnum type;
 
@@ -29,7 +29,7 @@ public class MediaDTO {
     /**
      * 电视剧季号/部数（仅电视剧用）
      */
-    private Integer seasonNumber;
+    private Integer season;
 
     /**
      * 总集数（电影可以为 NULL）
@@ -37,9 +37,9 @@ public class MediaDTO {
     private Integer totalEpisode;
 
     /**
-     * 已更新集数（仅电视剧用）
+     * 开始集数（beginEpisode）
      */
-    private Integer currentEpisode;
+    private Integer startEpisode;
 
     /**
      * 电视剧更新日（仅电视剧用）
@@ -51,8 +51,4 @@ public class MediaDTO {
      */
     private LocalDateTime releaseDate;
 
-    /**
-     * 匹配集数规则（仅电视剧用）
-     */
-    private String episodeRegex;
 }

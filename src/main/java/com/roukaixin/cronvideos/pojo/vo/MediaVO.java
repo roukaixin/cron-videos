@@ -42,6 +42,11 @@ public class MediaVO {
     private Integer totalEpisode;
 
     /**
+     * 开始集数（beginEpisode）
+     */
+    private Integer startEpisode;
+
+    /**
      * 已更新集数
      */
     private Integer currentEpisode;
