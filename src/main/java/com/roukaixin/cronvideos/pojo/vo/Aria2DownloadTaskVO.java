@@ -41,6 +41,11 @@ public class Aria2DownloadTaskVO {
     private String outName;
 
     /**
+     * 分辨率
+     */
+    private String shortName;
+
+    /**
      * 文件大小
      */
     private Long size;

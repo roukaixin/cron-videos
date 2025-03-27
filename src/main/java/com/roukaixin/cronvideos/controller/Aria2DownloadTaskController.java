@@ -1,9 +1,12 @@
 package com.roukaixin.cronvideos.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.roukaixin.cronvideos.enums.MediaResolutionEnum;
 import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
+import com.roukaixin.cronvideos.pojo.Page;
 import com.roukaixin.cronvideos.pojo.R;
 import com.roukaixin.cronvideos.pojo.dto.Aria2DownloadTaskDTO;
+import com.roukaixin.cronvideos.pojo.vo.Aria2DownloadTaskPageVO;
 import com.roukaixin.cronvideos.pojo.vo.Aria2DownloadTaskVO;
 import com.roukaixin.cronvideos.service.Aria2DownloadTasksService;
 import org.springframework.beans.BeanUtils;
@@ -12,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/download/task")
@@ -33,13 +35,14 @@ public class Aria2DownloadTaskController {
         list.forEach(e -> {
             Aria2DownloadTaskVO vo = new Aria2DownloadTaskVO();
             BeanUtils.copyProperties(e, vo);
+            vo.setShortName(MediaResolutionEnum.shortName(e.getVideoWidth(), e.getVideoHeight()));
             vos.add(vo);
         });
         return R.<List<Aria2DownloadTaskVO>>builder().data(vos.stream().sorted(Comparator.comparingInt(Aria2DownloadTaskVO::getEpisodeNumber)).toList()).code(200).build();
     }
 
     @GetMapping("/list")
-    public R<Map<String, Object>> list(Aria2DownloadTaskDTO dto) {
+    public R<Page<Aria2DownloadTaskPageVO>> list(Aria2DownloadTaskDTO dto) {
         return aria2DownloadTasksService.list(dto);
     }
 

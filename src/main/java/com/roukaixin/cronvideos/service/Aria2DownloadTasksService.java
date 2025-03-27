@@ -1,11 +1,11 @@
 package com.roukaixin.cronvideos.service;
 
-import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
+import com.roukaixin.cronvideos.pojo.Page;
 import com.roukaixin.cronvideos.pojo.R;
 import com.roukaixin.cronvideos.pojo.dto.Aria2DownloadTaskDTO;
-
-import java.util.Map;
+import com.roukaixin.cronvideos.pojo.vo.Aria2DownloadTaskPageVO;
 
 /**
  * @author pankx
@@ -13,5 +13,5 @@ import java.util.Map;
  */
 public interface Aria2DownloadTasksService extends IService<Aria2DownloadTask> {
 
-    R<Map<String, Object>> list(Aria2DownloadTaskDTO dto);
+    R<Page<Aria2DownloadTaskPageVO>> list(Aria2DownloadTaskDTO dto);
 }
