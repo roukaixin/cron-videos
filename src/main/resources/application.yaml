@@ -31,3 +31,6 @@ logging:
 
   file:
     path: ./log
+  logback:
+    rollingpolicy:
+      max-history: 2
