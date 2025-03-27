@@ -1,6 +1,7 @@
 package com.roukaixin.cronvideos.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.roukaixin.cronvideos.enums.MediaResolutionEnum;
 import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
 import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
 import com.roukaixin.cronvideos.pojo.R;
@@ -30,9 +31,9 @@ public class Aria2DownloadTasksServiceImpl extends ServiceImpl<Aria2DownloadTask
 
     @Override
     public R<Map<String, Object>> list(Aria2DownloadTaskDTO dto) {
-
         List<Aria2DownloadTaskPageVO> list = aria2DownloadTasksMapper.list(dto);
         Integer count = aria2DownloadTasksMapper.listCount(dto);
+        list.forEach(e -> e.setShortName(MediaResolutionEnum.shortName(e.getVideoWidth(), e.getVideoHeight())));
         Map<String, Object> map = new HashMap<>();
         map.put("list", list);
         map.put("total", count);

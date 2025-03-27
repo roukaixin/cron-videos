@@ -127,7 +127,7 @@ public class SshUtils {
                 if (!pathExists(sftp, currentPath.toString())) {
                     // 创建目录
                     sftp.mkdir(currentPath.toString());
-                    log.info("Created directory: {}", currentPath);
+                    log.info("创建目录: {}", currentPath);
                 }
             }
         }

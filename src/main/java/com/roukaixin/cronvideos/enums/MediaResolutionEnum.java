@@ -2,11 +2,9 @@ package com.roukaixin.cronvideos.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.util.ObjectUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * 媒体分辨率
@@ -33,7 +31,7 @@ public enum MediaResolutionEnum {
     ULTRA_WIDE_UHD_4K("4K", 3840, 1600, "4K", (double) 24 / 10, 2160),
 
 
-    OTHER("OTHER", 0, 0, "其他", 0, 0),
+    UNKNOWN("unknown", 0, 0, "未知", 0, 0),
 
 
     ;
@@ -56,13 +54,7 @@ public enum MediaResolutionEnum {
     private final int shortNameNumber;
 
     public static int shortNameNumber(int width, int height) {
-        double aspectRatio = (double) width / height;
-        List<MediaResolutionEnum> list = new ArrayList<>();
-        for (MediaResolutionEnum value : values()) {
-            if (Math.abs(value.getAspectRatio() - aspectRatio) <= 0.05) {
-                list.add(value);
-            }
-        }
+        List<MediaResolutionEnum> list = aspectRatio(width, height);
 
         for (MediaResolutionEnum anEnum : list) {
             if (anEnum.getWidth() == width || anEnum.getHeight() == height) {
@@ -72,7 +64,7 @@ public enum MediaResolutionEnum {
 
         MediaResolutionEnum shortNumber = list.stream()
                 .min(Comparator.comparingInt(r -> Math.abs(r.height - height)))
-                .orElse(OTHER);
+                .orElse(UNKNOWN);
         if (Math.abs(shortNumber.height - height) <= 30) {
             return shortNumber.getShortNameNumber();
         }
@@ -81,7 +73,45 @@ public enum MediaResolutionEnum {
         shortNumber = Arrays.stream(values()).toList().stream()
                 .min(Comparator.comparingDouble(r ->
                         Math.abs(r.width - width) + Math.abs(r.height - height)))
-                .orElse(OTHER);
+                .orElse(UNKNOWN);
         return shortNumber.getShortNameNumber();
+    }
+
+    public static String shortName(Integer width, Integer height) {
+        if (ObjectUtils.isEmpty(width) || ObjectUtils.isEmpty(height)) {
+            return UNKNOWN.shortName;
+        }
+        List<MediaResolutionEnum> list = aspectRatio(width, height);
+
+        for (MediaResolutionEnum anEnum : list) {
+            if (anEnum.getWidth() == width || anEnum.getHeight() == height) {
+                return anEnum.getShortName();
+            }
+        }
+
+        MediaResolutionEnum shortNumber = list.stream()
+                .min(Comparator.comparingInt(r -> Math.abs(r.height - height)))
+                .orElse(UNKNOWN);
+        if (Math.abs(shortNumber.height - height) <= 30) {
+            return shortNumber.getShortName();
+        }
+
+        // 3. 全局查找最接近的分辨率（宽高均接近）
+        shortNumber = Arrays.stream(values()).toList().stream()
+                .min(Comparator.comparingDouble(r ->
+                        Math.abs(r.width - width) + Math.abs(r.height - height)))
+                .orElse(UNKNOWN);
+        return shortNumber.getShortName();
+    }
+
+    private static List<MediaResolutionEnum> aspectRatio(int width, int height) {
+        double aspectRatio = (double) width / height;
+        List<MediaResolutionEnum> list = new ArrayList<>();
+        for (MediaResolutionEnum value : values()) {
+            if (Math.abs(value.getAspectRatio() - aspectRatio) <= 0.05) {
+                list.add(value);
+            }
+        }
+        return list;
     }
 }

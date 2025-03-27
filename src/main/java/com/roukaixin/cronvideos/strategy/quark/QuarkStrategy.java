@@ -467,19 +467,21 @@ public class QuarkStrategy implements CloudDrive {
                 fileInfo.getEpisodeNumber(),
                 mimeType
         );
-        if (ObjectUtils.isEmpty(aria2DownloadTask)) {
-            aria2DownloadTask = new Aria2DownloadTask();
-        }
-        aria2DownloadTask.setMediaId(media.getId());
-        aria2DownloadTask.setAria2ServiceId(aria2ServerId);
-        aria2DownloadTask.setEpisodeNumber(fileInfo.getEpisodeNumber());
-        aria2DownloadTask.setSavePath(savePath);
-        aria2DownloadTask.setSize(fileInfo.getSize());
-        aria2DownloadTask.setStatus(0);
-        aria2DownloadTask.setOutName(outName);
-        aria2DownloadTask.setResourceStatus(0);
 
         if (!ObjectUtils.isEmpty(aria2ServerId)) {
+            if (ObjectUtils.isEmpty(aria2DownloadTask)) {
+                aria2DownloadTask = new Aria2DownloadTask();
+            }
+            aria2DownloadTask.setMediaId(media.getId());
+            aria2DownloadTask.setAria2ServiceId(aria2ServerId);
+            aria2DownloadTask.setEpisodeNumber(fileInfo.getEpisodeNumber());
+            aria2DownloadTask.setSavePath(savePath);
+            aria2DownloadTask.setSize(fileInfo.getSize());
+            aria2DownloadTask.setVideoWidth(fileInfo.getMediaMetadata().getWidth());
+            aria2DownloadTask.setVideoHeight(fileInfo.getMediaMetadata().getHeight());
+            aria2DownloadTask.setStatus(0);
+            aria2DownloadTask.setOutName(outName);
+            aria2DownloadTask.setResourceStatus(0);
             Aria2Server aria2Server = aria2ServerMapper.selectById(aria2ServerId);
             // 更新(失败的)或者插入
             aria2DownloadTasksMapper.insertOrUpdate(aria2DownloadTask);
