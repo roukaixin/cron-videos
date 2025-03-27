@@ -94,19 +94,18 @@ public class QuarkStrategy implements CloudDrive {
                                         .height(filterVideo.getVideoHeight()).build()
                         )
                         .episodeNumber(
-                                getEpisodeNumber(
-                                        FileUtils.getEpisodeNumber(
-                                                FileUtils.episodeRegex(episodeNumber, filterVideo.getFileName())
-                                        ),
-                                        media.getStartEpisode()
-                                )
+                                getEpisodeNumber(FileUtils.getEpisodeNumber(media.getType(), episodeNumber, filterVideo.getFileName()), media.getStartEpisode())
                         )
                         .build();
                 fileInfos.add(build);
             }
             redisTemplate.delete("target-save-folder-id");
         }
-        return fileInfos.stream().sorted(Comparator.comparingInt(FileInfo::getEpisodeNumber)).toList();
+        // 过滤正则匹配失败的数据
+        return fileInfos.stream()
+                .sorted(Comparator.comparingInt(FileInfo::getEpisodeNumber))
+                .filter(e -> e.getEpisodeNumber() < 0)
+                .toList();
     }
 
     // 获取 stoken(分享token)
@@ -251,36 +250,55 @@ public class QuarkStrategy implements CloudDrive {
         return fid;
     }
 
+    /**
+     * 过滤视频
+     *
+     * @param sharepageFileList 分享文件列表
+     * @param fileRegex file 正则
+     * @return 过滤后的视频
+     */
     private List<QuarkFileInfo> getFilterVideos(List<QuarkFileInfo> sharepageFileList, String fileRegex) {
+        // 过滤出只是 video 类别的文件
         List<QuarkFileInfo> videoList = sharepageFileList
                 .stream()
                 .peek(e -> e.setFileName(e.getFileName().strip()))
                 .filter(e -> "video".equals(e.getObjCategory()))
+                .sorted(Comparator.comparing(QuarkFileInfo::getFileName, Collator.getInstance()))
                 .toList();
         if (log.isInfoEnabled()) {
-            log.info("{} -> 文件过滤之前 -> {}", CloudShareProviderEnum.quark, JSON.toJSONString(videoList));
+            log.info("{} -> 文件大小：{} -> 文件过滤之前 -> {}", CloudShareProviderEnum.quark, videoList.size(), JSON.toJSONString(videoList));
         }
+        // 过滤出大于 1080p 的媒体视频
         videoList = videoList
                 .stream()
                 .filter(e -> MediaResolutionEnum.shortNameNumber(e.getVideoWidth(), e.getVideoHeight()) > 1080)
                 .toList();
+        // 根据 fileRegex 正则表达式过滤
         if (!ObjectUtils.isEmpty(fileRegex)) {
             Pattern p = Pattern.compile(fileRegex);
             // 分享链接获取的文件列表(过滤掉不是视频的文件)
             videoList = videoList
                     .stream()
                     .filter(fileInfo -> p.matcher(fileInfo.getFileName()).matches())
-                    .sorted(Comparator.comparing(QuarkFileInfo::getFileName, Collator.getInstance()))
                     .toList();
         }
         if (log.isInfoEnabled()) {
-            log.info("{} -> 文件过滤之后 -> {}", CloudShareProviderEnum.quark, JSON.toJSONString(videoList));
+            log.info("{} -> 文件大小：{} -> 文件过滤之后 -> {}", CloudShareProviderEnum.quark, videoList.size(), JSON.toJSONString(videoList));
         }
         return videoList;
     }
 
-    private Integer getEpisodeNumber(Integer cur, Integer begin) {
-        return cur - begin + 1;
+    /**
+     * 获取媒体视频的集数
+     * @param source 匹配出来的集数
+     * @param begin 开始集数
+     * @return 实际媒体集数
+     */
+    private Integer getEpisodeNumber(Integer source, Integer begin) {
+        if (ObjectUtils.isEmpty(begin)) {
+            return source;
+        }
+        return source - begin + 1;
     }
 
     @Override
@@ -290,7 +308,7 @@ public class QuarkStrategy implements CloudDrive {
         String taskId = transferFile(filterVideo);
         if (StringUtils.hasText(taskId)) {
             // 获取转存后的文件id（fid）。通过 task_id 获取需要下载的文件id
-            String downloadFid = getDownloadFid(taskId, 0, 10);
+            String downloadFid = getDownloadFileId(taskId, 0, 10);
             if (StringUtils.hasText(downloadFid)) {
                 // 获取文件的直链下载地址
                 Map<String, String> downloadInfo = getDownloadUrl(downloadFid);
@@ -373,6 +391,57 @@ public class QuarkStrategy implements CloudDrive {
         return taskId;
     }
 
+    /**
+     * 获取转存之后的文件 id
+     *
+     * @param taskId     任务id
+     * @param retryCount 当前重试数次
+     * @param maxRetries 重试最大数次
+     * @return 文件 id
+     */
+    private String getDownloadFileId(String taskId, int retryCount, final int maxRetries) {
+        ThreadUtils.sleep(TimeUnit.MILLISECONDS, 1500);
+        // 避免递归过多，达到最大重试次数时退出
+        if (retryCount >= maxRetries) {
+            return "";
+        }
+        String response = quarkApi.task(taskId, retryCount, getCookies());
+        String downloadFid = "";
+        if (response != null && !response.isEmpty()) {
+            JSONObject responseJson = JSONObject.parseObject(response);
+            if (responseJson.getInteger("status").equals(200)) {
+                JSONObject data = responseJson
+                        .getJSONObject("data");
+                if (data.getInteger("status").equals(2)) {
+                    downloadFid = data
+                            .getJSONObject("save_as")
+                            .getJSONArray("save_as_top_fids")
+                            .getString(0);
+                } else {
+                    return getDownloadFileId(taskId, retryCount + 1, maxRetries);
+                }
+            }
+        }
+        return downloadFid;
+    }
+
+    private Map<String, String> getDownloadUrl(String fid) {
+        Map<String, String> map = new HashMap<>();
+        // cookie 和 responseBody
+        Map<String, String> response = quarkApi.download(Collections.singletonList(fid), getCookies());
+        String responseBody = response.get("response");
+        map.put("cookie", response.get("cookies"));
+        if (!responseBody.isEmpty()) {
+            JSONObject responseJson = JSONObject.parseObject(responseBody);
+            if (responseJson.getInteger("status").equals(200) && responseJson.getInteger("code").equals(0)) {
+                JSONObject downloadBodyData = responseJson.getJSONArray("data").getJSONObject(0);
+                map.put("download_url", downloadBodyData.getString("download_url"));
+                map.put("format_type", downloadBodyData.getString("format_type"));
+            }
+        }
+        return map;
+    }
+
     private String sendDownload(String url, String cookie, String mimeType, Media media, FileInfo fileInfo) {
         String gid = "";
         // 获取下载任务
@@ -386,7 +455,7 @@ public class QuarkStrategy implements CloudDrive {
         if (log.isDebugEnabled()) {
             log.debug("aria2 数据库 id -> {}", aria2ServerId);
         }
-        // show -> title/session、movie -> title
+        // show -> /title/session、  movie -> /title
         String savePath = getAria2SavePath(media.getType(), media.getName(), media.getSeason());
         // 下载保存的文件名
         String outName = FileUtils.getOutName(
@@ -394,7 +463,6 @@ public class QuarkStrategy implements CloudDrive {
                 media.getName(),
                 media.getSeason(),
                 media.getTotalEpisode(),
-                media.getStartEpisode(),
                 fileInfo.getFileName(),
                 fileInfo.getEpisodeNumber(),
                 mimeType
@@ -459,62 +527,11 @@ public class QuarkStrategy implements CloudDrive {
         return wait;
     }
 
-    /**
-     * 获取转存之后的文件 id
-     *
-     * @param taskId     任务id
-     * @param retryCount 当前重试数次
-     * @param maxRetries 重试最大数次
-     * @return 文件 id
-     */
-    private String getDownloadFid(String taskId, int retryCount, final int maxRetries) {
-        ThreadUtils.sleep(TimeUnit.MILLISECONDS, 1500);
-        // 避免递归过多，达到最大重试次数时退出
-        if (retryCount >= maxRetries) {
-            return "";
-        }
-        String response = quarkApi.task(taskId, retryCount, getCookies());
-        String downloadFid = "";
-        if (response != null && !response.isEmpty()) {
-            JSONObject responseJson = JSONObject.parseObject(response);
-            if (responseJson.getInteger("status").equals(200)) {
-                JSONObject data = responseJson
-                        .getJSONObject("data");
-                if (data.getInteger("status").equals(2)) {
-                    downloadFid = data
-                            .getJSONObject("save_as")
-                            .getJSONArray("save_as_top_fids")
-                            .getString(0);
-                } else {
-                    return getDownloadFid(taskId, retryCount + 1, maxRetries);
-                }
-            }
-        }
-        return downloadFid;
-    }
-
-    private Map<String, String> getDownloadUrl(String fid) {
-        Map<String, String> map = new HashMap<>();
-        // cookie 和 responseBody
-        Map<String, String> response = quarkApi.download(Collections.singletonList(fid), getCookies());
-        String responseBody = response.get("response");
-        map.put("cookie", response.get("cookies"));
-        if (!responseBody.isEmpty()) {
-            JSONObject responseJson = JSONObject.parseObject(responseBody);
-            if (responseJson.getInteger("status").equals(200) && responseJson.getInteger("code").equals(0)) {
-                JSONObject downloadBodyData = responseJson.getJSONArray("data").getJSONObject(0);
-                map.put("download_url", downloadBodyData.getString("download_url"));
-                map.put("format_type", downloadBodyData.getString("format_type"));
-            }
-        }
-        return map;
-    }
-
     private String getAria2SavePath(MediaTypeEnum type, String title, Integer season) {
         String savePath = "";
         switch (type) {
             case tv -> savePath = "/" + title + "/" + String.format("Season %02d", season);
-            case movie -> savePath = title;
+            case movie -> savePath = "/" + title;
         }
         return savePath;
     }

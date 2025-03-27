@@ -69,13 +69,17 @@ public class MediaDownloadScheduled {
             Integer today = now.getDayOfWeek().getValue();
             // 昨天
             Integer yesterday = now.minusDays(1).getDayOfWeek().getValue();
+
             mediaMapper.selectList(
                     null,
                     resultContext -> {
                         // 流式返回一条数据
                         Media media = resultContext.getResultObject();
                         // 判断是否需要下载更新。movie 类型始终都要下载(如果还没下载)、tv 类型需要在更新日或者更新日的前一天都要去下载
-                        if (media.getTotalEpisode() > media.getCurrentEpisode() && (media.getUpdateDay().contains(today) || media.getUpdateDay().contains(yesterday))) {
+                        if (media.getTotalEpisode() > media.getCurrentEpisode()
+                                && (media.getUpdateDay().contains(today)
+                                || (media.getUpdateDay().contains(yesterday) && now.getHour() < 8))
+                        ) {
                             log.info("开始更新视频 -> {}", media.getName());
                             List<CloudShare> cloudShareList = cloudShareMapper.selectList(
                                     Wrappers.<CloudShare>lambdaQuery()
@@ -89,9 +93,11 @@ public class MediaDownloadScheduled {
                                     List<FileInfo> fileList = cloudDrive.getFileList(media, cloudShare);
                                     videoList.addAll(fileList);
                                 }
+                                // key： 集数，value： 所有数据包括重复集数的数据
                                 Map<Integer, List<FileInfo>> listMap = videoList.stream()
                                         .collect(Collectors.groupingBy(FileInfo::getEpisodeNumber));
                                 List<FileInfo> videos = new ArrayList<>();
+                                // 获取当前集数中文件大小最大的
                                 listMap.forEach((key, value) -> value.stream()
                                         .max(Comparator.comparingLong(FileInfo::getSize)).ifPresent(videos::add));
                                 // 过滤已经下载过的视频
@@ -122,7 +128,7 @@ public class MediaDownloadScheduled {
      * 过滤掉已经下载文件
      *
      * @param mediaId 媒体id
-     * @param videos 为过滤之前的视频文件
+     * @param videos  为过滤之前的视频文件
      * @return 过滤后的视频文件
      */
     private List<FileInfo> filterDownlandVideo(Long mediaId, List<FileInfo> videos) {
@@ -146,7 +152,7 @@ public class MediaDownloadScheduled {
     }
 
 
-//    @Scheduled(fixedDelay = 1000 * 60 * 10)
+    @Scheduled(fixedDelay = 1000 * 60 * 10)
     public void formatMedia() {
         aria2DownloadTasksMapper.selectList(
                 Wrappers
@@ -234,6 +240,7 @@ public class MediaDownloadScheduled {
     }
 
     private static String getFfmpeg(String savePath, String outName, String targetOutName, StringBuilder exclude_maps) {
+        // ffmpeg -y -loglevel repeat+level+error -i intput.mp4 -c copy -map 0:v -map 0:a -map -0:v:m:attached_pic -metadata title='' output.mkv
         String[] command = {
                 "ffmpeg",
                 "-y",
