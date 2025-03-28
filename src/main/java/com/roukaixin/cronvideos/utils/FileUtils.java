@@ -27,6 +27,9 @@ public class FileUtils {
         if (log.isInfoEnabled()) {
             log.info("获取后缀 -> 文件名 {} -> 文件类型 {} -> 结果 {}", fileName, mimeType, suffix);
         }
+        if (!StringUtils.hasText(suffix)) {
+            suffix = FilenameUtils.getSuffixFromPath(fileName);
+        }
         return suffix;
     }
 
