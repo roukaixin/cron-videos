@@ -23,6 +23,7 @@ import org.apache.sshd.sftp.common.SftpException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -167,47 +168,53 @@ public class MediaDownloadScheduled {
                         String outName = aria2DownloadTask.getOutName();
                         String targetOutName = FilenameUtils.getBaseName(outName);
                         ClientSession tnt = SshUtils.init("tnt", "127.0.0.1", 22, "230553");
-                        String ffmpeg = getFfmpeg(savePath, outName, targetOutName, null);
-                        int flag = 0;
-                        while (flag < 2) {
-                            if (flag == 1) {
-                                StringBuilder exclude_maps = new StringBuilder();
-                                String ffprobe = SshUtils.execFfprobe(tnt, getFfprobe(savePath, outName));
-                                JSONObject ffprobeJson = JSONObject.parseObject(ffprobe);
-                                if (!ObjectUtils.isEmpty(ffprobeJson)) {
-                                    JSONArray streams = ffprobeJson.getJSONArray("streams");
-                                    for (int i = 0; i < streams.size(); i++) {
-                                        JSONObject jsonObject = streams.getJSONObject(i);
-                                        if (jsonObject.getString("codec_name").equals("unknown")) {
-                                            // 需要过滤的音频，不知道解码的
-                                            Integer index = jsonObject.getInteger("index");
-                                            exclude_maps.append("-map -0:").append(index).append(" ");
-                                        }
-                                    }
-                                }
-                                ffmpeg = getFfmpeg(savePath, outName, targetOutName, exclude_maps);
+                        // getMapCommod
+                        String commandMaps = getFfmpegMapCommod(tnt, savePath, outName);
+                        String ffmpeg = getFfmpeg(savePath, outName, targetOutName, commandMaps);
+                        if (SshUtils.execFfmpeg(tnt, ffmpeg)) {
+                            // 执行成功
+                            aria2DownloadTask.setResourceStatus(1);
+                            aria2DownloadTasksMapper.updateById(aria2DownloadTask);
+                            // 删除源文件
+                            if (SshUtils.execFfmpeg(tnt, getRm(savePath, outName))) {
+                                log.info("删除视频成功 -> {}", outName);
                             }
-                            if (SshUtils.execFfmpeg(tnt, ffmpeg)) {
-                                // 执行成功
-                                aria2DownloadTask.setResourceStatus(1);
-                                aria2DownloadTasksMapper.updateById(aria2DownloadTask);
-                                // 删除源文件
-                                if (SshUtils.execFfmpeg(tnt, getRm(savePath, outName))) {
-                                    log.info("删除视频成功 -> {}", outName);
-                                }
-                                // 修改回原来的名字
-                                if (SshUtils.execFfmpeg(tnt, getMv(savePath, targetOutName))) {
-                                    // 修改成功
-                                    log.info("视频使用 ffmpeg 转化成功 -> {}", outName);
-                                }
+                            // 修改回原来的名字
+                            if (SshUtils.execFfmpeg(tnt, getMv(savePath, targetOutName))) {
+                                // 修改成功
+                                log.info("视频使用 ffmpeg 转化成功 -> {}", outName);
                             }
-                            flag++;
                         }
-
                         log.info("转化结束视频 -> {}", aria2DownloadTask.getOutName());
                     }
                 });
         moveMedia();
+    }
+
+    private String getFfmpegMapCommod(ClientSession tnt, String savePath, String outName) {
+        StringBuilder exclude_maps = new StringBuilder();
+        String ffprobe = SshUtils.execFfprobe(tnt, getFfprobe(savePath, outName));
+        JSONObject ffprobeJson = JSONObject.parseObject(ffprobe);
+        if (!ObjectUtils.isEmpty(ffprobeJson)) {
+            JSONArray streams = ffprobeJson.getJSONArray("streams");
+            for (int i = 0; i < streams.size(); i++) {
+                JSONObject stream = streams.getJSONObject(i);
+                JSONObject disposition = stream.getJSONObject("disposition");
+                String codecName = stream.getString("codec_name");
+                String codecType = stream.getString("codec_type");
+                Integer index = stream.getInteger("index");
+                if (!"unknown".equals(codecName)) {
+                    int attachedPic = disposition.getIntValue("attached_pic");
+                    if ("video".equals(codecType) && attachedPic != 1) {
+                        exclude_maps.append("-map").append(" ").append("0:").append(index).append(" ");
+                    }
+                    if ("audio".equals(codecType)) {
+                        exclude_maps.append("-map").append(" ").append("0:").append(index).append(" ");
+                    }
+                }
+            }
+        }
+        return exclude_maps.toString();
     }
 
     private static String getInputFile(String savePath, String outName) {
@@ -239,7 +246,7 @@ public class MediaDownloadScheduled {
         return String.join(" ", command);
     }
 
-    private static String getFfmpeg(String savePath, String outName, String targetOutName, StringBuilder exclude_maps) {
+    private static String getFfmpeg(String savePath, String outName, String targetOutName, String commandMaps) {
         // ffmpeg -y -loglevel repeat+level+error -i intput.mp4 -c copy -map 0:v -map 0:a -map -0:v:m:attached_pic -metadata title='' output.mkv
         String[] command = {
                 "ffmpeg",
@@ -247,24 +254,22 @@ public class MediaDownloadScheduled {
                 "-loglevel", "repeat+level+error",
                 "-i", getInputFile(savePath, outName),
                 "-c", "copy",
-                "-map", "0:v",
-                "-map", "0:a",
-                "-map", "-0:v:m:attached_pic",
-                ObjectUtils.isEmpty(exclude_maps) ? "" : String.valueOf(exclude_maps),
+                StringUtils.hasText(commandMaps) ? commandMaps : "",
                 "-metadata", "title=''",
                 getTargetFile(savePath, targetOutName)
         };
         return String.join(" ", command);
     }
 
-    private static String getFfprobe(String savePath, String outName) {
+    public static String getFfprobe(String savePath, String outName) {
+        // ffprobe -v error -of json -show_optional_fields always -show_streams -show_entries stream=index,codec_name,codec_type 画江湖之不良人\ S07E01.mp4
         String[] command = {
                 "ffprobe",
                 "-v", "error",
-                "-select_streams", "a",
-                "-show_entries", "stream=index,codec_name",
                 "-of", "json",
                 "-show_optional_fields", "always",
+                "-show_streams",
+                "-show_entries", "stream=index,codec_name,codec_type",
                 getInputFile(savePath, outName)
         };
         return String.join(" ", command);
