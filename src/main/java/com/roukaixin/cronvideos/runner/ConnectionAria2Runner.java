@@ -10,6 +10,7 @@ import com.roukaixin.cronvideos.pojo.Aria2Server;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.client.WebSocketConnectionManager;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -30,14 +31,18 @@ public class ConnectionAria2Runner implements CommandLineRunner {
 
     private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
 
+    private final ApplicationContext applicationContext;
+
     public ConnectionAria2Runner(Aria2ServerMapper aria2ServerMapper,
                                  Aria2DownloadTasksMapper aria2DownloadTasksMapper,
                                  Aria2WebSocketPool aria2WebSocketPool,
-                                 SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+                                 SmoothWeightedRoundRobin smoothWeightedRoundRobin,
+                                 ApplicationContext applicationContext) {
         this.aria2ServerMapper = aria2ServerMapper;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
+        this.applicationContext = applicationContext;
     }
 
     @Override
@@ -49,6 +54,7 @@ public class ConnectionAria2Runner implements CommandLineRunner {
                 String wsUri = "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc";
                 StandardWebSocketClient client = new StandardWebSocketClient();
                 Aria2Handler handler = new Aria2Handler(
+                        applicationContext,
                         aria2Server.getId(),
                         aria2Server.getWeight(),
                         aria2DownloadTasksMapper,

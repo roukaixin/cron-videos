@@ -7,6 +7,7 @@ import org.apache.tika.io.FilenameUtils;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -121,17 +122,19 @@ public class FileUtils {
         // eg : filename -> S01E34.mp4   regex -> ^S\d+E(\d+)
         // eg : filename -> Throne.of.Seal.2022.S01E012.2160p.WEB-DL.H265.DDP.2Audios.mp4,06 4K.mp4   regex -> (?:^|E)(\d+)
         // eg : filename -> Secrets.in.the.Lattice.2021.EP01.HD1080P.X264.AAC.Mandarin.CHS.Mp4er.mp4   regex -> EP(\d{2})
-        // eg : filename -> S02E36.mp4、43 4K高码.mkv   regex -> ^(?:S\d{2}E(\d{2})|(\d+) +(?i:4k)[\u4e00-\u9fa5]+)\.(?:mp4|mkv)$
+        // eg : filename -> S02E36.mp4、43 4K高码.mkv   regex -> ^(?:S\d{2}E(\d{2})|(\d+) +(?i:4k)[一-龥]+)\.(?:mp4|mkv)$
+        // eg : filename -> 43-4K.高码.mkv   regex -> ^(?:S\d{2}E(\d{2})|(\d+) +(?i:4k)[一-龥]+)\.(?:mp4|mkv)$
 
-        List<String> list = Arrays.asList("The.Knockout.S01E01.2023.2160.mkv", "43 4K高码.mkv", "43 4k.mkv");
+        List<String> list = Arrays.asList("43-4K.高码.mkv", "");
 
-        Pattern pattern = Pattern.compile("(?:^|E)(\\d+)");
+        Pattern pattern = Pattern.compile("^(\\d+)");
         for (String s : list) {
             System.out.println(episodeRegex(pattern, s));
             test_share(pattern, s);
         }
 
         System.out.println(MediaResolutionEnum.shortNameNumber(1920, 800));
+        System.out.println(MediaResolutionEnum.shortName(null, null));
 
     }
 

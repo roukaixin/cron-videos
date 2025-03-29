@@ -12,6 +12,7 @@ import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import com.roukaixin.cronvideos.service.Aria2ServerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.WebSocketConnectionManager;
@@ -35,12 +36,16 @@ public class Aria2ServerServiceImpl extends ServiceImpl<Aria2ServerMapper, Aria2
 
     private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
 
+    private final ApplicationContext applicationContext;
+
     public Aria2ServerServiceImpl(Aria2DownloadTasksMapper aria2DownloadTasksMapper,
                                   Aria2WebSocketPool aria2WebSocketPool,
-                                  SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+                                  SmoothWeightedRoundRobin smoothWeightedRoundRobin,
+                                  ApplicationContext applicationContext) {
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
+        this.applicationContext = applicationContext;
     }
 
     @Override
@@ -81,6 +86,7 @@ public class Aria2ServerServiceImpl extends ServiceImpl<Aria2ServerMapper, Aria2
     private void addWebSocketClient(Aria2Server aria2Server) {
         WebSocketClient client = new StandardWebSocketClient();
         Aria2Handler handler = new Aria2Handler(
+                applicationContext,
                 aria2Server.getId(),
                 aria2Server.getWeight(),
                 aria2DownloadTasksMapper,

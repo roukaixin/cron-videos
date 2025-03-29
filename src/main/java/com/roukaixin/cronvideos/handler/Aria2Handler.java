@@ -14,7 +14,9 @@ import com.roukaixin.cronvideos.utils.Aria2Utils;
 import jakarta.annotation.Nonnull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.lang.NonNull;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -27,6 +29,8 @@ public class Aria2Handler extends TextWebSocketHandler {
 
     @Getter
     private final CompletableFuture<Boolean> connectionFuture = new CompletableFuture<>();
+
+    private final ApplicationContext applicationContext;
 
     private ScheduledExecutorService scheduler;
 
@@ -42,12 +46,14 @@ public class Aria2Handler extends TextWebSocketHandler {
 
     private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
 
-    public Aria2Handler(Long id,
+    public Aria2Handler(ApplicationContext applicationContext,
+                        Long id,
                         Integer weight,
                         Aria2DownloadTasksMapper aria2DownloadTasksMapper,
                         Aria2WebSocketPool aria2WebSocketPool,
                         Aria2ServerMapper aria2ServerMapper,
                         SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+        this.applicationContext = applicationContext;
         this.id = id;
         this.weight = weight;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
@@ -97,7 +103,14 @@ public class Aria2Handler extends TextWebSocketHandler {
             if (method.equals("aria2.onDownloadComplete")) {
                 TimeUnit.SECONDS.sleep(1);
                 // 任务下载完成,修改状态
-                updateAria2TaskStatus(id, 2, gid);
+                Aria2DownloadTask aria2DownloadTask = aria2DownloadTasksMapper.selectOne(
+                        Wrappers.<Aria2DownloadTask>lambdaQuery()
+                                .eq(Aria2DownloadTask::getGid, gid)
+                                .eq(Aria2DownloadTask::getAria2ServiceId, id));
+                if (!ObjectUtils.isEmpty(aria2DownloadTask)) {
+                    aria2DownloadTask.setStatus(2);
+                    applicationContext.publishEvent(aria2DownloadTask);
+                }
                 removeDownloadResult(session, gid);
             }
             if (method.equals("aria2.onDownloadError")) {
