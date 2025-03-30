@@ -1,8 +1,8 @@
 package com.roukaixin.cronvideos.algorithm;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.roukaixin.cronvideos.mapper.Aria2ServerMapper;
-import com.roukaixin.cronvideos.pojo.Aria2Server;
+import com.roukaixin.cronvideos.mapper.DownloaderMapper;
+import com.roukaixin.cronvideos.pojo.Downloader;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,17 +22,17 @@ public class SmoothWeightedRoundRobin {
 
     private final Map<Long, Weight> weightMap = new HashMap<>();
 
-    private final Aria2ServerMapper aria2ServerMapper;
+    private final DownloaderMapper downloaderMapper;
 
-    public SmoothWeightedRoundRobin(Aria2ServerMapper aria2ServerMapper) {
-        this.aria2ServerMapper = aria2ServerMapper;
+    public SmoothWeightedRoundRobin(DownloaderMapper downloaderMapper) {
+        this.downloaderMapper = downloaderMapper;
     }
 
     @PostConstruct
     public void init() {
-        List<Aria2Server> aria2Servers = aria2ServerMapper.selectList(Wrappers.<Aria2Server>lambdaQuery().eq(Aria2Server::getIsOnline, 1));
-        if (!aria2Servers.isEmpty()) {
-            aria2Servers.forEach(aria2Connection -> weightMap.put(aria2Connection.getId(), new Weight(aria2Connection.getId(), aria2Connection.getWeight(), 0)));
+        List<Downloader> downloaders = downloaderMapper.selectList(Wrappers.<Downloader>lambdaQuery().eq(Downloader::getIsOnline, 1));
+        if (!downloaders.isEmpty()) {
+            downloaders.forEach(aria2Connection -> weightMap.put(aria2Connection.getId(), new Weight(aria2Connection.getId(), aria2Connection.getWeight(), 0)));
         }
 
     }

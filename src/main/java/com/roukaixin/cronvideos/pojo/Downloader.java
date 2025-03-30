@@ -1,6 +1,7 @@
 package com.roukaixin.cronvideos.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.roukaixin.cronvideos.enums.DownloaderEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -8,11 +9,11 @@ import java.time.LocalDateTime;
 /**
  * aria2 连接信息
  *
- * @TableName aria2_server
+ * @TableName downloader
  */
-@TableName(value = "aria2_server")
+@TableName(value = "downloader")
 @Data
-public class Aria2Server {
+public class Downloader {
 
     /**
      * 唯一 ID
@@ -21,12 +22,22 @@ public class Aria2Server {
     private Long id;
 
     /**
-     * aria2 服务器地址（IP 或域名）
+     * 下载器类型。（0->aria2、1->qbittorrent）
      */
-    private String ip;
+    private DownloaderEnum type;
 
     /**
-     * 端口号，默认 6800
+     * 协议。ws/http
+     */
+    private String protocol;
+
+    /**
+     * 下载器主机地址（IP 或域名）
+     */
+    private String host;
+
+    /**
+     * 监听端口
      */
     private Integer port;
 
@@ -41,12 +52,7 @@ public class Aria2Server {
     private Integer weight;
 
     /**
-     * 当前任务数（用于最少连接数调度）
-     */
-    private Integer currentTasks;
-
-    /**
-     * aria2 在线状态（1: 在线, 0: 离线）
+     * 在线状态（1: 在线, 0: 离线）
      */
     private Integer isOnline;
 

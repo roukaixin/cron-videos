@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.handler.Aria2Handler;
 import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
-import com.roukaixin.cronvideos.mapper.Aria2ServerMapper;
-import com.roukaixin.cronvideos.pojo.Aria2Server;
+import com.roukaixin.cronvideos.mapper.DownloaderMapper;
+import com.roukaixin.cronvideos.pojo.Downloader;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class ConnectionAria2Runner implements CommandLineRunner {
 
-    private final Aria2ServerMapper aria2ServerMapper;
+    private final DownloaderMapper downloaderMapper;
 
     private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
 
@@ -33,12 +33,12 @@ public class ConnectionAria2Runner implements CommandLineRunner {
 
     private final ApplicationContext applicationContext;
 
-    public ConnectionAria2Runner(Aria2ServerMapper aria2ServerMapper,
+    public ConnectionAria2Runner(DownloaderMapper downloaderMapper,
                                  Aria2DownloadTasksMapper aria2DownloadTasksMapper,
                                  Aria2WebSocketPool aria2WebSocketPool,
                                  SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                                  ApplicationContext applicationContext) {
-        this.aria2ServerMapper = aria2ServerMapper;
+        this.downloaderMapper = downloaderMapper;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
@@ -47,11 +47,11 @@ public class ConnectionAria2Runner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        List<Aria2Server> aria2Servers = aria2ServerMapper.selectList(
-                Wrappers.<Aria2Server>lambdaQuery().eq(Aria2Server::getIsOnline, 1));
-        if (!aria2Servers.isEmpty()) {
-            List<CompletableFuture<Boolean>> futures = aria2Servers.stream().map(aria2Server -> {
-                String wsUri = "ws://" + aria2Server.getIp() + ":" + aria2Server.getPort() + "/jsonrpc";
+        List<Downloader> downloaders = downloaderMapper.selectList(
+                Wrappers.<Downloader>lambdaQuery().eq(Downloader::getIsOnline, 1));
+        if (!downloaders.isEmpty()) {
+            List<CompletableFuture<Boolean>> futures = downloaders.stream().map(aria2Server -> {
+                String wsUri = "ws://" + aria2Server.getHost() + ":" + aria2Server.getPort() + "/jsonrpc";
                 StandardWebSocketClient client = new StandardWebSocketClient();
                 Aria2Handler handler = new Aria2Handler(
                         applicationContext,
@@ -59,7 +59,7 @@ public class ConnectionAria2Runner implements CommandLineRunner {
                         aria2Server.getWeight(),
                         aria2DownloadTasksMapper,
                         aria2WebSocketPool,
-                        aria2ServerMapper,
+                        downloaderMapper,
                         smoothWeightedRoundRobin
                 );
                 WebSocketConnectionManager manager = new WebSocketConnectionManager(
@@ -71,7 +71,7 @@ public class ConnectionAria2Runner implements CommandLineRunner {
                 manager.start();
                 return handler.getConnectionFuture().exceptionally(throwable -> {
                     aria2Server.setIsOnline(0);
-                    aria2ServerMapper.updateById(aria2Server);
+                    downloaderMapper.updateById(aria2Server);
                     log.error("连接aria2服务器失败: {}", throwable.getMessage());
                     return false;
                 });

@@ -6,9 +6,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
-import com.roukaixin.cronvideos.mapper.Aria2ServerMapper;
+import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
-import com.roukaixin.cronvideos.pojo.Aria2Server;
+import com.roukaixin.cronvideos.pojo.Downloader;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import com.roukaixin.cronvideos.utils.Aria2Utils;
 import jakarta.annotation.Nonnull;
@@ -42,7 +42,7 @@ public class Aria2Handler extends TextWebSocketHandler {
 
     private final Aria2WebSocketPool aria2WebSocketPool;
 
-    private final Aria2ServerMapper aria2ServerMapper;
+    private final DownloaderMapper downloaderMapper;
 
     private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
 
@@ -51,14 +51,14 @@ public class Aria2Handler extends TextWebSocketHandler {
                         Integer weight,
                         Aria2DownloadTasksMapper aria2DownloadTasksMapper,
                         Aria2WebSocketPool aria2WebSocketPool,
-                        Aria2ServerMapper aria2ServerMapper,
+                        DownloaderMapper downloaderMapper,
                         SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
         this.applicationContext = applicationContext;
         this.id = id;
         this.weight = weight;
         this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
-        this.aria2ServerMapper = aria2ServerMapper;
+        this.downloaderMapper = downloaderMapper;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
     }
 
@@ -143,10 +143,10 @@ public class Aria2Handler extends TextWebSocketHandler {
         // 手动停止 CloseStatus[code=1000, reason=null]
         if (status.getCode() == 1006) {
             // 强制关闭 CloseStatus[code=1006, reason=null]
-            Aria2Server aria2Server = new Aria2Server();
-            aria2Server.setId(id);
-            aria2Server.setIsOnline(0);
-            aria2ServerMapper.updateById(aria2Server);
+            Downloader downloader = new Downloader();
+            downloader.setId(id);
+            downloader.setIsOnline(0);
+            downloaderMapper.updateById(downloader);
         }
         aria2WebSocketPool.removeSession(session);
         aria2WebSocketPool.remove(id);
@@ -178,12 +178,12 @@ public class Aria2Handler extends TextWebSocketHandler {
     private void removeDownloadResult(@NonNull WebSocketSession session, String gid) {
         // 删除 aria2 任务
         Long aria2ServiceId = aria2WebSocketPool.getAria2ServiceId(session);
-        Aria2Server aria2Server = aria2ServerMapper.selectById(aria2ServiceId);
+        Downloader downloader = downloaderMapper.selectById(aria2ServiceId);
         String removeDownloadResult = Aria2Utils.removeDownloadResult(
-                aria2Server.getIp(),
-                aria2Server.getPort(),
+                downloader.getHost(),
+                downloader.getPort(),
                 JSONArray.of(
-                        "token:" + aria2Server.getSecret(),
+                        "token:" + downloader.getSecret(),
                         gid
                 ).toJSONString()
         );
