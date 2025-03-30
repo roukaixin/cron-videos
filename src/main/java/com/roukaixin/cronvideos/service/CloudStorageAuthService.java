@@ -1,6 +1,6 @@
 package com.roukaixin.cronvideos.service;
 
-import com.roukaixin.cronvideos.pojo.CloudStorageAuth;
+import com.roukaixin.cronvideos.domain.CloudStorageAuth;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

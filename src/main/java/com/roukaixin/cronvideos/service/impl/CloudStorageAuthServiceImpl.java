@@ -1,7 +1,7 @@
 package com.roukaixin.cronvideos.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.roukaixin.cronvideos.pojo.CloudStorageAuth;
+import com.roukaixin.cronvideos.domain.CloudStorageAuth;
 import com.roukaixin.cronvideos.service.CloudStorageAuthService;
 import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,9 @@
 package com.roukaixin.cronvideos.service;
 
-import com.roukaixin.cronvideos.pojo.Downloader;
+import com.roukaixin.cronvideos.domain.Downloader;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.roukaixin.cronvideos.pojo.R;
-import com.roukaixin.cronvideos.pojo.dto.DownloaderDTO;
+import com.roukaixin.cronvideos.domain.R;
+import com.roukaixin.cronvideos.domain.dto.DownloaderDTO;
 
 /**
  * @author pankx

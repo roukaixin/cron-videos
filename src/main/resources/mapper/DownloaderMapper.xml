@@ -4,18 +4,18 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.roukaixin.cronvideos.mapper.DownloaderMapper">
 
-    <resultMap id="BaseResultMap" type="com.roukaixin.cronvideos.pojo.Downloader">
+    <resultMap id="BaseResultMap" type="com.roukaixin.cronvideos.domain.Downloader">
             <id property="id" column="id" />
-            <result property="ip" column="ip" />
+            <result property="type" column="type" />
+            <result property="protocol" column="protocol" />
+            <result property="host" column="host" />
             <result property="port" column="port" />
             <result property="secret" column="secret" />
+            <result property="weight" column="weight" />
+            <result property="isOnline" column="is_online" />
             <result property="isDeleted" column="is_deleted" />
             <result property="createdAt" column="created_at" />
             <result property="updatedAt" column="updated_at" />
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,ip,port,secret,is_deleted,created_at,
-        updated_at
-    </sql>
 </mapper>

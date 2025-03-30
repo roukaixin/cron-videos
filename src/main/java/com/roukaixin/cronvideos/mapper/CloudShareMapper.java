@@ -1,7 +1,7 @@
 package com.roukaixin.cronvideos.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.roukaixin.cronvideos.pojo.CloudShare;
+import com.roukaixin.cronvideos.domain.CloudShare;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

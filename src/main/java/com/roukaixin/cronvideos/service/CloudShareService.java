@@ -1,9 +1,9 @@
 package com.roukaixin.cronvideos.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.roukaixin.cronvideos.pojo.CloudShare;
-import com.roukaixin.cronvideos.pojo.R;
-import com.roukaixin.cronvideos.pojo.vo.CloudShareVO;
+import com.roukaixin.cronvideos.domain.CloudShare;
+import com.roukaixin.cronvideos.domain.R;
+import com.roukaixin.cronvideos.domain.vo.CloudShareVO;
 
 import java.util.List;
 

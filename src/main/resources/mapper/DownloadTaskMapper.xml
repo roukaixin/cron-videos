@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.roukaixin.cronvideos.mapper.DownloadTaskMapper">
+
+    <resultMap id="BaseResultMap" type="com.roukaixin.cronvideos.domain.DownloadTask">
+        <result property="id" column=" id"/>
+        <result property="mediaId" column="media_id"/>
+        <result property="downloaderId" column="downloader_id"/>
+        <result property="gid" column="gid"/>
+        <result property="episodeNumber" column="episode_number"/>
+        <result property="savePath" column="save_path"/>
+        <result property="outName" column="out_name"/>
+        <result property="videoWidth" column="video_width"/>
+        <result property="videoHeight" column="video_height"/>
+        <result property="size" column="size"/>
+        <result property="status" column="status"/>
+        <result property="resourceStatus" column="resource_status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+
+    <select id="list" resultType="com.roukaixin.cronvideos.domain.vo.DownloadTaskPageVO">
+        <bind name="offset" value="(page -1) * pageSize"/>
+        select
+            a.id id,
+            a.gid gid,
+            b.name name,
+            a.episode_number episodeNumber,
+            a.save_path savePath,
+            a.out_name outName,
+            a.size size,
+            a.status status,
+            a.video_width,
+            a.video_height
+        from download_task a
+        left join media b on a.media_id = b.id
+        <where>
+            <if test="status != null">
+                a.status = #{status}
+            </if>
+            <if test="name != '' and name != null">
+                and b.name like CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        limit #{offset} , #{pageSize}
+    </select>
+
+    <select id="listCount" resultType="java.lang.Integer">
+        select
+            count(1)
+        from download_task a
+        left join media b on a.media_id = b.id
+        <where>
+            <if test="status != null">
+                a.status = #{status}
+            </if>
+            <if test="name != '' and name != null">
+                and b.name like CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+    </select>
+</mapper>

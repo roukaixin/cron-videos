@@ -2,7 +2,7 @@ package com.roukaixin.cronvideos.strategy;
 
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
-import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.mapper.CloudShareMapper;
 import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
@@ -29,7 +29,7 @@ public class CloudDriveContext {
 
     private final DownloaderMapper downloaderMapper;
 
-    private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
+    private final DownloadTaskMapper downloadTaskMapper;
 
     private final CloudShareMapper cloudShareMapper;
 
@@ -40,14 +40,14 @@ public class CloudDriveContext {
     public CloudDriveContext(CloudStorageAuthMapper cloudStorageAuthMapper,
                              SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                              DownloaderMapper downloaderMapper,
-                             Aria2DownloadTasksMapper aria2DownloadTasksMapper,
+                             DownloadTaskMapper downloadTaskMapper,
                              CloudShareMapper cloudShareMapper,
                              QuarkApi quarkApi,
                              RedisTemplate<String, Object> redisTemplate) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.downloaderMapper = downloaderMapper;
-        this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
+        this.downloadTaskMapper = downloadTaskMapper;
         this.cloudShareMapper = cloudShareMapper;
         this.quarkApi = quarkApi;
         this.redisTemplate = redisTemplate;
@@ -61,7 +61,7 @@ public class CloudDriveContext {
                         cloudStorageAuthMapper,
                         smoothWeightedRoundRobin,
                         downloaderMapper,
-                        aria2DownloadTasksMapper,
+                        downloadTaskMapper,
                         quarkApi,
                         redisTemplate,
                         cloudShareMapper

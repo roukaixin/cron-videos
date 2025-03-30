@@ -2,7 +2,7 @@ package com.roukaixin.cronvideos.algorithm;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.pojo.Downloader;
+import com.roukaixin.cronvideos.domain.Downloader;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

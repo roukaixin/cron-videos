@@ -1,7 +1,7 @@
 package com.roukaixin.cronvideos.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.roukaixin.cronvideos.pojo.Media;
+import com.roukaixin.cronvideos.domain.Media;
 
 
 /**

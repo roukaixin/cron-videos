@@ -1,7 +1,7 @@
 package com.roukaixin.cronvideos.strategy;
 
-import com.roukaixin.cronvideos.pojo.CloudShare;
-import com.roukaixin.cronvideos.pojo.Media;
+import com.roukaixin.cronvideos.domain.CloudShare;
+import com.roukaixin.cronvideos.domain.Media;
 import com.roukaixin.cronvideos.strategy.domain.FileInfo;
 
 import java.util.List;

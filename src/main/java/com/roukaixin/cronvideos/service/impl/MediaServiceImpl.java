@@ -2,7 +2,7 @@ package com.roukaixin.cronvideos.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.roukaixin.cronvideos.mapper.MediaMapper;
-import com.roukaixin.cronvideos.pojo.Media;
+import com.roukaixin.cronvideos.domain.Media;
 import com.roukaixin.cronvideos.service.MediaService;
 import org.springframework.stereotype.Service;
 

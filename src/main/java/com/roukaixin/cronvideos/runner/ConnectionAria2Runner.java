@@ -4,9 +4,9 @@ package com.roukaixin.cronvideos.runner;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.handler.Aria2Handler;
-import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.pojo.Downloader;
+import com.roukaixin.cronvideos.domain.Downloader;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -25,7 +25,7 @@ public class ConnectionAria2Runner implements CommandLineRunner {
 
     private final DownloaderMapper downloaderMapper;
 
-    private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
+    private final DownloadTaskMapper downloadTaskMapper;
 
     private final Aria2WebSocketPool aria2WebSocketPool;
 
@@ -34,12 +34,12 @@ public class ConnectionAria2Runner implements CommandLineRunner {
     private final ApplicationContext applicationContext;
 
     public ConnectionAria2Runner(DownloaderMapper downloaderMapper,
-                                 Aria2DownloadTasksMapper aria2DownloadTasksMapper,
+                                 DownloadTaskMapper downloadTaskMapper,
                                  Aria2WebSocketPool aria2WebSocketPool,
                                  SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                                  ApplicationContext applicationContext) {
         this.downloaderMapper = downloaderMapper;
-        this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
+        this.downloadTaskMapper = downloadTaskMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.applicationContext = applicationContext;
@@ -57,7 +57,7 @@ public class ConnectionAria2Runner implements CommandLineRunner {
                         applicationContext,
                         aria2Server.getId(),
                         aria2Server.getWeight(),
-                        aria2DownloadTasksMapper,
+                        downloadTaskMapper,
                         aria2WebSocketPool,
                         downloaderMapper,
                         smoothWeightedRoundRobin

@@ -5,10 +5,10 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
-import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
-import com.roukaixin.cronvideos.pojo.Downloader;
+import com.roukaixin.cronvideos.domain.DownloadTask;
+import com.roukaixin.cronvideos.domain.Downloader;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import com.roukaixin.cronvideos.utils.Aria2Utils;
 import jakarta.annotation.Nonnull;
@@ -38,7 +38,7 @@ public class Aria2Handler extends TextWebSocketHandler {
 
     private final Integer weight;
 
-    private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
+    private final DownloadTaskMapper downloadTaskMapper;
 
     private final Aria2WebSocketPool aria2WebSocketPool;
 
@@ -49,14 +49,14 @@ public class Aria2Handler extends TextWebSocketHandler {
     public Aria2Handler(ApplicationContext applicationContext,
                         Long id,
                         Integer weight,
-                        Aria2DownloadTasksMapper aria2DownloadTasksMapper,
+                        DownloadTaskMapper downloadTaskMapper,
                         Aria2WebSocketPool aria2WebSocketPool,
                         DownloaderMapper downloaderMapper,
                         SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
         this.applicationContext = applicationContext;
         this.id = id;
         this.weight = weight;
-        this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
+        this.downloadTaskMapper = downloadTaskMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
         this.downloaderMapper = downloaderMapper;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
@@ -103,13 +103,13 @@ public class Aria2Handler extends TextWebSocketHandler {
             if (method.equals("aria2.onDownloadComplete")) {
                 TimeUnit.SECONDS.sleep(1);
                 // 任务下载完成,修改状态
-                Aria2DownloadTask aria2DownloadTask = aria2DownloadTasksMapper.selectOne(
-                        Wrappers.<Aria2DownloadTask>lambdaQuery()
-                                .eq(Aria2DownloadTask::getGid, gid)
-                                .eq(Aria2DownloadTask::getAria2ServiceId, id));
-                if (!ObjectUtils.isEmpty(aria2DownloadTask)) {
-                    aria2DownloadTask.setStatus(2);
-                    applicationContext.publishEvent(aria2DownloadTask);
+                DownloadTask downloadTask = downloadTaskMapper.selectOne(
+                        Wrappers.<DownloadTask>lambdaQuery()
+                                .eq(DownloadTask::getGid, gid)
+                                .eq(DownloadTask::getDownloaderId, id));
+                if (!ObjectUtils.isEmpty(downloadTask)) {
+                    downloadTask.setStatus(2);
+                    applicationContext.publishEvent(downloadTask);
                 }
                 removeDownloadResult(session, gid);
             }
@@ -156,8 +156,8 @@ public class Aria2Handler extends TextWebSocketHandler {
     }
 
     private void updateAria2TaskStatus(Long aria2ServiceId, Integer status, String gid) {
-        aria2DownloadTasksMapper.update(Wrappers.<Aria2DownloadTask>lambdaUpdate()
-                .set(Aria2DownloadTask::getStatus, status).eq(Aria2DownloadTask::getGid, gid).eq(Aria2DownloadTask::getAria2ServiceId, aria2ServiceId));
+        downloadTaskMapper.update(Wrappers.<DownloadTask>lambdaUpdate()
+                .set(DownloadTask::getStatus, status).eq(DownloadTask::getGid, gid).eq(DownloadTask::getDownloaderId, aria2ServiceId));
     }
 
     public void setTimeout(long timeout, TimeUnit unit) {

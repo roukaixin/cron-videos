@@ -1,6 +1,6 @@
 package com.roukaixin.cronvideos.mapper;
 
-import com.roukaixin.cronvideos.pojo.CloudStorageAuth;
+import com.roukaixin.cronvideos.domain.CloudStorageAuth;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

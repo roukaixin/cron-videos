@@ -8,11 +8,11 @@ import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
 import com.roukaixin.cronvideos.enums.MediaResolutionEnum;
 import com.roukaixin.cronvideos.enums.MediaTypeEnum;
-import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.mapper.CloudShareMapper;
 import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
-import com.roukaixin.cronvideos.pojo.*;
+import com.roukaixin.cronvideos.domain.*;
 import com.roukaixin.cronvideos.strategy.CloudDrive;
 import com.roukaixin.cronvideos.strategy.domain.FileInfo;
 import com.roukaixin.cronvideos.strategy.domain.MediaMetadata;
@@ -40,7 +40,7 @@ public class QuarkStrategy implements CloudDrive {
 
     private final DownloaderMapper downloaderMapper;
 
-    private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
+    private final DownloadTaskMapper downloadTaskMapper;
 
     private final CloudShareMapper cloudShareMapper;
 
@@ -51,14 +51,14 @@ public class QuarkStrategy implements CloudDrive {
     public QuarkStrategy(CloudStorageAuthMapper cloudStorageAuthMapper,
                          SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                          DownloaderMapper downloaderMapper,
-                         Aria2DownloadTasksMapper aria2DownloadTasksMapper,
+                         DownloadTaskMapper downloadTaskMapper,
                          QuarkApi quarkApi,
                          RedisTemplate<String, Object> redisTemplate,
                          CloudShareMapper cloudShareMapper) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
         this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.downloaderMapper = downloaderMapper;
-        this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
+        this.downloadTaskMapper = downloadTaskMapper;
         this.quarkApi = quarkApi;
         this.redisTemplate = redisTemplate;
         this.cloudShareMapper = cloudShareMapper;
@@ -74,7 +74,7 @@ public class QuarkStrategy implements CloudDrive {
             // 在自己网盘中创建文件夹(如果没有),现在默认保存路径都在跟路经下的 `来自：分享`
             String saveFolderFid = (String) redisTemplate.opsForValue().get("target-save-folder-id");
             if (ObjectUtils.isEmpty(saveFolderFid)) {
-                saveFolderFid = getSaveFolderFid(media.getName(), media.getSeason());
+                saveFolderFid = getSaveFolderFid(media.getName(), media.getSeasonNumber());
                 redisTemplate.opsForValue().set("target-save-folder-id", saveFolderFid);
             }
             Pattern episodeNumber = Pattern.compile(cloudShare.getEpisodeRegex());
@@ -445,10 +445,10 @@ public class QuarkStrategy implements CloudDrive {
     private String sendDownload(String url, String cookie, String mimeType, Media media, FileInfo fileInfo) {
         String gid = "";
         // 获取下载任务
-        Aria2DownloadTask aria2DownloadTask = aria2DownloadTasksMapper.selectOne(
-                Wrappers.<Aria2DownloadTask>lambdaQuery()
-                        .eq(Aria2DownloadTask::getMediaId, media.getId())
-                        .eq(Aria2DownloadTask::getEpisodeNumber, fileInfo.getEpisodeNumber())
+        DownloadTask downloadTask = downloadTaskMapper.selectOne(
+                Wrappers.<DownloadTask>lambdaQuery()
+                        .eq(DownloadTask::getMediaId, media.getId())
+                        .eq(DownloadTask::getEpisodeNumber, fileInfo.getEpisodeNumber())
         );
         // __puus= (下载需要)
         Long aria2ServerId = smoothWeightedRoundRobin.getAria2ServerId();
@@ -456,12 +456,12 @@ public class QuarkStrategy implements CloudDrive {
             log.debug("aria2 数据库 id -> {}", aria2ServerId);
         }
         // show -> /title/session、  movie -> /title
-        String savePath = getAria2SavePath(media.getType(), media.getName(), media.getSeason());
+        String savePath = getAria2SavePath(media.getType(), media.getName(), media.getSeasonNumber());
         // 下载保存的文件名
         String outName = FileUtils.getOutName(
                 media.getType(),
                 media.getName(),
-                media.getSeason(),
+                media.getSeasonNumber(),
                 media.getTotalEpisode(),
                 fileInfo.getFileName(),
                 fileInfo.getEpisodeNumber(),
@@ -469,25 +469,25 @@ public class QuarkStrategy implements CloudDrive {
         );
 
         if (!ObjectUtils.isEmpty(aria2ServerId)) {
-            if (ObjectUtils.isEmpty(aria2DownloadTask)) {
-                aria2DownloadTask = new Aria2DownloadTask();
+            if (ObjectUtils.isEmpty(downloadTask)) {
+                downloadTask = new DownloadTask();
             }
-            aria2DownloadTask.setMediaId(media.getId());
-            aria2DownloadTask.setAria2ServiceId(aria2ServerId);
-            aria2DownloadTask.setEpisodeNumber(fileInfo.getEpisodeNumber());
-            aria2DownloadTask.setSavePath(savePath);
-            aria2DownloadTask.setSize(fileInfo.getSize());
-            aria2DownloadTask.setVideoWidth(fileInfo.getMediaMetadata().getWidth());
-            aria2DownloadTask.setVideoHeight(fileInfo.getMediaMetadata().getHeight());
-            aria2DownloadTask.setStatus(0);
-            aria2DownloadTask.setOutName(outName);
-            aria2DownloadTask.setResourceStatus(0);
+            downloadTask.setMediaId(media.getId());
+            downloadTask.setDownloaderId(aria2ServerId);
+            downloadTask.setEpisodeNumber(fileInfo.getEpisodeNumber());
+            downloadTask.setSavePath(savePath);
+            downloadTask.setSize(fileInfo.getSize());
+            downloadTask.setVideoWidth(fileInfo.getMediaMetadata().getWidth());
+            downloadTask.setVideoHeight(fileInfo.getMediaMetadata().getHeight());
+            downloadTask.setStatus(0);
+            downloadTask.setOutName(outName);
+            downloadTask.setResourceStatus(0);
             Downloader downloader = downloaderMapper.selectById(aria2ServerId);
             // 更新(失败的)或者插入
-            aria2DownloadTasksMapper.insertOrUpdate(aria2DownloadTask);
+            downloadTaskMapper.insertOrUpdate(downloadTask);
             // 下载之前先判断任务是否在等待下载
-            if (taskIsWaiting(downloader, aria2DownloadTask.getGid())) {
-                gid = aria2DownloadTask.getGid();
+            if (taskIsWaiting(downloader, downloadTask.getGid())) {
+                gid = downloadTask.getGid();
             } else {
                 // 获取 aria2 中的保存目录
                 String dir = Aria2Utils.getDir(
@@ -501,8 +501,8 @@ public class QuarkStrategy implements CloudDrive {
                 );
                 gid = JSONObject.parseObject(response).getString("result");
                 // 暂时不考虑发生到aria2失败,更新数据
-                aria2DownloadTask.setGid(gid);
-                aria2DownloadTasksMapper.updateById(aria2DownloadTask);
+                downloadTask.setGid(gid);
+                downloadTaskMapper.updateById(downloadTask);
             }
         }
         return gid;

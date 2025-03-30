@@ -1,9 +1,9 @@
 package com.roukaixin.cronvideos.controller;
 
-import com.roukaixin.cronvideos.pojo.Downloader;
-import com.roukaixin.cronvideos.pojo.R;
-import com.roukaixin.cronvideos.pojo.dto.DownloaderDTO;
-import com.roukaixin.cronvideos.pojo.vo.DownloaderVO;
+import com.roukaixin.cronvideos.domain.Downloader;
+import com.roukaixin.cronvideos.domain.R;
+import com.roukaixin.cronvideos.domain.dto.DownloaderDTO;
+import com.roukaixin.cronvideos.domain.vo.DownloaderVO;
 import com.roukaixin.cronvideos.service.DownloaderService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;

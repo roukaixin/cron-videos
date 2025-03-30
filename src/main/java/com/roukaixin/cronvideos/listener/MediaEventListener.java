@@ -3,10 +3,10 @@ package com.roukaixin.cronvideos.listener;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.roukaixin.cronvideos.mapper.Aria2DownloadTasksMapper;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.MediaMapper;
-import com.roukaixin.cronvideos.pojo.Aria2DownloadTask;
-import com.roukaixin.cronvideos.pojo.Media;
+import com.roukaixin.cronvideos.domain.DownloadTask;
+import com.roukaixin.cronvideos.domain.Media;
 import com.roukaixin.cronvideos.utils.SshUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -26,22 +26,22 @@ public class MediaEventListener {
 
     private final MediaMapper mediaMapper;
 
-    private final Aria2DownloadTasksMapper aria2DownloadTasksMapper;
+    private final DownloadTaskMapper downloadTaskMapper;
 
     public MediaEventListener(MediaMapper mediaMapper,
-                              Aria2DownloadTasksMapper aria2DownloadTasksMapper) {
+                              DownloadTaskMapper downloadTaskMapper) {
         this.mediaMapper = mediaMapper;
-        this.aria2DownloadTasksMapper = aria2DownloadTasksMapper;
+        this.downloadTaskMapper = downloadTaskMapper;
     }
 
     @EventListener
     @Async
-    public void formatAndMoveMedia(Aria2DownloadTask aria2DownloadTask) {
-        log.info("发生事件 -> {}", JSON.toJSONString(aria2DownloadTask));
-        if (!ObjectUtils.isEmpty(aria2DownloadTask.getOutName())) {
-            log.info("开始转化和移动视频 -> {}", aria2DownloadTask.getOutName());
-            String savePath = aria2DownloadTask.getSavePath();
-            String outName = aria2DownloadTask.getOutName();
+    public void formatAndMoveMedia(DownloadTask downloadTask) {
+        log.info("发生事件 -> {}", JSON.toJSONString(downloadTask));
+        if (!ObjectUtils.isEmpty(downloadTask.getOutName())) {
+            log.info("开始转化和移动视频 -> {}", downloadTask.getOutName());
+            String savePath = downloadTask.getSavePath();
+            String outName = downloadTask.getOutName();
             String targetOutName = FilenameUtils.getBaseName(outName);
             ClientSession sourceSession = SshUtils.init("tnt", "127.0.0.1", 22, "230553");
             ClientSession targetSession = null;
@@ -50,8 +50,8 @@ public class MediaEventListener {
             String ffmpeg = getFfmpeg(savePath, outName, targetOutName, commandMaps);
             if (SshUtils.execFfmpeg(sourceSession, ffmpeg)) {
                 // 执行成功
-                aria2DownloadTask.setResourceStatus(1);
-                aria2DownloadTasksMapper.updateById(aria2DownloadTask);
+                downloadTask.setResourceStatus(1);
+                downloadTaskMapper.updateById(downloadTask);
                 // 删除源文件
                 if (SshUtils.execFfmpeg(sourceSession, getRm(savePath, outName))) {
                     log.info("删除视频成功 -> {}", outName);
@@ -61,7 +61,7 @@ public class MediaEventListener {
                     // 修改成功
                     log.info("视频使用 ffmpeg 转化成功 -> {}", outName);
                 }
-                Media media = mediaMapper.selectById(aria2DownloadTask.getMediaId());
+                Media media = mediaMapper.selectById(downloadTask.getMediaId());
                 if (!ObjectUtils.isEmpty(media.getTypeAlias())) {
                     try {
                         // 媒体服务器 ip 地址 session
@@ -71,16 +71,16 @@ public class MediaEventListener {
                                 targetSession,
                                 "/home/tnt/job/IdeaProjects/docker-software/local/download",
                                 "/home/tnt/Videos" + "/" + media.getTypeAlias(),
-                                aria2DownloadTask.getSavePath(),
+                                downloadTask.getSavePath(),
                                 outName
                         );
-                        aria2DownloadTask.setResourceStatus(2);
-                        aria2DownloadTasksMapper.updateById(aria2DownloadTask);
+                        downloadTask.setResourceStatus(2);
+                        downloadTaskMapper.updateById(downloadTask);
                     } catch (IOException e) {
                         if (e instanceof SftpException sftpException && sftpException.getMessage().equals("No such file")) {
                             // 文件不存在
-                            aria2DownloadTask.setResourceStatus(2);
-                            aria2DownloadTasksMapper.updateById(aria2DownloadTask);
+                            downloadTask.setResourceStatus(2);
+                            downloadTaskMapper.updateById(downloadTask);
                         } else {
                             throw new RuntimeException(e);
                         }
@@ -95,7 +95,7 @@ public class MediaEventListener {
             } catch (IOException e) {
                 log.error("ssh session 关闭异常", e);
             }
-            log.info("转化和移动结束视频 -> {}", aria2DownloadTask.getOutName());
+            log.info("转化和移动结束视频 -> {}", downloadTask.getOutName());
         }
     }
 
