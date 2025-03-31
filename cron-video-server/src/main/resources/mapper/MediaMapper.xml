@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.roukaixin.cronvideos.mapper.MediaMapper">
+
+    <resultMap id="BaseResultMap" type="com.roukaixin.cronvideos.domain.Media">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="type" column="type" />
+            <result property="typeAlias" column="typeAlias" />
+            <result property="seasonNumber" column="season_number" />
+            <result property="totalEpisode" column="total_episode" />
+            <result property="releaseDate" column="release_date" />
+            <result property="tmdbId" column="tmdb_id" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="createdAt" column="created_at" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+</mapper>

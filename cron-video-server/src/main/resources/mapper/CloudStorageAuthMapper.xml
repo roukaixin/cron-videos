@@ -15,8 +15,4 @@
             <result property="isDeleted" column="is_deleted" />
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,provider,access_token,refresh_token,cookie,created_at,
-        updated_at,is_deleted
-    </sql>
 </mapper>

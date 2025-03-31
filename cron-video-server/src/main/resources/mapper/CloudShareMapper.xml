@@ -17,8 +17,4 @@
             <result property="isDeleted" column="is_deleted" />
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,media_id,provider,share_id,share_code,expired_at,
-        file_regex,created_at,updated_at,is_deleted
-    </sql>
 </mapper>

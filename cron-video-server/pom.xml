@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.roukaixin</groupId>
-    <artifactId>cron-videos</artifactId>
+    <artifactId>cron-video-server</artifactId>
     <version>0.0.1</version>
     <name>cron-videos</name>
     <description>cron-videos</description>
