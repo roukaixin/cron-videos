@@ -6,6 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
+ * 下载器下载任务
+ *
  * @TableName download_task
  */
 @TableName(value = "download_task")
@@ -19,7 +21,7 @@ public class DownloadTask {
     private Long id;
 
     /**
-     * 关联的媒体 ID
+     * 关联 media 表 id
      */
     private Long mediaId;
 

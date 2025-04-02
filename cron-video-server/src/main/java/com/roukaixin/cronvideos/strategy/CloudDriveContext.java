@@ -1,11 +1,10 @@
 package com.roukaixin.cronvideos.strategy;
 
-import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
-import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
-import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.mapper.CloudShareMapper;
 import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
+import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.strategy.quark.QuarkApi;
 import com.roukaixin.cronvideos.strategy.quark.QuarkStrategy;
 import jakarta.annotation.PostConstruct;
@@ -25,8 +24,6 @@ public class CloudDriveContext {
 
     private final CloudStorageAuthMapper cloudStorageAuthMapper;
 
-    private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
-
     private final DownloaderMapper downloaderMapper;
 
     private final DownloadTaskMapper downloadTaskMapper;
@@ -38,14 +35,12 @@ public class CloudDriveContext {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public CloudDriveContext(CloudStorageAuthMapper cloudStorageAuthMapper,
-                             SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                              DownloaderMapper downloaderMapper,
                              DownloadTaskMapper downloadTaskMapper,
                              CloudShareMapper cloudShareMapper,
                              QuarkApi quarkApi,
                              RedisTemplate<String, Object> redisTemplate) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
-        this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.downloaderMapper = downloaderMapper;
         this.downloadTaskMapper = downloadTaskMapper;
         this.cloudShareMapper = cloudShareMapper;
@@ -59,7 +54,6 @@ public class CloudDriveContext {
                 "cloud_drive_" + CloudShareProviderEnum.quark.getProvider(),
                 new QuarkStrategy(
                         cloudStorageAuthMapper,
-                        smoothWeightedRoundRobin,
                         downloaderMapper,
                         downloadTaskMapper,
                         quarkApi,

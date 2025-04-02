@@ -10,10 +10,7 @@ import com.roukaixin.cronvideos.domain.DownloadTask;
 import com.roukaixin.cronvideos.domain.CloudShare;
 import com.roukaixin.cronvideos.domain.Media;
 import com.roukaixin.cronvideos.domain.MediaEpisode;
-import com.roukaixin.cronvideos.mapper.CloudShareMapper;
-import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
-import com.roukaixin.cronvideos.mapper.MediaEpisodeMapper;
-import com.roukaixin.cronvideos.mapper.MediaMapper;
+import com.roukaixin.cronvideos.mapper.*;
 import com.roukaixin.cronvideos.strategy.CloudDrive;
 import com.roukaixin.cronvideos.strategy.CloudDriveContext;
 import com.roukaixin.cronvideos.strategy.domain.FileInfo;
@@ -44,8 +41,6 @@ public class MediaScheduled {
 
     private final DownloadTaskMapper downloadTaskMapper;
 
-    private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
-
     private final MediaEpisodeMapper mediaEpisodeMapper;
 
     private final TmdbApi tmdbApi;
@@ -55,21 +50,20 @@ public class MediaScheduled {
                           MediaMapper mediaMapper,
                           CloudDriveContext cloudDriveContext,
                           DownloadTaskMapper downloadTaskMapper,
-                          SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                           MediaEpisodeMapper mediaEpisodeMapper,
-                          TmdbApi tmdbApi) {
+                          TmdbApi tmdbApi,
+                          DownloaderMapper downloaderMapper) {
         this.cloudShareMapper = cloudShareMapper;
         this.mediaMapper = mediaMapper;
         this.cloudDriveContext = cloudDriveContext;
         this.downloadTaskMapper = downloadTaskMapper;
-        this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.mediaEpisodeMapper = mediaEpisodeMapper;
         this.tmdbApi = tmdbApi;
     }
 
     @Scheduled(fixedDelay = 1000 * 60 * 10, initialDelay = 1000)
     public void downloadMedia() {
-        if (smoothWeightedRoundRobin.size() > 0) {
+        if (SmoothWeightedRoundRobin.getInstance().size() > 0) {
             mediaMapper.selectList(
                     Wrappers.emptyWrapper(),
                     resultContext -> {

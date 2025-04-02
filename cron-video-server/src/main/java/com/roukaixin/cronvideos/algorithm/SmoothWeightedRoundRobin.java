@@ -1,55 +1,34 @@
 package com.roukaixin.cronvideos.algorithm;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.domain.Downloader;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-@Component
 @Slf4j
 public class SmoothWeightedRoundRobin {
 
+    private final Map<Long, Weight> weightMap = new LinkedHashMap<>();
 
-    private final Map<Long, Weight> weightMap = new HashMap<>();
+    private SmoothWeightedRoundRobin() {
 
-    private final DownloaderMapper downloaderMapper;
+    }
 
-    public SmoothWeightedRoundRobin(DownloaderMapper downloaderMapper) {
-        this.downloaderMapper = downloaderMapper;
+    public static SmoothWeightedRoundRobin getInstance() {
+        return InnerEnum.INSTANCE.getInstance();
     }
 
     @PostConstruct
     public void init() {
-        List<Downloader> downloaders = downloaderMapper.selectList(Wrappers.<Downloader>lambdaQuery().eq(Downloader::getIsOnline, 1));
-        if (!downloaders.isEmpty()) {
-            downloaders.forEach(aria2Connection -> weightMap.put(aria2Connection.getId(), new Weight(aria2Connection.getId(), aria2Connection.getWeight(), 0)));
-        }
 
     }
 
-    @Setter
-    @Getter
-    @AllArgsConstructor
-    public static class Weight {
-
-        private Long id;
-
-        private Integer weight;
-
-        private Integer currentWeight;
-    }
-
-    public Long getAria2ServerId() {
+    public Long getDownloaderId() {
         Long id = null;
         AtomicReference<Integer> totalWeight = new AtomicReference<>(0);
         weightMap.forEach((key, value) -> {
@@ -81,6 +60,33 @@ public class SmoothWeightedRoundRobin {
 
     public int size() {
         return weightMap.size();
+    }
+
+
+    @Setter
+    @Getter
+    @AllArgsConstructor
+    public static class Weight {
+
+        private Long id;
+
+        private Integer weight;
+
+        private Integer currentWeight;
+    }
+
+    private enum InnerEnum {
+        INSTANCE;
+
+        private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
+
+        InnerEnum() {
+            smoothWeightedRoundRobin = new SmoothWeightedRoundRobin();
+        }
+
+        public SmoothWeightedRoundRobin getInstance() {
+            return smoothWeightedRoundRobin;
+        }
     }
 
 }

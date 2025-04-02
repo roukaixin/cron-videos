@@ -7,7 +7,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 影视列表
+ * 媒体列表
  *
  * @TableName media
  */

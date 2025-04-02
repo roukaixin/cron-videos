@@ -1,7 +1,40 @@
-抱歉之前的回复方式不够清晰。让我直接修改 README.md 文件：
+# 后端
 
-```markdown:README.md
-# 影视自动下载管理系统
+active -> 下载中
+
+waiting -> 等待
+
+paused -> 暂停
+
+error -> 错误而停止的下载
+
+complete -> 已停止和已完成
+
+removed -> 用户删除
+
+
+ffmpeg -v error -i output.mp4 -c copy -copyts -f null -
+
+
+1280 * 720 high 720p
+
+1920 * 1080 1920 * 1072 super 1080p
+
+3840 * 1596 4k  2160p
+
+3840 * 1608
+
+1920 * 798
+
+
+## 夸克下载过程
+
+
+## 阿里云下载过程
+
+
+
+# 前端
 
 基于 Vue 3 + TypeScript + Element Plus 开发的影视自动下载管理系统的前端部分。
 
@@ -20,16 +53,20 @@
 ## 快速开始
 
 1. 安装依赖
-```bash
-npm install
-```
+
+    ```bash
+    npm install
+    ```
 
 2. 启动开发服务器
-```bash
-npm run dev
-```
+
+    ```bash
+    npm run dev
+    ```
 
 3. 打开浏览器访问 http://localhost:18080
+
+
 
 ## 可用命令
 
@@ -89,4 +126,3 @@ src/
 1. 确保后端API服务运行在 8080 端口
 2. Aria2 服务需运行在 6800 端口
 3. 代码提交前请运行类型检查
-```

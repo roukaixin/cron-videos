@@ -7,7 +7,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * aria2 连接信息
+ * 下载器连接信息
  *
  * @TableName downloader
  */

@@ -2,11 +2,10 @@ package com.roukaixin.cronvideos.runner;
 
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
+import com.roukaixin.cronvideos.domain.Downloader;
 import com.roukaixin.cronvideos.handler.Aria2Handler;
 import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.domain.Downloader;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -29,28 +28,25 @@ public class ConnectionAria2Runner implements CommandLineRunner {
 
     private final Aria2WebSocketPool aria2WebSocketPool;
 
-    private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
-
     private final ApplicationContext applicationContext;
 
     public ConnectionAria2Runner(DownloaderMapper downloaderMapper,
                                  DownloadTaskMapper downloadTaskMapper,
                                  Aria2WebSocketPool aria2WebSocketPool,
-                                 SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                                  ApplicationContext applicationContext) {
         this.downloaderMapper = downloaderMapper;
         this.downloadTaskMapper = downloadTaskMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
-        this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.applicationContext = applicationContext;
     }
 
     @Override
     public void run(String... args) {
-        List<Downloader> downloaders = downloaderMapper.selectList(
+        List<Downloader> downloaderList = downloaderMapper.selectList(
                 Wrappers.<Downloader>lambdaQuery().eq(Downloader::getIsOnline, 1));
-        if (!downloaders.isEmpty()) {
-            List<CompletableFuture<Boolean>> futures = downloaders.stream().map(aria2Server -> {
+        if (!downloaderList.isEmpty()) {
+            // 配置下载器。
+            List<CompletableFuture<Boolean>> futures = downloaderList.stream().map(aria2Server -> {
                 String wsUri = "ws://" + aria2Server.getHost() + ":" + aria2Server.getPort() + "/jsonrpc";
                 StandardWebSocketClient client = new StandardWebSocketClient();
                 Aria2Handler handler = new Aria2Handler(
@@ -59,8 +55,7 @@ public class ConnectionAria2Runner implements CommandLineRunner {
                         aria2Server.getWeight(),
                         downloadTaskMapper,
                         aria2WebSocketPool,
-                        downloaderMapper,
-                        smoothWeightedRoundRobin
+                        downloaderMapper
                 );
                 WebSocketConnectionManager manager = new WebSocketConnectionManager(
                         client,

@@ -44,22 +44,18 @@ public class Aria2Handler extends TextWebSocketHandler {
 
     private final DownloaderMapper downloaderMapper;
 
-    private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
-
     public Aria2Handler(ApplicationContext applicationContext,
                         Long id,
                         Integer weight,
                         DownloadTaskMapper downloadTaskMapper,
                         Aria2WebSocketPool aria2WebSocketPool,
-                        DownloaderMapper downloaderMapper,
-                        SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+                        DownloaderMapper downloaderMapper) {
         this.applicationContext = applicationContext;
         this.id = id;
         this.weight = weight;
         this.downloadTaskMapper = downloadTaskMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
         this.downloaderMapper = downloaderMapper;
-        this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
     }
 
     /**
@@ -72,7 +68,7 @@ public class Aria2Handler extends TextWebSocketHandler {
     public void afterConnectionEstablished(@Nonnull WebSocketSession session) throws Exception {
         log.info("连接成功 {}", session.getId());
         aria2WebSocketPool.putSession(session, id);
-        smoothWeightedRoundRobin.put(id, weight);
+        SmoothWeightedRoundRobin.getInstance().put(id, weight);
         connectionFuture.complete(true);
         cancelTimeout();
         super.afterConnectionEstablished(session);
@@ -151,7 +147,7 @@ public class Aria2Handler extends TextWebSocketHandler {
         aria2WebSocketPool.removeSession(session);
         aria2WebSocketPool.remove(id);
         // 重置id
-        smoothWeightedRoundRobin.remove(id);
+        SmoothWeightedRoundRobin.getInstance().remove(id);
         super.afterConnectionClosed(session, status);
     }
 

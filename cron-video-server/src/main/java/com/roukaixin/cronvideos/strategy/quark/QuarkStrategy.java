@@ -36,8 +36,6 @@ public class QuarkStrategy implements CloudDrive {
 
     private final CloudStorageAuthMapper cloudStorageAuthMapper;
 
-    private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
-
     private final DownloaderMapper downloaderMapper;
 
     private final DownloadTaskMapper downloadTaskMapper;
@@ -49,14 +47,12 @@ public class QuarkStrategy implements CloudDrive {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public QuarkStrategy(CloudStorageAuthMapper cloudStorageAuthMapper,
-                         SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                          DownloaderMapper downloaderMapper,
                          DownloadTaskMapper downloadTaskMapper,
                          QuarkApi quarkApi,
                          RedisTemplate<String, Object> redisTemplate,
                          CloudShareMapper cloudShareMapper) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
-        this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.downloaderMapper = downloaderMapper;
         this.downloadTaskMapper = downloadTaskMapper;
         this.quarkApi = quarkApi;
@@ -451,7 +447,7 @@ public class QuarkStrategy implements CloudDrive {
                         .eq(DownloadTask::getEpisodeNumber, fileInfo.getEpisodeNumber())
         );
         // __puus= (下载需要)
-        Long aria2ServerId = smoothWeightedRoundRobin.getAria2ServerId();
+        Long aria2ServerId = SmoothWeightedRoundRobin.getInstance().getDownloaderId();
         if (log.isDebugEnabled()) {
             log.debug("aria2 数据库 id -> {}", aria2ServerId);
         }

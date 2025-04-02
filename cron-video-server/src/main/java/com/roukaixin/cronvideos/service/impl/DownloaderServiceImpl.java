@@ -1,13 +1,12 @@
 package com.roukaixin.cronvideos.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
-import com.roukaixin.cronvideos.handler.Aria2Handler;
-import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
-import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.domain.Downloader;
 import com.roukaixin.cronvideos.domain.R;
 import com.roukaixin.cronvideos.domain.dto.DownloaderDTO;
+import com.roukaixin.cronvideos.handler.Aria2Handler;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
+import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
 import com.roukaixin.cronvideos.service.DownloaderService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,17 +33,13 @@ public class DownloaderServiceImpl extends ServiceImpl<DownloaderMapper, Downloa
 
     private final Aria2WebSocketPool aria2WebSocketPool;
 
-    private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
-
     private final ApplicationContext applicationContext;
 
     public DownloaderServiceImpl(DownloadTaskMapper downloadTaskMapper,
                                  Aria2WebSocketPool aria2WebSocketPool,
-                                 SmoothWeightedRoundRobin smoothWeightedRoundRobin,
                                  ApplicationContext applicationContext) {
         this.downloadTaskMapper = downloadTaskMapper;
         this.aria2WebSocketPool = aria2WebSocketPool;
-        this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         this.applicationContext = applicationContext;
     }
 
@@ -91,13 +86,12 @@ public class DownloaderServiceImpl extends ServiceImpl<DownloaderMapper, Downloa
                 downloader.getWeight(),
                 downloadTaskMapper,
                 aria2WebSocketPool,
-                this.baseMapper,
-                smoothWeightedRoundRobin
+                this.baseMapper
         );
         WebSocketConnectionManager manager = new WebSocketConnectionManager(
                 client,
                 handler,
-                "ws://" + downloader.getHost() + ":" + downloader.getPort() + "/jsonrpc"
+                downloader.getProtocol() + "://" + downloader.getHost() + ":" + downloader.getPort() + "/jsonrpc"
         );
         handler.setTimeout(1, TimeUnit.SECONDS);
         manager.start();
