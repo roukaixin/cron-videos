@@ -5,7 +5,7 @@ create table media
         primary key,
     name          varchar(100)  not null comment '电影/电视剧名称',
     type          varchar(10)   not null comment '媒体类型: movie / show',
-    typeAlias     varchar(255)  not null comment '媒体列别（如 电影=影片，电视剧=剧集）',
+    type_alias    varchar(255)  not null comment '媒体列别（如 电影=影片，电视剧=剧集）',
     season_number int           null comment '电视剧季号/部数（仅电视剧用、电影为 NULL）',
     total_episode int           not null comment '总集数（电影默认为1）',
     start_episode int           null comment '开始集数（beginEpisode）',
@@ -71,16 +71,15 @@ create table downloader
 (
     id         bigint               not null comment '主键 id'
         primary key,
-    provider   int                  not null comment '网盘提供商（1: 夸克, 2: 阿里云盘, 3: 百度网盘 等）',
     type       int                  not null comment '下载器类型。（0->aria2、1->qbittorrent）',
     protocol   varchar(10)          not null comment '协议。ws/http',
     host       varchar(100)         not null comment '下载器主机地址（IP 或域名）',
     port       int                  not null comment '监听端口',
     secret     varchar(255)         null comment 'RPC 密钥（Token）',
     weight     int        default 1 not null comment '服务器权重（用于负载均衡）',
-    is_online  tinyint(1)           not null comment '在线状态（1: 在线, 0: 离线）',
+    is_online  tinyint(1) default 0 not null comment '在线状态（1: 在线, 0: 离线）',
     created_at datetime             not null comment '创建时间',
-    updated_at int                  null comment '更新时间',
+    updated_at datetime             null comment '更新时间',
     is_deleted tinyint(1) default 0 not null comment '逻辑删除 (0=正常, 1=删除)'
 )
     comment '下载器连接信息';
