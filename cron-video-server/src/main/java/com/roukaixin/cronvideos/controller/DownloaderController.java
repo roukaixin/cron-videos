@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/aria2")
+@RequestMapping("/downloader")
 public class DownloaderController {
 
     private final DownloaderService downloaderService;

@@ -1,6 +1,7 @@
 package com.roukaixin.cronvideos.domain.vo;
 
-import com.roukaixin.cronvideos.enums.DownloaderEnum;
+import com.roukaixin.cronvideos.enums.DownloaderProtocolEnum;
+import com.roukaixin.cronvideos.enums.DownloaderTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,12 +17,12 @@ public class DownloaderVO {
     /**
      * 下载器类型。（0->aria2、1->qbittorrent）
      */
-    private DownloaderEnum type;
+    private DownloaderTypeEnum type;
 
     /**
      * 协议。ws/http
      */
-    private String protocol;
+    private DownloaderProtocolEnum protocol;
 
     /**
      * 下载器主机地址（IP 或域名）

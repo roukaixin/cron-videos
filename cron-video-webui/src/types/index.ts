@@ -14,9 +14,11 @@ export interface Media {
 
 
 // Aria2 连接配置类型
-export interface Aria2Connection {
-    id: number;
-    ip: string;
+export interface Downloader {
+    id: string;
+    type: number;
+    protocol: string;
+    host: string;
     port: number;
     secret: string | null;
     weight: number;

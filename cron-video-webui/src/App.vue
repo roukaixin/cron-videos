@@ -10,13 +10,13 @@
           <i class="el-icon-cloudy"></i>
           <span>网盘认证</span>
         </router-link>
-        <router-link to="/aria2-server" class="nav-item" active-class="active">
+        <router-link to="/downloader" class="nav-item" active-class="active">
           <i class="el-icon-download"></i>
-          <span>Aria2 配置</span>
+          <span>下载器管理</span>
         </router-link>
         <router-link to="/aria2-download-task" class="nav-item" active-class="active">
           <i class="el-icon-folder-opened"></i>
-          <span>下载管理</span>
+          <span>下载任务管理</span>
         </router-link>
       </div>
     </el-header>

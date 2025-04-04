@@ -37,7 +37,9 @@ public class MediaEventListener {
     @EventListener
     @Async
     public void formatAndMoveMedia(DownloadTask downloadTask) {
-        log.info("发生事件 -> {}", JSON.toJSONString(downloadTask));
+        if (log.isDebugEnabled()) {
+            log.info("监听到格式化和移动视频 -> {}", JSON.toJSONString(downloadTask));
+        }
         if (!ObjectUtils.isEmpty(downloadTask.getOutName())) {
             log.info("开始转化和移动视频 -> {}", downloadTask.getOutName());
             String savePath = downloadTask.getSavePath();

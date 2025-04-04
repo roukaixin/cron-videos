@@ -12,9 +12,9 @@ const routes: RouteRecordRaw[] = [
     meta: { keepAlive: true }
   },
   {
-    path: '/aria2-server',
-    name: 'Aria2Server.vue',
-    component: () => import('@/views/Aria2Server.vue'),
+    path: '/downloader',
+    name: 'Downloader.vue',
+    component: () => import('@/views/Downloader.vue'),
     meta: { keepAlive: true }
   },
   {

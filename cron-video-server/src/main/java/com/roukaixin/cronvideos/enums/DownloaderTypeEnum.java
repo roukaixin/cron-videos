@@ -7,10 +7,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum DownloaderEnum {
+public enum DownloaderTypeEnum {
 
-    ARIA2(1, "aria2"),
-    qbittorrent(2, "qbittorrent");
+    aria2(0, "aria2"),
+    qbittorrent(1, "qbittorrent");
 
     @EnumValue
     @JsonValue

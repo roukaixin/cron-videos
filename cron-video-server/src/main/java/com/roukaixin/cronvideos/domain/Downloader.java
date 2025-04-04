@@ -1,7 +1,8 @@
 package com.roukaixin.cronvideos.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.roukaixin.cronvideos.enums.DownloaderEnum;
+import com.roukaixin.cronvideos.enums.DownloaderProtocolEnum;
+import com.roukaixin.cronvideos.enums.DownloaderTypeEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -18,18 +19,18 @@ public class Downloader {
     /**
      * 唯一 ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
      * 下载器类型。（0->aria2、1->qbittorrent）
      */
-    private DownloaderEnum type;
+    private DownloaderTypeEnum type;
 
     /**
      * 协议。ws/http
      */
-    private String protocol;
+    private DownloaderProtocolEnum protocol;
 
     /**
      * 下载器主机地址（IP 或域名）

@@ -51,8 +51,7 @@ public class MediaScheduled {
                           CloudDriveContext cloudDriveContext,
                           DownloadTaskMapper downloadTaskMapper,
                           MediaEpisodeMapper mediaEpisodeMapper,
-                          TmdbApi tmdbApi,
-                          DownloaderMapper downloaderMapper) {
+                          TmdbApi tmdbApi) {
         this.cloudShareMapper = cloudShareMapper;
         this.mediaMapper = mediaMapper;
         this.cloudDriveContext = cloudDriveContext;
