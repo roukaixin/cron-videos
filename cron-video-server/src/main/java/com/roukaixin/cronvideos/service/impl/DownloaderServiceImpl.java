@@ -39,9 +39,7 @@ public class DownloaderServiceImpl extends ServiceImpl<DownloaderMapper, Downloa
         Downloader downloader = new Downloader();
         BeanUtils.copyProperties(downloaderDto, downloader);
         this.save(downloader);
-        CompletableFuture.runAsync(() -> {
-            addWebSocketClient(downloader);
-        });
+        CompletableFuture.runAsync(() -> addWebSocketClient(downloader));
         return R.<String>builder().code(200).message("添加成功").build();
     }
 
@@ -49,9 +47,9 @@ public class DownloaderServiceImpl extends ServiceImpl<DownloaderMapper, Downloa
     @Override
     public R<String> delete(Long id) {
         this.removeById(id);
-        WebSocketClient aria2Client = (WebSocketClient) aria2WebSocketPool.get(id);
+        DownloaderClient aria2Client =  aria2WebSocketPool.get(id);
         if (aria2Client != null) {
-            aria2Client.close();
+            aria2Client.stop();
         }
         return R.<String>builder().code(200).message("删除成功").build();
     }
@@ -61,9 +59,9 @@ public class DownloaderServiceImpl extends ServiceImpl<DownloaderMapper, Downloa
         Downloader downloader = new Downloader();
         BeanUtils.copyProperties(downloaderDto, downloader);
         downloader.setId(id);
-        DownloaderClient downloaderClient = aria2WebSocketPool.get(id);
-        if (downloaderClient instanceof Aria2DownloaderClient aria2DownloaderClient) {
-            aria2DownloaderClient.close();
+        DownloaderClient downloaderClient =  aria2WebSocketPool.get(id);
+        if (downloaderClient != null) {
+            downloaderClient.stop();
         }
         aria2WebSocketPool.remove(id);
         addWebSocketClient(downloader);

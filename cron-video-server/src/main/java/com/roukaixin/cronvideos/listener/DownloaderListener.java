@@ -38,6 +38,7 @@ public class DownloaderListener {
         downloadTaskMapper.update(Wrappers.<DownloadTask>lambdaUpdate()
                 .set(DownloadTask::getStatus, event.getStatus())
                 .eq(DownloadTask::getGid, event.getGid())
+                .eq(DownloadTask::getStatus, event.getOriginalStatus())
                 .eq(DownloadTask::getDownloaderId, event.getId()));
     }
 

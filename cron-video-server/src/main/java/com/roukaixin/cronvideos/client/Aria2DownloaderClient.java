@@ -48,17 +48,17 @@ public class Aria2DownloaderClient extends WebSocketClient implements Downloader
             String gid = params.getJSONObject(0).getString("gid");
             if (method.equals("aria2.onDownloadStart")) {
                 // 开始下载，发送监听
-                EventUtils.publishEvent(new DownloadTaskStatus(id, 1, gid));
+                EventUtils.publishEvent(new DownloadTaskStatus(id, 1, gid, 0));
             }
             if (method.equals("aria2.onDownloadComplete")) {
                 // 任务下载完成
-                EventUtils.publishEvent(new DownloadTaskStatus(id, 2, gid));
+                EventUtils.publishEvent(new DownloadTaskStatus(id, 2, gid, 1));
                 // 删除内存任务
                 EventUtils.publishEvent(new Aria2Task(id, gid));
             }
             if (method.equals("aria2.onDownloadError")) {
                 // 重新处理下载失败的任务
-                EventUtils.publishEvent(new DownloadTaskStatus(id, 3, gid));
+                EventUtils.publishEvent(new DownloadTaskStatus(id, 3, gid, 1));
                 // 删除失败任务
                 EventUtils.publishEvent(new Aria2Task(id, gid));
             }

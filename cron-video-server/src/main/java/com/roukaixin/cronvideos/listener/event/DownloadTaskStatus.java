@@ -15,4 +15,6 @@ public class DownloadTaskStatus {
 
     private String gid;
 
+    private int originalStatus;
+
 }
