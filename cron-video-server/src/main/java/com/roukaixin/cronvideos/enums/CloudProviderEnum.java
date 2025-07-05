@@ -7,11 +7,11 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum CloudShareProviderEnum {
+public enum CloudProviderEnum {
 
-    quark(1, "夸克网盘"),
-    aliyun(2, "阿里云盘"),
-    baidu(3, "百度网盘");
+    QUARK(1, "夸克网盘"),
+    ALIYUN(2, "阿里云盘"),
+    BAIDU(3, "百度网盘");
 
     @EnumValue
     @JsonValue

@@ -2,7 +2,7 @@ package com.roukaixin.cronvideos.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
-import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
+import com.roukaixin.cronvideos.enums.CloudProviderEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -13,9 +13,9 @@ import java.util.List;
  *
  * @TableName cloud_shares
  */
-@TableName(value = "cloud_share", autoResultMap = true)
+@TableName(value = "cloud", autoResultMap = true)
 @Data
-public class CloudShare {
+public class Cloud {
     /**
      * 唯一 ID
      */
@@ -30,9 +30,9 @@ public class CloudShare {
     /**
      * 网盘提供商（1: 夸克, 2: 阿里云盘, 3: 百度网盘 等
      *
-     * @see CloudShareProviderEnum
+     * @see CloudProviderEnum
      */
-    private CloudShareProviderEnum provider;
+    private CloudProviderEnum provider;
 
     /**
      * 分享 ID (路径 ID 或链接)

@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.service.service;
+package com.roukaixin.cronvideos.service;
 
 import com.roukaixin.cronvideos.domain.MediaEpisode;
 import com.baomidou.mybatisplus.extension.service.IService;

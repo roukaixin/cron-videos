@@ -1,45 +1,45 @@
 package com.roukaixin.cronvideos.controller;
 
-import com.roukaixin.cronvideos.domain.CloudShare;
+import com.roukaixin.cronvideos.domain.Cloud;
 import com.roukaixin.cronvideos.domain.R;
 import com.roukaixin.cronvideos.domain.dto.CloudShareDTO;
 import com.roukaixin.cronvideos.domain.vo.CloudShareVO;
-import com.roukaixin.cronvideos.service.CloudShareService;
+import com.roukaixin.cronvideos.service.CloudService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/cloud-shares")
-public class CloudShareController {
+@RequestMapping("/cloud")
+public class CloudController {
 
-    private final CloudShareService cloudShareService;
+    private final CloudService cloudService;
 
-    public CloudShareController(CloudShareService cloudShareService) {
-        this.cloudShareService = cloudShareService;
+    public CloudController(CloudService cloudService) {
+        this.cloudService = cloudService;
     }
 
     @PostMapping("/add")
     private R<String> add(@RequestBody CloudShareDTO cloudSharesDto) {
-        CloudShare cloudShare = new CloudShare();
+        Cloud cloudShare = new Cloud();
         BeanUtils.copyProperties(cloudSharesDto, cloudShare);
-        cloudShareService.save(cloudShare);
+        cloudService.save(cloudShare);
         return R.<String>builder().code(200).message("添加成功").build();
     }
 
     @GetMapping("/{mediaId}")
     public R<List<CloudShareVO>> share(@PathVariable("mediaId") String mediaId){
-        return cloudShareService.share(mediaId);
+        return cloudService.share(mediaId);
     }
 
     @PutMapping("/{id}")
     public R<String> update(@PathVariable("id") Long id, @RequestBody CloudShareDTO update) {
-        CloudShare cloudShare = new CloudShare();
+        Cloud cloudShare = new Cloud();
         BeanUtils.copyProperties(update, cloudShare);
         cloudShare.setId(id);
         cloudShare.setMediaId(null);
-        cloudShareService.updateById(cloudShare);
+        cloudService.updateById(cloudShare);
         return R.<String>builder().code(200).message("编辑成功").build();
     }
 }

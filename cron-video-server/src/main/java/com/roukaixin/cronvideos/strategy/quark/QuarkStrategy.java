@@ -5,14 +5,14 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
-import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
+import com.roukaixin.cronvideos.domain.*;
+import com.roukaixin.cronvideos.enums.CloudProviderEnum;
 import com.roukaixin.cronvideos.enums.MediaResolutionEnum;
 import com.roukaixin.cronvideos.enums.MediaTypeEnum;
+import com.roukaixin.cronvideos.mapper.CloudMapper;
+import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
 import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.mapper.CloudShareMapper;
-import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
-import com.roukaixin.cronvideos.domain.*;
 import com.roukaixin.cronvideos.strategy.CloudDrive;
 import com.roukaixin.cronvideos.strategy.domain.FileInfo;
 import com.roukaixin.cronvideos.strategy.domain.MediaMetadata;
@@ -40,7 +40,7 @@ public class QuarkStrategy implements CloudDrive {
 
     private final DownloadTaskMapper downloadTaskMapper;
 
-    private final CloudShareMapper cloudShareMapper;
+    private final CloudMapper cloudMapper;
 
     private final QuarkApi quarkApi;
 
@@ -51,36 +51,36 @@ public class QuarkStrategy implements CloudDrive {
                          DownloadTaskMapper downloadTaskMapper,
                          QuarkApi quarkApi,
                          RedisTemplate<String, Object> redisTemplate,
-                         CloudShareMapper cloudShareMapper) {
+                         CloudMapper cloudMapper) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
         this.downloaderMapper = downloaderMapper;
         this.downloadTaskMapper = downloadTaskMapper;
         this.quarkApi = quarkApi;
         this.redisTemplate = redisTemplate;
-        this.cloudShareMapper = cloudShareMapper;
+        this.cloudMapper = cloudMapper;
     }
 
     @Override
-    public List<FileInfo> getFileList(Media media, CloudShare cloudShare) {
+    public List<FileInfo> getFileList(Media media, Cloud cloud, List<Integer> needDownloadEpisode) {
         List<FileInfo> fileInfos = new ArrayList<>();
         // 根据分享 pwd_id 获取 stoken
-        String shareToken = getShareToken(cloudShare.getShareId(), cloudShare.getId());
+        String shareToken = getShareToken(cloud.getShareId(), cloud.getId());
         if (!ObjectUtils.isEmpty(shareToken)) {
-            List<QuarkFileInfo> sharepageFileList = getSharepageFileList(cloudShare, shareToken, "0", 1);
+            List<QuarkFileInfo> sharepageFileList = getSharepageFileList(cloud, shareToken, "0", 1);
             // 在自己网盘中创建文件夹(如果没有),现在默认保存路径都在跟路经下的 `来自：分享`
             String saveFolderFid = (String) redisTemplate.opsForValue().get("target-save-folder-id");
             if (ObjectUtils.isEmpty(saveFolderFid)) {
                 saveFolderFid = getSaveFolderFid(media.getName(), media.getSeasonNumber());
                 redisTemplate.opsForValue().set("target-save-folder-id", saveFolderFid);
             }
-            Pattern episodeNumber = Pattern.compile(cloudShare.getEpisodeRegex());
-            for (QuarkFileInfo filterVideo : getFilterVideos(sharepageFileList, cloudShare.getFileRegex())) {
+            Pattern episodeNumber = Pattern.compile(cloud.getEpisodeRegex());
+            for (QuarkFileInfo filterVideo : getFilterVideos(sharepageFileList, cloud.getFileRegex())) {
                 FileInfo build = FileInfo
                         .builder()
-                        .provider(CloudShareProviderEnum.quark)
+                        .provider(CloudProviderEnum.QUARK)
                         .fileId(filterVideo.getFid())
                         .fileName(filterVideo.getFileName())
-                        .shareId(cloudShare.getShareId())
+                        .shareId(cloud.getShareId())
                         .shareToken(shareToken)
                         .size(filterVideo.getSize())
                         .parentFileId(saveFolderFid)
@@ -111,11 +111,11 @@ public class QuarkStrategy implements CloudDrive {
         String data = (String) response.get("data");
         if (response.get("is_ok").equals(false)) {
             // 连接已经失效
-            CloudShare cloudShare = new CloudShare();
-            cloudShare.setId(id);
-            cloudShare.setIsLapse(1);
-            cloudShare.setLapseCause(data);
-            cloudShareMapper.updateById(cloudShare);
+            Cloud cloud = new Cloud();
+            cloud.setId(id);
+            cloud.setIsLapse(1);
+            cloud.setLapseCause(data);
+            cloudMapper.updateById(cloud);
             log.info("分享链接已经失效 -> {} -> {}", shareId, data);
         } else {
             JSONObject responseJson = JSONObject.parseObject(data);
@@ -127,11 +127,11 @@ public class QuarkStrategy implements CloudDrive {
         return shareToken;
     }
 
-    private List<QuarkFileInfo> getSharepageFileList(CloudShare cloudShare,
+    private List<QuarkFileInfo> getSharepageFileList(Cloud cloud,
                                                      String stoken,
                                                      String pdirFid,
                                                      Integer page) {
-        String response = quarkApi.shareSharepageDetail(cloudShare.getShareId(), stoken, pdirFid, page);
+        String response = quarkApi.shareSharepageDetail(cloud.getShareId(), stoken, pdirFid, page);
         List<QuarkFileInfo> fileInfoList = new ArrayList<>();
         if (!ObjectUtils.isEmpty(response)) {
             JSONObject responseJson = JSONObject.parseObject(response);
@@ -140,12 +140,12 @@ public class QuarkStrategy implements CloudDrive {
                 List<QuarkFileInfo> dataList = data.getList("list", QuarkFileInfo.class);
                 for (QuarkFileInfo info : dataList) {
                     if (info.getCategory().equals(0)) {
-                        if (!ObjectUtils.isEmpty(cloudShare.getExcludedDir()) &&
-                                cloudShare.getExcludedDir().contains(info.getFileName())) {
+                        if (!ObjectUtils.isEmpty(cloud.getExcludedDir()) &&
+                                cloud.getExcludedDir().contains(info.getFileName())) {
                             continue;
                         }
                         // 如果是目录,递归调用获取文件
-                        fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, info.getFid(), page));
+                        fileInfoList.addAll(getSharepageFileList(cloud, stoken, info.getFid(), page));
                     } else {
                         fileInfoList.add(info);
                     }
@@ -153,7 +153,7 @@ public class QuarkStrategy implements CloudDrive {
                 }
                 Integer total = responseJson.getJSONObject("metadata").getInteger("_total");
                 if (total > page * 100) {
-                    fileInfoList.addAll(getSharepageFileList(cloudShare, stoken, pdirFid, page + 1));
+                    fileInfoList.addAll(getSharepageFileList(cloud, stoken, pdirFid, page + 1));
                 }
             }
         }
@@ -262,7 +262,7 @@ public class QuarkStrategy implements CloudDrive {
                 .sorted(Comparator.comparing(QuarkFileInfo::getFileName, Collator.getInstance()))
                 .toList();
         if (log.isInfoEnabled()) {
-            log.info("{} -> 文件大小：{} -> 文件过滤之前 -> {}", CloudShareProviderEnum.quark, videoList.size(), JSON.toJSONString(videoList));
+            log.info("{} -> 文件大小：{} -> 文件过滤之前 -> {}", CloudProviderEnum.QUARK, videoList.size(), JSON.toJSONString(videoList));
         }
         // 过滤出大于 1080p 的媒体视频
         videoList = videoList
@@ -279,7 +279,7 @@ public class QuarkStrategy implements CloudDrive {
                     .toList();
         }
         if (log.isInfoEnabled()) {
-            log.info("{} -> 文件大小：{} -> 文件过滤之后 -> {}", CloudShareProviderEnum.quark, videoList.size(), JSON.toJSONString(videoList));
+            log.info("{} -> 文件大小：{} -> 文件过滤之后 -> {}", CloudProviderEnum.QUARK, videoList.size(), JSON.toJSONString(videoList));
         }
         return videoList;
     }

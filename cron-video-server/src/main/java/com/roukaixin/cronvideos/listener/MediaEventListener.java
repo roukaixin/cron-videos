@@ -47,8 +47,8 @@ public class MediaEventListener {
             String targetOutName = FilenameUtils.getBaseName(outName);
             ClientSession sourceSession = SshUtils.init("tnt", "127.0.0.1", 22, "230553");
             ClientSession targetSession = null;
-            // getMapCommod
-            String commandMaps = getFfmpegMapCommod(sourceSession, savePath, outName);
+            // getMapCommand
+            String commandMaps = getFfmpegMapCommand(sourceSession, savePath, outName);
             String ffmpeg = getFfmpeg(savePath, outName, targetOutName, commandMaps);
             if (SshUtils.execFfmpeg(sourceSession, ffmpeg)) {
                 // 执行成功
@@ -101,7 +101,7 @@ public class MediaEventListener {
         }
     }
 
-    private String getFfmpegMapCommod(ClientSession tnt, String savePath, String outName) {
+    private String getFfmpegMapCommand(ClientSession tnt, String savePath, String outName) {
         StringBuilder exclude_maps = new StringBuilder();
         String ffprobe = SshUtils.execFfprobe(tnt, getFfprobe(savePath, outName));
         JSONObject ffprobeJson = JSONObject.parseObject(ffprobe);

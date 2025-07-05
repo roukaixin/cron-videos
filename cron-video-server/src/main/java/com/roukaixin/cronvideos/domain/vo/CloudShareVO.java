@@ -2,7 +2,7 @@ package com.roukaixin.cronvideos.domain.vo;
 
 import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
+import com.roukaixin.cronvideos.enums.CloudProviderEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,7 +31,7 @@ public class CloudShareVO {
     /**
      * 网盘提供商（1: 夸克, 2: 阿里云盘, 3: 百度网盘 等）
      */
-    private CloudShareProviderEnum provider;
+    private CloudProviderEnum provider;
 
     /**
      * 分享 ID (路径 ID 或链接)

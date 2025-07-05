@@ -1,6 +1,6 @@
 package com.roukaixin.cronvideos.strategy.domain;
 
-import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
+import com.roukaixin.cronvideos.enums.CloudProviderEnum;
 import lombok.*;
 
 @Setter
@@ -13,7 +13,7 @@ public class FileInfo {
     /**
      * 网盘类型
      */
-    private CloudShareProviderEnum provider;
+    private CloudProviderEnum provider;
 
     /**
      * 文件id

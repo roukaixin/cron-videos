@@ -6,11 +6,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.api.TmdbApi;
 import com.roukaixin.cronvideos.api.domain.Episode;
-import com.roukaixin.cronvideos.domain.DownloadTask;
-import com.roukaixin.cronvideos.domain.CloudShare;
-import com.roukaixin.cronvideos.domain.Media;
-import com.roukaixin.cronvideos.domain.MediaEpisode;
-import com.roukaixin.cronvideos.mapper.*;
+import com.roukaixin.cronvideos.domain.*;
+import com.roukaixin.cronvideos.mapper.CloudMapper;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
+import com.roukaixin.cronvideos.mapper.MediaEpisodeMapper;
+import com.roukaixin.cronvideos.mapper.MediaMapper;
 import com.roukaixin.cronvideos.strategy.CloudDrive;
 import com.roukaixin.cronvideos.strategy.CloudDriveContext;
 import com.roukaixin.cronvideos.strategy.domain.FileInfo;
@@ -33,7 +33,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 @Slf4j
 public class MediaScheduled {
 
-    private final CloudShareMapper cloudShareMapper;
+    private final CloudMapper cloudMapper;
 
     private final MediaMapper mediaMapper;
 
@@ -46,13 +46,13 @@ public class MediaScheduled {
     private final TmdbApi tmdbApi;
 
 
-    public MediaScheduled(CloudShareMapper cloudShareMapper,
+    public MediaScheduled(CloudMapper cloudMapper,
                           MediaMapper mediaMapper,
                           CloudDriveContext cloudDriveContext,
                           DownloadTaskMapper downloadTaskMapper,
                           MediaEpisodeMapper mediaEpisodeMapper,
                           TmdbApi tmdbApi) {
-        this.cloudShareMapper = cloudShareMapper;
+        this.cloudMapper = cloudMapper;
         this.mediaMapper = mediaMapper;
         this.cloudDriveContext = cloudDriveContext;
         this.downloadTaskMapper = downloadTaskMapper;
@@ -68,24 +68,25 @@ public class MediaScheduled {
                     resultContext -> {
                         // 流式返回一条数据
                         Media media = resultContext.getResultObject();
-                        Long notDownloadCount = mediaEpisodeMapper.selectCount(
+                        List<Integer> needDownloadEpisode = mediaEpisodeMapper.selectList(
                                 Wrappers.<MediaEpisode>lambdaQuery()
+                                        .select(MediaEpisode::getEpisodeNumber)
                                         .le(MediaEpisode::getAirDate, LocalDateTime.now().format(ISO_LOCAL_DATE))
                                         .eq(MediaEpisode::getIsUpdate, 0)
                                         .eq(MediaEpisode::getMediaId, media.getId())
-                        );
-                        if (notDownloadCount.compareTo(0L) > 0) {
+                        ).stream().map(MediaEpisode::getEpisodeNumber).toList();
+                        if (!needDownloadEpisode.isEmpty()) {
                             log.info("开始更新视频 -> {}", media.getName());
-                            List<CloudShare> cloudShareList = cloudShareMapper.selectList(
-                                    Wrappers.<CloudShare>lambdaQuery()
-                                            .eq(CloudShare::getMediaId, media.getId())
-                                            .eq(CloudShare::getIsLapse, 0)
+                            List<Cloud> cloudShareList = cloudMapper.selectList(
+                                    Wrappers.<Cloud>lambdaQuery()
+                                            .eq(Cloud::getMediaId, media.getId())
+                                            .eq(Cloud::getIsLapse, 0)
                             );
                             if (!cloudShareList.isEmpty()) {
                                 List<FileInfo> videoList = new ArrayList<>();
-                                for (CloudShare cloudShare : cloudShareList) {
-                                    CloudDrive cloudDrive = cloudDriveContext.getCloudDrive(cloudShare.getProvider());
-                                    List<FileInfo> fileList = cloudDrive.getFileList(media, cloudShare);
+                                for (Cloud cloud : cloudShareList) {
+                                    CloudDrive cloudDrive = cloudDriveContext.getCloudDrive(cloud.getProvider());
+                                    List<FileInfo> fileList = cloudDrive.getFileList(media, cloud, needDownloadEpisode);
                                     videoList.addAll(fileList);
                                 }
                                 // key： 集数，value： 所有数据包括重复集数的数据

@@ -1,8 +1,8 @@
-package com.roukaixin.cronvideos.service.service.impl;
+package com.roukaixin.cronvideos.service.impl.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.roukaixin.cronvideos.domain.MediaEpisode;
-import com.roukaixin.cronvideos.service.service.MediaEpisodeService;
+import com.roukaixin.cronvideos.service.MediaEpisodeService;
 import com.roukaixin.cronvideos.mapper.MediaEpisodeMapper;
 import org.springframework.stereotype.Service;
 

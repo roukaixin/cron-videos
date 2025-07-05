@@ -1,7 +1,7 @@
 package com.roukaixin.cronvideos.strategy;
 
-import com.roukaixin.cronvideos.enums.CloudShareProviderEnum;
-import com.roukaixin.cronvideos.mapper.CloudShareMapper;
+import com.roukaixin.cronvideos.enums.CloudProviderEnum;
+import com.roukaixin.cronvideos.mapper.CloudMapper;
 import com.roukaixin.cronvideos.mapper.CloudStorageAuthMapper;
 import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
@@ -28,7 +28,7 @@ public class CloudDriveContext {
 
     private final DownloadTaskMapper downloadTaskMapper;
 
-    private final CloudShareMapper cloudShareMapper;
+    private final CloudMapper cloudMapper;
 
     private final QuarkApi quarkApi;
 
@@ -37,13 +37,13 @@ public class CloudDriveContext {
     public CloudDriveContext(CloudStorageAuthMapper cloudStorageAuthMapper,
                              DownloaderMapper downloaderMapper,
                              DownloadTaskMapper downloadTaskMapper,
-                             CloudShareMapper cloudShareMapper,
+                             CloudMapper cloudMapper,
                              QuarkApi quarkApi,
                              RedisTemplate<String, Object> redisTemplate) {
         this.cloudStorageAuthMapper = cloudStorageAuthMapper;
         this.downloaderMapper = downloaderMapper;
         this.downloadTaskMapper = downloadTaskMapper;
-        this.cloudShareMapper = cloudShareMapper;
+        this.cloudMapper = cloudMapper;
         this.quarkApi = quarkApi;
         this.redisTemplate = redisTemplate;
     }
@@ -51,20 +51,20 @@ public class CloudDriveContext {
     @PostConstruct
     private void init() {
         CLOUD_DRIVE_MAP.put(
-                "cloud_drive_" + CloudShareProviderEnum.quark.getProvider(),
+                "cloud_drive_" + CloudProviderEnum.QUARK.name().toLowerCase(),
                 new QuarkStrategy(
                         cloudStorageAuthMapper,
                         downloaderMapper,
                         downloadTaskMapper,
                         quarkApi,
                         redisTemplate,
-                        cloudShareMapper
+                        cloudMapper
                 )
         );
     }
 
 
-    public CloudDrive getCloudDrive(CloudShareProviderEnum key) {
-        return CLOUD_DRIVE_MAP.get("cloud_drive_" + key.getProvider());
+    public CloudDrive getCloudDrive(CloudProviderEnum key) {
+        return CLOUD_DRIVE_MAP.get("cloud_drive_" + key.name().toLowerCase());
     }
 }

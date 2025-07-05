@@ -32,7 +32,7 @@ create table media_episode
     comment '媒体库剧集信息';
 
 
-create table cloud_share
+create table cloud
 (
     id            bigint               not null comment '主键 id'
         primary key,
