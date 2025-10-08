@@ -1,5 +1,10 @@
 # 后端
 
+启动项目之前自动创建数据库
+
+-- 创建数据库
+create schema cron_videos collate utf8mb4_general_ci;
+
 active -> 下载中
 
 waiting -> 等待
