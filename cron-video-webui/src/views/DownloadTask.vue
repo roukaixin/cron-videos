@@ -42,7 +42,7 @@
               </el-icon>
               批量删除
             </el-button>
-            <el-button type="primary" @click="refresh" :loading="loading" plain>
+            <el-button type="primary" @click="loadDownloads" :loading="loading" plain>
               <el-icon>
                 <Refresh/>
               </el-icon>
@@ -206,204 +206,176 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent, ref, onMounted} from 'vue'
+<script lang="ts" setup>
+import {ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Refresh, Search, Delete, VideoPause, RefreshRight} from '@element-plus/icons-vue'
 import {Aria2DownloadTaskPage, DownloadTask} from '@/types'
 import {aria2DownloadTaskApi} from "@/api/views/aria2_download_task";
 
-export default defineComponent({
-  name: 'Aria2DownloadTask',
-  components: {
-    Refresh,
-    Search,
-    Delete,
-    VideoPause,
-    RefreshRight
-  },
-  setup() {
-    const aria2DownloadTaskPageList = ref<Aria2DownloadTaskPage[]>([])
-    const loading = ref(false)
-    const total = ref(0)
-    const selectedTasks = ref<Aria2DownloadTaskPage[]>([])
+defineOptions({
+  name: "DownloadTask"
+})
 
-    // 查询参数
-    const queryParams = ref({
-      page: 1,
-      pageSize: 10,
-      name: '',
-      status: undefined as number | undefined
+const aria2DownloadTaskPageList = ref<Aria2DownloadTaskPage[]>([])
+const loading = ref(false)
+const total = ref(0)
+const selectedTasks = ref<Aria2DownloadTaskPage[]>([])
+
+// 查询参数
+const queryParams = ref({
+  page: 1,
+  pageSize: 10,
+  name: '',
+  status: undefined as number | undefined
+})
+
+// 修改状态相关的类型定义
+type TaskStatus = 0 | 1 | 2 | 3
+
+const getStatusText = (status: TaskStatus) => {
+  const statusMap: Record<TaskStatus, string> = {
+    0: '等待中',
+    1: '下载中',
+    2: '已完成',
+    3: '失败'
+  }
+  return statusMap[status] || '未知'
+}
+
+const getStatusType = (status: TaskStatus) => {
+  const typeMap: Record<TaskStatus, string> = {
+    0: 'info',
+    1: 'warning',
+    2: 'success',
+    3: 'danger'
+  }
+  return typeMap[status] || 'info'
+}
+
+const formatFileSize = (bytes: number) => {
+  if (!bytes) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let size = bytes
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+
+  return `${size.toFixed(1)} ${units[unitIndex]}`
+}
+
+// 获取分页列表
+const loadDownloads = async () => {
+  loading.value = true
+  try {
+    const response = await aria2DownloadTaskApi.getTasks({
+      page: queryParams.value.page,
+      pageSize: queryParams.value.pageSize,
+      name: queryParams.value.name || "",
+      status: queryParams.value.status
     })
-
-    // 修改状态相关的类型定义
-    type TaskStatus = 0 | 1 | 2 | 3
-
-    const getStatusText = (status: TaskStatus) => {
-      const statusMap: Record<TaskStatus, string> = {
-        0: '等待中',
-        1: '下载中',
-        2: '已完成',
-        3: '失败'
-      }
-      return statusMap[status] || '未知'
+    if (response.data.code === 200) {
+      aria2DownloadTaskPageList.value = response.data.data.list
+      total.value = response.data.data.total
+    } else {
+      ElMessage.error(response.data.message || '加载下载任务列表失败')
     }
+  } catch (error) {
+    console.error('加载失败:', error)
+    ElMessage.error('加载下载任务列表失败')
+  } finally {
+    loading.value = false
+  }
+}
 
-    const getStatusType = (status: TaskStatus) => {
-      const typeMap: Record<TaskStatus, string> = {
-        0: 'info',
-        1: 'warning',
-        2: 'success',
-        3: 'danger'
-      }
-      return typeMap[status] || 'info'
+const handleSearch = () => {
+  queryParams.value.page = 1
+  loadDownloads()
+}
+
+const handleSizeChange = (val: number) => {
+  queryParams.value.pageSize = val
+  loadDownloads()
+}
+
+const handleCurrentChange = (val: number) => {
+  queryParams.value.page = val
+  loadDownloads()
+}
+
+const handleRetry = async (task: DownloadTask) => {
+  try {
+    const response = await aria2DownloadTaskApi.updateTask(task.id, {status: 0})
+    if (response.data.code === 200) {
+      ElMessage.success('重试任务已添加')
+      await loadDownloads()
+    } else {
+      ElMessage.error(response.data.message || '重试失败')
     }
+  } catch (error) {
+    console.error('重试失败:', error)
+    ElMessage.error('重试失败')
+  }
+}
 
-    const formatFileSize = (bytes: number) => {
-      if (!bytes) return '0 B'
-      const units = ['B', 'KB', 'MB', 'GB', 'TB']
-      let size = bytes
-      let unitIndex = 0
-
-      while (size >= 1024 && unitIndex < units.length - 1) {
-        size /= 1024
-        unitIndex++
-      }
-
-      return `${size.toFixed(1)} ${units[unitIndex]}`
+const handleDelete = async (id: string) => {
+  try {
+    const response = await aria2DownloadTaskApi.deleteTask(id)
+    if (response.data.code === 200) {
+      ElMessage.success('删除成功')
+      await loadDownloads()
+    } else {
+      ElMessage.error(response.data.message || '删除失败')
     }
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败')
+  }
+}
 
-    // 获取分页列表
-    const loadDownloads = async () => {
-      loading.value = true
-      try {
-        const response = await aria2DownloadTaskApi.getTasks({
-          page: queryParams.value.page,
-          pageSize: queryParams.value.pageSize,
-          name: queryParams.value.name || "",
-          status: queryParams.value.status
-        })
-        if (response.data.code === 200) {
-          aria2DownloadTaskPageList.value = response.data.data.list
-          total.value = response.data.data.total
-        } else {
-          ElMessage.error(response.data.message || '加载下载任务列表失败')
+const handleSelectionChange = (selection: Aria2DownloadTaskPage[]) => {
+  selectedTasks.value = selection
+}
+
+const handleBatchDelete = async () => {
+  if (!selectedTasks.value.length) return
+
+  try {
+    await ElMessageBox.confirm(
+        `确定要删除选中的 ${selectedTasks.value.length} 个任务吗？`,
+        '批量删除',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
         }
-      } catch (error) {
-        console.error('加载失败:', error)
-        ElMessage.error('加载下载任务列表失败')
-      } finally {
-        loading.value = false
-      }
-    }
+    )
 
-    const handleSearch = () => {
-      queryParams.value.page = 1
-      loadDownloads()
-    }
+    const deletePromises = selectedTasks.value.map((task: Aria2DownloadTaskPage) =>
+        aria2DownloadTaskApi.deleteTask(task.id)
+    )
 
-    const handleSizeChange = (val: number) => {
-      queryParams.value.pageSize = val
-      loadDownloads()
-    }
-
-    const handleCurrentChange = (val: number) => {
-      queryParams.value.page = val
-      loadDownloads()
-    }
-
-    const handleRetry = async (task: DownloadTask) => {
-      try {
-        const response = await aria2DownloadTaskApi.updateTask(task.id, {status: 0})
-        if (response.data.code === 200) {
-          ElMessage.success('重试任务已添加')
-          await loadDownloads()
-        } else {
-          ElMessage.error(response.data.message || '重试失败')
-        }
-      } catch (error) {
-        console.error('重试失败:', error)
-        ElMessage.error('重试失败')
-      }
-    }
-
-    const handleDelete = async (id: string) => {
-      try {
-        const response = await aria2DownloadTaskApi.deleteTask(id)
-        if (response.data.code === 200) {
-          ElMessage.success('删除成功')
-          await loadDownloads()
-        } else {
-          ElMessage.error(response.data.message || '删除失败')
-        }
-      } catch (error) {
-        console.error('删除失败:', error)
-        ElMessage.error('删除失败')
-      }
-    }
-
-    const handleSelectionChange = (selection: Aria2DownloadTaskPage[]) => {
-      selectedTasks.value = selection
-    }
-
-    const handleBatchDelete = async () => {
-      if (!selectedTasks.value.length) return
-
-      try {
-        await ElMessageBox.confirm(
-            `确定要删除选中的 ${selectedTasks.value.length} 个任务吗？`,
-            '批量删除',
-            {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'warning'
-            }
-        )
-
-        const deletePromises = selectedTasks.value.map((task: Aria2DownloadTaskPage) =>
-            aria2DownloadTaskApi.deleteTask(task.id)
-        )
-
-        await Promise.all(deletePromises)
-        ElMessage.success('批量删除成功')
-        await loadDownloads()
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('批量删除失败:', error)
-          ElMessage.error('批量删除失败')
-        }
-      }
-    }
-
-    const handlePause = (task: DownloadTask) => {
-      // 暂停
-      console.log(task)
-    }
-
-    onMounted(() => {
-      loadDownloads()
-    })
-
-    return {
-      aria2DownloadTaskPageList,
-      loading,
-      total,
-      queryParams,
-      selectedTasks,
-      getStatusText,
-      getStatusType,
-      formatFileSize,
-      handleRetry,
-      handleDelete,
-      handleSearch,
-      handleSizeChange,
-      handleCurrentChange,
-      handleSelectionChange,
-      handleBatchDelete,
-      refresh: loadDownloads,
-      handlePause
+    await Promise.all(deletePromises)
+    ElMessage.success('批量删除成功')
+    await loadDownloads()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+      ElMessage.error('批量删除失败')
     }
   }
+}
+
+const handlePause = (task: DownloadTask) => {
+  // 暂停
+  console.log(task)
+}
+
+onMounted(() => {
+  loadDownloads()
 })
 </script>
 

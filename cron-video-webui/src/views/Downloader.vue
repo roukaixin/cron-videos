@@ -278,192 +278,172 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent, ref, onMounted} from 'vue'
+<script lang="ts" setup>
+import {ref, onMounted} from 'vue'
 import {ElMessage, type FormInstance} from 'element-plus'
 import {Plus, Refresh, Edit, Delete, CircleCheck, CircleClose} from '@element-plus/icons-vue'
 import {Downloader} from '@/types'
 import {downloaderApi} from "@/api/views/downloader";
 
-export default defineComponent({
-  name: 'Downloader',
-  components: {
-    Plus,
-    Refresh,
-    Edit,
-    Delete,
-    CircleCheck,
-    CircleClose
-  },
-  setup() {
-    // 下载器列表
-    const downloaderList = ref<Downloader[]>([])
-    const loading = ref(false)
-    const dialogVisible = ref(false)
-    const isEdit = ref(false)
-    const formRef = ref<FormInstance | null>(null)
+defineOptions({
+  name: "Downloader"
+})
 
-    const connectionForm = ref<Partial<Downloader>>({
-      type: 0,
-      protocol: '',
-      host: '',
-      port: 6800,
-      secret: '',
-      weight: 1
-    })
 
-    const formRules = {
-      ip: [
-        {required: true, message: '请输入服务器地址', trigger: 'blur'}
-      ],
-      port: [
-        {required: true, message: '请输入端口号', trigger: 'blur'},
-        {type: 'number', min: 1, max: 65535, message: '端口号范围1-65535', trigger: 'blur'}
-      ],
-      weight: [
-        {required: true, message: '请输入权重', trigger: 'blur'},
-        {type: 'number', min: 1, max: 100, message: '权重范围1-100', trigger: 'blur'}
-      ]
-    }
+onMounted(() => {
+  loadConnections()
+})
 
-    const loadConnections = async () => {
-      loading.value = true
-      try {
-        const response = await downloaderApi.getDownloaderList()
-        if (response.data.code === 200) {
-          downloaderList.value = response.data.data
-        } else {
-          ElMessage.error(response.data.message || '加载连接列表失败')
-        }
-      } catch (error) {
-        console.error('加载失败:', error)
-        ElMessage.error('加载连接列表失败')
-      } finally {
-        loading.value = false
-      }
-    }
 
-    const handleAddConnection = () => {
-      connectionForm.value = {
-        type: 0,
-        protocol: '',
-        host: '',
-        port: 6800,
-        secret: '',
-        weight: 1
-      }
-      isEdit.value = false
-      dialogVisible.value = true
-    }
+// 下载器列表
+const downloaderList = ref<Downloader[]>([])
+const loading = ref(false)
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+const formRef = ref<FormInstance | null>(null)
 
-    const handleEdit = (row: Downloader) => {
-      connectionForm.value = {...row}
-      isEdit.value = true
-      dialogVisible.value = true
-    }
+const connectionForm = ref<Partial<Downloader>>({
+  type: 0,
+  protocol: '',
+  host: '',
+  port: 6800,
+  secret: '',
+  weight: 1
+})
 
-    const handleSubmit = async () => {
-      if (!formRef.value) return
-      await formRef.value.validate(async (valid) => {
-        if (!valid) return
-        try {
-          let response
-          if (isEdit.value) {
-            response = await downloaderApi.updateDownloader(connectionForm.value.id!, {
-              type: connectionForm.value.type!,
-              protocol: connectionForm.value.protocol!,
-              host: connectionForm.value.host!,
-              port: connectionForm.value.port!,
-              secret: connectionForm.value.secret!,
-              weight: connectionForm.value.weight!
-            })
-          } else {
-            response = await downloaderApi.addDownloader({
-              type: connectionForm.value.type!,
-              protocol: connectionForm.value.protocol!,
-              host: connectionForm.value.host!,
-              port: connectionForm.value.port!,
-              secret: connectionForm.value.secret!,
-              weight: connectionForm.value.weight!
-            })
-          }
+const formRules = {
+  ip: [
+    {required: true, message: '请输入服务器地址', trigger: 'blur'}
+  ],
+  port: [
+    {required: true, message: '请输入端口号', trigger: 'blur'},
+    {type: 'number', min: 1, max: 65535, message: '端口号范围1-65535', trigger: 'blur'}
+  ],
+  weight: [
+    {required: true, message: '请输入权重', trigger: 'blur'},
+    {type: 'number', min: 1, max: 100, message: '权重范围1-100', trigger: 'blur'}
+  ]
+}
 
-          if (response.data.code === 200) {
-            ElMessage.success('操作成功')
-            dialogVisible.value = false
-            await loadConnections()
-          } else {
-            ElMessage.error(response.data.message || '操作失败')
-          }
-        } catch (error) {
-          console.error('操作失败:', error)
-          ElMessage.error('操作失败，请重试')
-        }
-      })
-    }
 
-    const handleDelete = async (row: Downloader) => {
-      try {
-        const response = await downloaderApi.deleteDownloader(row.id)
-        if (response.data.code === 200) {
-          ElMessage.success('删除成功')
-          await loadConnections()
-        } else {
-          ElMessage.error(response.data.message || '删除失败')
-        }
-      } catch (error) {
-        console.error('删除失败:', error)
-        ElMessage.error('删除失败')
-      }
-    }
-
-    const copySecret = async (secret: string) => {
-      try {
-        await navigator.clipboard.writeText(secret)
-        ElMessage.success('密钥已复制')
-      } catch (err) {
-        ElMessage.error('复制失败')
-      }
-    }
-
-    const downloaderType = [
-      {
-        value: 0,
-        label: "aria2"
-      },
-      {
-        value: 1,
-        label: "qbittorrent"
-      }
-    ]
-
-    const getDownloaderType = (type: number) => {
-      const item = downloaderType.find(item => item.value === type);
-      return item ? item.label : '未知'
-    }
-
-    onMounted(() => {
-      loadConnections()
-    })
-
-    return {
-      downloaderList,
-      loading,
-      dialogVisible,
-      isEdit,
-      connectionForm,
-      formRef,
-      formRules,
-      handleAddConnection,
-      handleEdit,
-      handleDelete,
-      handleSubmit,
-      copySecret,
-      loadConnections,
-      getDownloaderType,
-      downloaderType
-    }
+const handleAddConnection = () => {
+  connectionForm.value = {
+    type: 0,
+    protocol: '',
+    host: '',
+    port: 6800,
+    secret: '',
+    weight: 1
   }
+  isEdit.value = false
+  dialogVisible.value = true
+}
+
+const handleEdit = (row: Downloader) => {
+  connectionForm.value = {...row}
+  isEdit.value = true
+  dialogVisible.value = true
+}
+
+const handleSubmit = async () => {
+  if (!formRef.value) return
+  await formRef.value.validate(async (valid) => {
+    if (!valid) return
+    try {
+      let response
+      if (isEdit.value) {
+        response = await downloaderApi.updateDownloader(connectionForm.value.id!, {
+          type: connectionForm.value.type!,
+          protocol: connectionForm.value.protocol!,
+          host: connectionForm.value.host!,
+          port: connectionForm.value.port!,
+          secret: connectionForm.value.secret!,
+          weight: connectionForm.value.weight!
+        })
+      } else {
+        response = await downloaderApi.addDownloader({
+          type: connectionForm.value.type!,
+          protocol: connectionForm.value.protocol!,
+          host: connectionForm.value.host!,
+          port: connectionForm.value.port!,
+          secret: connectionForm.value.secret!,
+          weight: connectionForm.value.weight!
+        })
+      }
+
+      if (response.data.code === 200) {
+        ElMessage.success('操作成功')
+        dialogVisible.value = false
+        await loadConnections()
+      } else {
+        ElMessage.error(response.data.message || '操作失败')
+      }
+    } catch (error) {
+      console.error('操作失败:', error)
+      ElMessage.error('操作失败，请重试')
+    }
+  })
+}
+
+const handleDelete = async (row: Downloader) => {
+  try {
+    const response = await downloaderApi.deleteDownloader(row.id)
+    if (response.data.code === 200) {
+      ElMessage.success('删除成功')
+      await loadConnections()
+    } else {
+      ElMessage.error(response.data.message || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败')
+  }
+}
+
+const copySecret = async (secret: string) => {
+  try {
+    await navigator.clipboard.writeText(secret)
+    ElMessage.success('密钥已复制')
+  } catch (err) {
+    ElMessage.error('复制失败')
+  }
+}
+
+const downloaderType = [
+  {
+    value: 0,
+    label: "aria2"
+  },
+  {
+    value: 1,
+    label: "qbittorrent"
+  }
+]
+
+const getDownloaderType = (type: number) => {
+  const item = downloaderType.find(item => item.value === type);
+  return item ? item.label : '未知'
+}
+
+const loadConnections = async () => {
+  loading.value = true
+  try {
+    const response = await downloaderApi.getDownloaderList()
+    if (response.data.code === 200) {
+      downloaderList.value = response.data.data
+    } else {
+      ElMessage.error(response.data.message || '加载连接列表失败')
+    }
+  } catch (error) {
+    console.error('加载失败:', error)
+    ElMessage.error('加载连接列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadConnections()
 })
 </script>
 

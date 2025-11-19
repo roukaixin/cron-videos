@@ -1,63 +1,61 @@
 <template>
-  <el-container>
-    <el-header class="header">
-      <div class="custom-nav">
-        <router-link to="/media" class="nav-item" active-class="active">
-          <i class="el-icon-video-camera"></i>
-          <span>影视管理</span>
-        </router-link>
-        <router-link to="/cloud-storage-auth" class="nav-item" active-class="active">
-          <i class="el-icon-cloudy"></i>
-          <span>网盘认证</span>
-        </router-link>
-        <router-link to="/downloader" class="nav-item" active-class="active">
-          <i class="el-icon-download"></i>
-          <span>下载器管理</span>
-        </router-link>
-        <router-link to="/aria2-download-task" class="nav-item" active-class="active">
-          <i class="el-icon-folder-opened"></i>
-          <span>下载任务管理</span>
-        </router-link>
-      </div>
-    </el-header>
-    <el-main>
-      <router-view v-slot="{ Component }">
-        <keep-alive>
-          <component :is="Component" />
-        </keep-alive>
-      </router-view>
-    </el-main>
-  </el-container>
+  <div class="common-layout">
+    <el-container>
+      <el-header>
+        <el-card shadow="always">
+          <el-row>
+            <el-col :span="6">
+              <router-link to="/media" class="nav-item" active-class="active">
+                <i class="el-icon-video-camera"></i>
+                <span>影视管理</span>
+              </router-link>
+            </el-col>
+            <el-col :span="6">
+              <router-link to="/cloud-storage-auth" class="nav-item" active-class="active">
+                <i class="el-icon-cloudy"></i>
+                <span>网盘认证</span>
+              </router-link>
+            </el-col>
+            <el-col :span="6">
+              <router-link to="/downloader" class="nav-item" active-class="active">
+                <i class="el-icon-download"></i>
+                <span>下载器管理</span>
+              </router-link>
+            </el-col>
+            <el-col :span="6">
+              <router-link to="/download-task" class="nav-item" active-class="active">
+                <i class="el-icon-folder-opened"></i>
+                <span>下载任务管理</span>
+              </router-link>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-header>
+      <el-main>
+        <router-view v-slot="{ Component }">
+          <keep-alive>
+            <component :is="Component"/>
+          </keep-alive>
+        </router-view>
+      </el-main>
+    </el-container>
+  </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script lang="ts" setup>
 
-export default defineComponent({
-  setup() {
-    const beforeLeave = (el: Element) => {
-      // 保存滚动位置
-      (el as any)._scrollPosition = {
-        top: window.scrollY,
-        left: window.scrollX,
-      }
-    }
-
-    const enter = (el: Element) => {
-      // 恢复滚动位置
-      const { top, left } = (el as any)._scrollPosition || { top: 0, left: 0 }
-      window.scrollTo(left, top)
-    }
-
-    return {
-      beforeLeave,
-      enter
-    }
-  }
+defineOptions({
+  name: "App"
 })
+
 </script>
 
-<style>
+<style scoped>
+
+.el-card {
+  background-color: #f56c6c;
+  border-radius: 8px;
+}
 .header {
   padding: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -150,7 +148,7 @@ export default defineComponent({
   .nav-item i {
     font-size: 22px;
   }
-  
+
   .nav-item span {
     font-size: 16px;
   }

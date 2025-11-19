@@ -230,178 +230,153 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent, ref, onMounted, computed} from 'vue'
+<script lang="ts" setup>
+import {ref, onMounted, computed} from 'vue'
 import {ElMessage, type FormInstance} from 'element-plus'
 import type {CloudStorageAuth} from '@/types'
 import {Plus, Refresh, Edit, Delete} from '@element-plus/icons-vue'
 import {cloudStorageAuthApi} from "@/api/views/cloud_storage_auth";
 
-export default defineComponent({
-  name: 'CloudStorageAuth',
-  components: {
-    Plus,
-    Refresh,
-    Edit,
-    Delete
-  },
-  setup() {
-    const authList = ref<CloudStorageAuth[]>([])
-    const loading = ref(false)
-    const dialogVisible = ref<boolean>(false)
-    const isEdit = ref<boolean>(false)
-    const authFormRef = ref<FormInstance | null>(null)
-
-    const authForm = ref<Partial<CloudStorageAuth>>({
-      provider: 1,
-      cookie: '',
-      access_token: null,
-      refresh_token: null
-    })
-
-    const showAccessToken = computed(() => authForm.value.provider !== 1)
-    const showRefreshToken = computed(() => authForm.value.provider !== 1)
-
-    // 修改表单验证规则
-    const formRules = {
-      provider: [
-        {required: true, message: '请选择网盘类型', trigger: 'change'}
-      ],
-      cookie: [
-        {required: true, message: '请输入Cookie', trigger: 'blur'}
-      ],
-      access_token: [
-        {
-          required: computed(() => authForm.value.provider !== 1),
-          message: '请输入访问令牌',
-          trigger: 'blur'
-        }
-      ],
-      refresh_token: [
-        {
-          required: computed(() => authForm.value.provider !== 1),
-          message: '请输入刷新令牌',
-          trigger: 'blur'
-        }
-      ]
-    }
-
-    const getProviderName = (provider: number) => {
-      const providers = ['夸克', '阿里云盘', '百度网盘']
-      return providers[provider - 1] || '未知'
-    }
-
-    const getProviderTagType = (provider: number) => {
-      const types = ['', 'success', 'info', 'warning']
-      return types[provider] || 'info'
-    }
-
-    const loadAuths = async () => {
-      loading.value = true
-      try {
-        const response = await cloudStorageAuthApi.getAuths()
-        if (response.data.code === 200) {
-          authList.value = response.data.data
-        } else {
-          ElMessage.error(response.data.message || '加载认证信息失败')
-        }
-      } catch (error) {
-        console.error('加载失败:', error)
-        ElMessage.error('加载认证信息失败')
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const handleAddAuth = () => {
-      authForm.value = {
-        provider: 1,
-        cookie: '',
-        access_token: null,
-        refresh_token: null,
-        id: undefined
-      }
-      isEdit.value = false
-      dialogVisible.value = true
-    }
-
-    const handleEdit = (row: CloudStorageAuth) => {
-      authForm.value = {...row}
-      isEdit.value = true
-      dialogVisible.value = true
-    }
-
-    const handleSubmit = async () => {
-      if (!authFormRef.value) return
-      await authFormRef.value.validate(async (valid) => {
-        if (!valid) return
-        try {
-          let response
-          const requestData = {
-            provider: authForm.value.provider,
-            cookie: authForm.value.cookie,
-            access_token: authForm.value.access_token || '',
-            refresh_token: authForm.value.refresh_token || ''
-          } as CloudStorageAuth;
-
-          if (isEdit.value) {
-            response = await cloudStorageAuthApi.updateAuth(authForm.value.id!, requestData)
-          } else {
-            response = await cloudStorageAuthApi.addAuth(requestData)
-          }
-          if (response.data.code === 200) {
-            ElMessage.success('操作成功')
-            dialogVisible.value = false
-            await loadAuths()
-          } else {
-            ElMessage.error(response.data.message || '操作失败')
-          }
-        } catch (error) {
-          console.error('操作失败:', error)
-          ElMessage.error('操作失败，请重试')
-        }
-      })
-    }
-
-    const handleDelete = async (id: number) => {
-      try {
-        const response = await cloudStorageAuthApi.deleteAuth(id)
-        if (response.data.code === 200) {
-          ElMessage.success('删除成功')
-          await loadAuths()
-        } else {
-          ElMessage.error(response.data.message || '删除失败')
-        }
-      } catch (error) {
-        console.error('删除失败:', error)
-        ElMessage.error('删除失败')
-      }
-    }
-
-    onMounted(() => {
-      loadAuths()
-    })
-
-    return {
-      authList,
-      loading,
-      dialogVisible,
-      isEdit,
-      authForm,
-      authFormRef,
-      getProviderName,
-      getProviderTagType,
-      loadAuths,
-      handleSubmit,
-      handleEdit,
-      handleAddAuth,
-      handleDelete,
-      showAccessToken,
-      showRefreshToken,
-      formRules
-    }
-  }
+defineOptions({
+  name: "CloudStorageAuth"
 })
+
+const authList = ref<CloudStorageAuth[]>([])
+const loading = ref(false)
+const dialogVisible = ref<boolean>(false)
+const isEdit = ref<boolean>(false)
+const authFormRef = ref<FormInstance | null>(null)
+
+const authForm = ref<Partial<CloudStorageAuth>>({
+  provider: 1,
+  cookie: '',
+  access_token: null,
+  refresh_token: null
+})
+
+const showAccessToken = computed(() => authForm.value.provider !== 1)
+const showRefreshToken = computed(() => authForm.value.provider !== 1)
+
+// 修改表单验证规则
+const formRules = {
+  provider: [
+    {required: true, message: '请选择网盘类型', trigger: 'change'}
+  ],
+  cookie: [
+    {required: true, message: '请输入Cookie', trigger: 'blur'}
+  ],
+  access_token: [
+    {
+      required: computed(() => authForm.value.provider !== 1),
+      message: '请输入访问令牌',
+      trigger: 'blur'
+    }
+  ],
+  refresh_token: [
+    {
+      required: computed(() => authForm.value.provider !== 1),
+      message: '请输入刷新令牌',
+      trigger: 'blur'
+    }
+  ]
+}
+
+const getProviderName = (provider: number) => {
+  const providers = ['夸克', '阿里云盘', '百度网盘']
+  return providers[provider - 1] || '未知'
+}
+
+const getProviderTagType = (provider: number) => {
+  const types = ['', 'success', 'info', 'warning']
+  return types[provider] || 'info'
+}
+
+const loadAuths = async () => {
+  loading.value = true
+  try {
+    const response = await cloudStorageAuthApi.getAuths()
+    if (response.data.code === 200) {
+      authList.value = response.data.data
+    } else {
+      ElMessage.error(response.data.message || '加载认证信息失败')
+    }
+  } catch (error) {
+    console.error('加载失败:', error)
+    ElMessage.error('加载认证信息失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleAddAuth = () => {
+  authForm.value = {
+    provider: 1,
+    cookie: '',
+    access_token: null,
+    refresh_token: null,
+    id: undefined
+  }
+  isEdit.value = false
+  dialogVisible.value = true
+}
+
+const handleEdit = (row: CloudStorageAuth) => {
+  authForm.value = {...row}
+  isEdit.value = true
+  dialogVisible.value = true
+}
+
+const handleSubmit = async () => {
+  if (!authFormRef.value) return
+  await authFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    try {
+      let response
+      const requestData = {
+        provider: authForm.value.provider,
+        cookie: authForm.value.cookie,
+        access_token: authForm.value.access_token || '',
+        refresh_token: authForm.value.refresh_token || ''
+      } as CloudStorageAuth;
+
+      if (isEdit.value) {
+        response = await cloudStorageAuthApi.updateAuth(authForm.value.id!, requestData)
+      } else {
+        response = await cloudStorageAuthApi.addAuth(requestData)
+      }
+      if (response.data.code === 200) {
+        ElMessage.success('操作成功')
+        dialogVisible.value = false
+        await loadAuths()
+      } else {
+        ElMessage.error(response.data.message || '操作失败')
+      }
+    } catch (error) {
+      console.error('操作失败:', error)
+      ElMessage.error('操作失败，请重试')
+    }
+  })
+}
+
+const handleDelete = async (id: number) => {
+  try {
+    const response = await cloudStorageAuthApi.deleteAuth(id)
+    if (response.data.code === 200) {
+      ElMessage.success('删除成功')
+      await loadAuths()
+    } else {
+      ElMessage.error(response.data.message || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败')
+  }
+}
+
+onMounted(() => {
+  loadAuths()
+})
+
 </script>
 
 <style lang="scss" scoped>

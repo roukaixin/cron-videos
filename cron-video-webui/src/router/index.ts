@@ -18,9 +18,9 @@ const routes: RouteRecordRaw[] = [
     meta: { keepAlive: true }
   },
   {
-    path: '/aria2-download-task',
-    name: 'Aria2DownloadTask',
-    component: () => import('@/views/Aria2DownloadTask.vue'),
+    path: '/download-task',
+    name: 'DownloadTask',
+    component: () => import('@/views/DownloadTask.vue'),
     meta: { keepAlive: true }
   },
   {

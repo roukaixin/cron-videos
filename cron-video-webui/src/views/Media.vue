@@ -696,521 +696,433 @@
   </div>
 </template>
 
-<script lang="ts">
-import {computed, defineComponent, onMounted, ref} from 'vue'
+<script lang="ts" setup>
+import {computed, onMounted, ref} from 'vue'
 import {dayjs, ElMessage} from 'element-plus'
-import {Delete, Download, Edit, Film, Plus, QuestionFilled, Refresh, Share, VideoCamera} from '@element-plus/icons-vue'
+import {Delete, Download, Edit, Plus, QuestionFilled, Refresh, Share} from '@element-plus/icons-vue'
 import type {CloudShare, DownloadTask, Media} from '@/types'
 import {mediaApi} from "@/api/views/media";
 import {cloudShareApi} from "@/api/views/cloud_share";
 
-export default defineComponent({
-  name: 'Media',
-  components: {
-    VideoCamera,
-    Film,
-    Plus,
-    Refresh,
-    Edit,
-    Share,
-    Download,
-    QuestionFilled,
-    Delete,
-  },
-  setup() {
-    const mediaList = ref<Media[]>([])
-    const shareList = ref<CloudShare[]>([])
-    const loading = ref(true)
-    const shareLoading = ref(false)
-    const shareDialogVisible = ref(false)
-    const addMediaDialogVisible = ref(false)
-    const addShareDialogVisible = ref(false)
-    const currentMediaId = ref<string>()
-    const newMedia = ref<Partial<Media>>({
-      name: '',
-      type: '',
-      typeAlias: '',
-      seasonNumber: 0,
-      totalEpisode: 0,
-      startEpisode: null,
-      releaseDate: '',
-      tmdbId: ''
-    })
-    const newShare = ref<Partial<CloudShare>>({
-      provider: undefined,
-      shareId: '',
-      shareCode: '',
-      expiredAt: '',
-      fileRegex: '',
-      onlyInDir: '',
-      excludedDir: [],
-      isLapse: 0,
-      lapseCause: ''
-    })
-    const downloadTasksDialogVisible = ref(false)
-    const downloadTasks = ref<DownloadTask[]>([])
-    const currentMedia = ref<Media | null>(null)
+defineOptions({
+  name: "Media"
+})
 
-    const mediaTypes = [
-      {label: 'movie', value: 'movie', icon: 'Film'},
-      {label: 'tv', value: 'tv', icon: 'VideoCamera'}
-    ]
+const mediaList = ref<Media[]>([])
+const shareList = ref<CloudShare[]>([])
+const loading = ref(true)
+const shareLoading = ref(false)
+const shareDialogVisible = ref(false)
+const addMediaDialogVisible = ref(false)
+const addShareDialogVisible = ref(false)
+const currentMediaId = ref<string>()
+const newMedia = ref<Partial<Media>>({
+  name: '',
+  type: '',
+  typeAlias: '',
+  seasonNumber: 0,
+  totalEpisode: 0,
+  startEpisode: null,
+  releaseDate: '',
+  tmdbId: ''
+})
+const newShare = ref<Partial<CloudShare>>({
+  provider: undefined,
+  shareId: '',
+  shareCode: '',
+  expiredAt: '',
+  fileRegex: '',
+  onlyInDir: '',
+  excludedDir: [],
+  isLapse: 0,
+  lapseCause: ''
+})
+const downloadTasksDialogVisible = ref(false)
+const downloadTasks = ref<DownloadTask[]>([])
+const currentMedia = ref<Media | null>(null)
 
-    const getProviderName = (provider: number) => {
-      const providers: Record<number, string> = {
-        1: '夸克',
-        2: '阿里云盘',
-        3: '百度网盘'
-      }
-      return providers[provider] || '未知'
+const mediaTypes = [
+  {label: 'movie', value: 'movie', icon: 'Film'},
+  {label: 'tv', value: 'tv', icon: 'VideoCamera'}
+]
+
+const getProviderName = (provider: number) => {
+  const providers: Record<number, string> = {
+    1: '夸克',
+    2: '阿里云盘',
+    3: '百度网盘'
+  }
+  return providers[provider] || '未知'
+}
+
+const getProviderTagType = (provider: number) => {
+  const types: Record<number, string> = {
+    1: 'success',  // 夸克
+    2: 'primary',  // 阿里云盘
+    3: 'warning'   // 百度网盘
+  }
+  return types[provider] || 'info'
+}
+
+interface MediaResponse {
+  id: number
+  name: string
+  type: string
+  typeAlias?: string
+  seasonNumber: number
+  totalEpisode: number
+  startEpisode: number | null
+  releaseDate?: string
+  tmdbId?: string
+}
+
+const loadMediaList = async () => {
+  try {
+    const response = await mediaApi.getList()
+    if (response.data.code === 200) {
+      mediaList.value = response.data.data.map((item: MediaResponse) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        typeAlias: item.typeAlias,
+        seasonNumber: item.seasonNumber,
+        totalEpisode: item.totalEpisode,
+        startEpisode: item.startEpisode,
+        releaseDate: item.releaseDate,
+        tmdbId: item.tmdbId
+      }))
+    } else {
+      ElMessage.error('加载影视列表失败: ' + (response.data.message || '未知错误'))
     }
+  } catch (error) {
+    ElMessage.error('加载影视列表失败')
+  }
+}
 
-    const getProviderTagType = (provider: number) => {
-      const types: Record<number, string> = {
-        1: 'success',  // 夸克
-        2: 'primary',  // 阿里云盘
-        3: 'warning'   // 百度网盘
-      }
-      return types[provider] || 'info'
-    }
+onMounted(async () => {
+  loading.value = true
+  try {
+    await loadMediaList()
+  } finally {
+    loading.value = false
+  }
+})
 
-    interface MediaResponse {
-      id: number
-      name: string
-      type: string
-      typeAlias?: string
-      seasonNumber: number
-      totalEpisode: number
-      startEpisode: number | null
-      releaseDate?: string
-      tmdbId?: string
-    }
+const refreshMediaList = async () => {
+  if (loading.value) return
+  loading.value = true
 
-    const loadMediaList = async () => {
-      try {
-        const response = await mediaApi.getList()
-        if (response.data.code === 200) {
-          mediaList.value = response.data.data.map((item: MediaResponse) => ({
-            id: item.id,
-            name: item.name,
-            type: item.type,
-            typeAlias: item.typeAlias,
-            seasonNumber: item.seasonNumber,
-            totalEpisode: item.totalEpisode,
-            startEpisode: item.startEpisode,
-            releaseDate: item.releaseDate,
-            tmdbId: item.tmdbId
-          }))
-        } else {
-          ElMessage.error('加载影视列表失败: ' + (response.data.message || '未知错误'))
-        }
-      } catch (error) {
-        ElMessage.error('加载影视列表失败')
-      }
-    }
-
-    onMounted(async () => {
-      loading.value = true
-      try {
-        await loadMediaList()
-      } finally {
+  await new Promise<void>(resolve => {
+    requestAnimationFrame(async () => {
+      await loadMediaList()
+      requestAnimationFrame(() => {
         loading.value = false
-      }
+        resolve()
+      })
     })
+  })
+}
 
-    const refreshMediaList = async () => {
-      if (loading.value) return
-      loading.value = true
+const isEdit = ref(false)
+const editingId = ref<string>()
 
-      await new Promise<void>(resolve => {
-        requestAnimationFrame(async () => {
-          await loadMediaList()
-          requestAnimationFrame(() => {
-            loading.value = false
-            resolve()
-          })
-        })
+const dialogTitle = computed(() => isEdit.value ? '编辑影视' : '添加影视')
+
+const resetForm = () => {
+  newMedia.value = {
+    name: '',
+    type: '',
+    typeAlias: '',
+    seasonNumber: 0,
+    totalEpisode: 0,
+    startEpisode: null,
+    releaseDate: '',
+    tmdbId: ''
+  }
+  isEdit.value = false
+  editingId.value = undefined
+}
+
+const handleEdit = (row: Media) => {
+  // 设置所有字段，但部分字段设为只读
+  newMedia.value = {
+    ...row,
+    name: row.name,
+    type: row.type,
+    typeAlias: row.typeAlias,
+    seasonNumber: row.seasonNumber,
+    totalEpisode: row.totalEpisode,
+    startEpisode: row.startEpisode,
+    releaseDate: row.releaseDate,
+    tmdbId: row.tmdbId
+  }
+
+  editingId.value = row.id
+  isEdit.value = true
+  addMediaDialogVisible.value = true
+}
+
+const submitForm = async () => {
+  try {
+    let response
+    // 编辑时只提交允许修改的字段
+    const submitData = isEdit.value ? {
+      typeAlias: newMedia.value.typeAlias || '',
+      totalEpisode: newMedia.value.totalEpisode || 0,
+      releaseDate: newMedia.value.releaseDate,
+      startEpisode: newMedia.value.startEpisode === undefined ? null : newMedia.value.startEpisode
+    } : {
+      // 新增时提交所有字段
+      ...newMedia.value,
+    }
+
+    if (isEdit.value && editingId.value) {
+      response = await mediaApi.updateMedia(editingId.value, submitData)
+    } else {
+      response = await mediaApi.addMedia(submitData)
+    }
+
+    if (response.data.code === 200) {
+      ElMessage.success(isEdit.value ? '编辑成功' : '添加成功')
+      addMediaDialogVisible.value = false
+      await loadMediaList()
+      resetForm()
+    } else {
+      ElMessage.error(response.data.message || '操作失败')
+    }
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
+const handleClose = () => {
+  resetForm()
+  addMediaDialogVisible.value = false
+}
+
+const manageShares = async (media: Media) => {
+  if (!media || !media.id) return
+
+  if (currentMediaId.value !== media.id) {
+    currentMediaId.value = media.id
+    shareLoading.value = true
+    try {
+      const response = await cloudShareApi.getShares(media.id)
+      if (response.data.code === 200) {
+        shareList.value = response.data.data || []
+      } else {
+        ElMessage.error('加载分享列表失败: ' + (response.data.message || '未知错误'))
+        shareList.value = []
+      }
+    } catch (error) {
+      ElMessage.error('加载分享列表失败')
+      shareList.value = []
+    } finally {
+      shareLoading.value = false
+    }
+  }
+
+  shareDialogVisible.value = true
+}
+
+const isEditShare = ref(false)
+const editingShareId = ref<number>()
+
+const handleEditShare = (row: CloudShare) => {
+  isEditShare.value = true
+  editingShareId.value = row.id
+  addShareDialogVisible.value = true
+  newShare.value = {
+    provider: row.provider,
+    shareId: row.shareId,
+    shareCode: row.shareCode,
+    expiredAt: row.expiredAt ? dayjs(row.expiredAt).format('YYYY-MM-DD HH:mm:ss') : '',
+    fileRegex: row.fileRegex,
+    onlyInDir: row.onlyInDir,
+    episodeRegex: row.episodeRegex,
+    excludedDir: row.excludedDir || [],
+    isLapse: row.isLapse || 0,
+    lapseCause: row.lapseCause || ''
+  }
+}
+
+const handleAddShare = () => {
+  isEditShare.value = false
+  editingShareId.value = undefined
+  addShareDialogVisible.value = true
+  newShare.value = {
+    provider: undefined,
+    shareId: '',
+    shareCode: '',
+    expiredAt: '',
+    fileRegex: '',
+    onlyInDir: '',
+    excludedDir: [],
+    isLapse: 0,
+    lapseCause: ''
+  }
+}
+
+const submitShare = async () => {
+  if (!shareFormRef.value) return
+
+  try {
+    // 校验表单
+    await shareFormRef.value.validate()
+
+    if (!currentMediaId.value) {
+      ElMessage.error('未找到媒体ID')
+      return
+    }
+
+    let response
+    if (isEditShare.value && editingShareId.value) {
+      response = await cloudShareApi.updateShare(editingShareId.value, {
+        ...newShare.value,
+        mediaId: currentMediaId.value
+      })
+    } else {
+      response = await cloudShareApi.addShare({
+        ...newShare.value,
+        mediaId: currentMediaId.value
       })
     }
 
-    const isEdit = ref(false)
-    const editingId = ref<string>()
-
-    const dialogTitle = computed(() => isEdit.value ? '编辑影视' : '添加影视')
-
-    const resetForm = () => {
-      newMedia.value = {
-        name: '',
-        type: '',
-        typeAlias: '',
-        seasonNumber: 0,
-        totalEpisode: 0,
-        startEpisode: null,
-        releaseDate: '',
-        tmdbId: ''
-      }
-      isEdit.value = false
-      editingId.value = undefined
+    if (response.data.code === 200) {
+      ElMessage.success(isEditShare.value ? '编辑成功' : '添加成功')
+      addShareDialogVisible.value = false
+      await manageShares(mediaList.value.find(m => m.id === currentMediaId.value) as Media)
+    } else {
+      ElMessage.error(response.data.message || '操作失败')
     }
-
-    const handleEdit = (row: Media) => {
-      // 设置所有字段，但部分字段设为只读
-      newMedia.value = {
-        ...row,
-        name: row.name,
-        type: row.type,
-        typeAlias: row.typeAlias,
-        seasonNumber: row.seasonNumber,
-        totalEpisode: row.totalEpisode,
-        startEpisode: row.startEpisode,
-        releaseDate: row.releaseDate,
-        tmdbId: row.tmdbId
-      }
-
-      editingId.value = row.id
-      isEdit.value = true
-      addMediaDialogVisible.value = true
-    }
-
-    const submitForm = async () => {
-      try {
-        let response
-        // 编辑时只提交允许修改的字段
-        const submitData = isEdit.value ? {
-          typeAlias: newMedia.value.typeAlias || '',
-          totalEpisode: newMedia.value.totalEpisode || 0,
-          releaseDate: newMedia.value.releaseDate,
-          startEpisode: newMedia.value.startEpisode === undefined ? null : newMedia.value.startEpisode
-        } : {
-          // 新增时提交所有字段
-          ...newMedia.value,
-        }
-
-        if (isEdit.value && editingId.value) {
-          response = await mediaApi.updateMedia(editingId.value, submitData)
-        } else {
-          response = await mediaApi.addMedia(submitData)
-        }
-
-        if (response.data.code === 200) {
-          ElMessage.success(isEdit.value ? '编辑成功' : '添加成功')
-          addMediaDialogVisible.value = false
-          await loadMediaList()
-          resetForm()
-        } else {
-          ElMessage.error(response.data.message || '操作失败')
-        }
-      } catch (error) {
-        ElMessage.error('操作失败')
-      }
-    }
-
-    const handleClose = () => {
-      resetForm()
-      addMediaDialogVisible.value = false
-    }
-
-    const manageShares = async (media: Media) => {
-      if (!media || !media.id) return
-
-      if (currentMediaId.value !== media.id) {
-        currentMediaId.value = media.id
-        shareLoading.value = true
-        try {
-          const response = await cloudShareApi.getShares(media.id)
-          if (response.data.code === 200) {
-            shareList.value = response.data.data || []
-          } else {
-            ElMessage.error('加载分享列表失败: ' + (response.data.message || '未知错误'))
-            shareList.value = []
-          }
-        } catch (error) {
-          ElMessage.error('加载分享列表失败')
-          shareList.value = []
-        } finally {
-          shareLoading.value = false
-        }
-      }
-
-      shareDialogVisible.value = true
-    }
-
-    const isEditShare = ref(false)
-    const editingShareId = ref<number>()
-
-    const handleEditShare = (row: CloudShare) => {
-      isEditShare.value = true
-      editingShareId.value = row.id
-      addShareDialogVisible.value = true
-      newShare.value = {
-        provider: row.provider,
-        shareId: row.shareId,
-        shareCode: row.shareCode,
-        expiredAt: row.expiredAt ? dayjs(row.expiredAt).format('YYYY-MM-DD HH:mm:ss') : '',
-        fileRegex: row.fileRegex,
-        onlyInDir: row.onlyInDir,
-        episodeRegex: row.episodeRegex,
-        excludedDir: row.excludedDir || [],
-        isLapse: row.isLapse || 0,
-        lapseCause: row.lapseCause || ''
-      }
-    }
-
-    const handleAddShare = () => {
-      isEditShare.value = false
-      editingShareId.value = undefined
-      addShareDialogVisible.value = true
-      newShare.value = {
-        provider: undefined,
-        shareId: '',
-        shareCode: '',
-        expiredAt: '',
-        fileRegex: '',
-        onlyInDir: '',
-        excludedDir: [],
-        isLapse: 0,
-        lapseCause: ''
-      }
-    }
-
-    const submitShare = async () => {
-      if (!shareFormRef.value) return
-
-      try {
-        // 校验表单
-        await shareFormRef.value.validate()
-
-        if (!currentMediaId.value) {
-          ElMessage.error('未找到媒体ID')
-          return
-        }
-
-        let response
-        if (isEditShare.value && editingShareId.value) {
-          response = await cloudShareApi.updateShare(editingShareId.value, {
-            ...newShare.value,
-            mediaId: currentMediaId.value
-          })
-        } else {
-          response = await cloudShareApi.addShare({
-            ...newShare.value,
-            mediaId: currentMediaId.value
-          })
-        }
-
-        if (response.data.code === 200) {
-          ElMessage.success(isEditShare.value ? '编辑成功' : '添加成功')
-          addShareDialogVisible.value = false
-          await manageShares(mediaList.value.find(m => m.id === currentMediaId.value) as Media)
-        } else {
-          ElMessage.error(response.data.message || '操作失败')
-        }
-      } catch (error) {
-        ElMessage.error('操作失败')
-      }
-    }
-
-    const deleteShare = async (id: number) => {
-      try {
-        const response = await cloudShareApi.deleteShare(id)
-        if (response.data.code === 200) {
-          ElMessage.success('删除成功')
-          if (currentMediaId.value) {
-            await manageShares(mediaList.value.find(m => m.id === currentMediaId.value) as Media)
-          }
-        } else {
-          ElMessage.error(response.data.message || '删除失败')
-        }
-      } catch (error) {
-        ElMessage.error('删除失败')
-      }
-    }
-
-    const taskStats = computed(() => {
-      const total = downloadTasks.value.length
-      const waiting = downloadTasks.value.filter(t => t.status === 0).length
-      const downloading = downloadTasks.value.filter(t => t.status === 1).length
-      const completed = downloadTasks.value.filter(t => t.status === 2).length
-      const failed = downloadTasks.value.filter(t => t.status === 3).length
-      return {total, waiting, downloading, completed, failed}
-    })
-
-    const getStatusIcon = (status: number) => {
-      const icons = {
-        0: 'Clock',        // 等待中
-        1: 'Loading',      // 下载中
-        2: 'CircleCheck',  // 已完成
-        3: 'CircleClose'   // 失败
-      }
-      return icons[status as keyof typeof icons] || 'More'
-    }
-
-    const viewDownloadTasks = async (media: Media) => {
-      currentMedia.value = media
-      downloadTasksDialogVisible.value = true
-      try {
-        const response = await fetch(`/api/download/task/${media.id}`)
-        const data = await response.json()
-        if (data.code === 200) {
-          downloadTasks.value = data.data
-        } else {
-          ElMessage.error(data.message || '获取下载任务失败')
-        }
-      } catch (error) {
-        ElMessage.error('获取下载任务失败')
-      }
-    }
-
-    const getStatusType = (status: number) => {
-      const types: Record<number, string> = {
-        0: 'info',     // 等待中
-        1: 'primary',  // 下载中
-        2: 'success',  // 已完成
-        3: 'danger'    // 失败
-      }
-      return types[status] || 'info'
-    }
-
-    const getStatusText = (status: number) => {
-      const texts: Record<number, string> = {
-        0: '等待中',
-        1: '下载中',
-        2: '已完成',
-        3: '已失败'
-      }
-      return texts[status] || '未知'
-    }
-
-    // 格式化 update days
-    const formatUpdateDays = (days: number[]) => {
-      if (!days || (Array.isArray(days) && days.length === 0)) {
-        return '-'
-      }
-
-      const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-
-      return days
-          .sort((a, b) => a - b)  // 确保按顺序显示
-          .map(day => `<span class="weekday-tag">${weekdays[day - 1]}</span>`)
-          .join('')
-    }
-
-    const formatExpiredTime = (expiredAt: string) => {
-      if (!expiredAt) return '永久有效'
-      return new Date(expiredAt).toLocaleString()
-    }
-
-    const isExpired = (expiredAt: string) => {
-      if (!expiredAt) return false
-      return new Date(expiredAt).getTime() < Date.now()
-    }
-
-    const shareFormRules = {
-      provider: [
-        {required: true, message: '请选择网盘类型', trigger: 'change'}
-      ],
-      shareId: [
-        {required: true, message: '请输入分享链接', trigger: 'blur'}
-      ],
-      episodeRegex: [
-        {required: true, message: '请输入文件匹配规则', trigger: 'blur'}
-      ]
-    }
-
-    const shareFormRef = ref()
-
-    const excludedDirInput = ref('')
-
-    const handleAddExcludedDir = () => {
-      const dir = excludedDirInput.value.trim()
-      if (dir && !newShare.value.excludedDir?.includes(dir)) {
-        newShare.value.excludedDir = [...(newShare.value.excludedDir || []), dir]
-        excludedDirInput.value = ''
-      }
-    }
-
-    const handleRemoveExcludedDir = (index: number) => {
-      newShare.value.excludedDir?.splice(index, 1)
-    }
-
-    const formatReleaseDate = (date: string) => {
-      if (!date) return '-'
-      return dayjs(date).format("YYYY-MM-DD")
-    }
-
-    const formatFileSize = (bytes: number) => {
-      if (!bytes) return '0 B'
-      const units = ['B', 'KB', 'MB', 'GB', 'TB']
-      let size = bytes
-      let unitIndex = 0
-
-      while (size >= 1024 && unitIndex < units.length - 1) {
-        size /= 1024
-        unitIndex++
-      }
-
-      return `${size.toFixed(1)} ${units[unitIndex]}`
-    }
-
-    return {
-      mediaList,
-      shareList,
-      loading,
-      shareLoading,
-      shareDialogVisible,
-      addMediaDialogVisible,
-      addShareDialogVisible,
-      newMedia,
-      newShare,
-      getProviderName,
-      getProviderTagType,
-      handleAddMedia: () => {
-        isEdit.value = false
-        resetForm()
-        addMediaDialogVisible.value = true
-      },
-      handleEdit,
-      manageShares,
-      handleAddShare,
-      deleteShare,
-      refreshMediaList,
-      mediaTypes,
-      formatUpdateDays,
-      Plus,
-      Refresh,
-      Edit,
-      Share,
-      Download,
-      QuestionFilled,
-      dialogTitle,
-      handleClose,
-      submitForm,
-      taskStats,
-      viewDownloadTasks,
-      downloadTasksDialogVisible,
-      downloadTasks,
-      currentMedia,
-      getStatusType,
-      getStatusText,
-      getStatusIcon,
-      formatExpiredTime,
-      isExpired,
-      shareFormRules,
-      shareFormRef,
-      submitShare,
-      isEdit,
-      editingId,
-      formatReleaseDate,
-      excludedDirInput,
-      handleAddExcludedDir,
-      handleRemoveExcludedDir,
-      isEditShare,
-      editingShareId,
-      handleEditShare,
-      formatFileSize
-    }
+  } catch (error) {
+    ElMessage.error('操作失败')
   }
+}
+
+const deleteShare = async (id: number) => {
+  try {
+    const response = await cloudShareApi.deleteShare(id)
+    if (response.data.code === 200) {
+      ElMessage.success('删除成功')
+      if (currentMediaId.value) {
+        await manageShares(mediaList.value.find(m => m.id === currentMediaId.value) as Media)
+      }
+    } else {
+      ElMessage.error(response.data.message || '删除失败')
+    }
+  } catch (error) {
+    ElMessage.error('删除失败')
+  }
+}
+
+const taskStats = computed(() => {
+  const total = downloadTasks.value.length
+  const waiting = downloadTasks.value.filter(t => t.status === 0).length
+  const downloading = downloadTasks.value.filter(t => t.status === 1).length
+  const completed = downloadTasks.value.filter(t => t.status === 2).length
+  const failed = downloadTasks.value.filter(t => t.status === 3).length
+  return {total, waiting, downloading, completed, failed}
 })
+
+const viewDownloadTasks = async (media: Media) => {
+  currentMedia.value = media
+  downloadTasksDialogVisible.value = true
+  try {
+    const response = await fetch(`/api/download/task/${media.id}`)
+    const data = await response.json()
+    if (data.code === 200) {
+      downloadTasks.value = data.data
+    } else {
+      ElMessage.error(data.message || '获取下载任务失败')
+    }
+  } catch (error) {
+    ElMessage.error('获取下载任务失败')
+  }
+}
+
+const getStatusType = (status: number) => {
+  const types: Record<number, string> = {
+    0: 'info',     // 等待中
+    1: 'primary',  // 下载中
+    2: 'success',  // 已完成
+    3: 'danger'    // 失败
+  }
+  return types[status] || 'info'
+}
+
+const getStatusText = (status: number) => {
+  const texts: Record<number, string> = {
+    0: '等待中',
+    1: '下载中',
+    2: '已完成',
+    3: '已失败'
+  }
+  return texts[status] || '未知'
+}
+
+const formatExpiredTime = (expiredAt: string) => {
+  if (!expiredAt) return '永久有效'
+  return new Date(expiredAt).toLocaleString()
+}
+
+const isExpired = (expiredAt: string) => {
+  if (!expiredAt) return false
+  return new Date(expiredAt).getTime() < Date.now()
+}
+
+const shareFormRules = {
+  provider: [
+    {required: true, message: '请选择网盘类型', trigger: 'change'}
+  ],
+  shareId: [
+    {required: true, message: '请输入分享链接', trigger: 'blur'}
+  ],
+  episodeRegex: [
+    {required: true, message: '请输入文件匹配规则', trigger: 'blur'}
+  ]
+}
+
+const shareFormRef = ref()
+
+const excludedDirInput = ref('')
+
+const handleAddExcludedDir = () => {
+  const dir = excludedDirInput.value.trim()
+  if (dir && !newShare.value.excludedDir?.includes(dir)) {
+    newShare.value.excludedDir = [...(newShare.value.excludedDir || []), dir]
+    excludedDirInput.value = ''
+  }
+}
+
+const handleRemoveExcludedDir = (index: number) => {
+  newShare.value.excludedDir?.splice(index, 1)
+}
+
+const formatReleaseDate = (date: string) => {
+  if (!date) return '-'
+  return dayjs(date).format("YYYY-MM-DD")
+}
+
+const formatFileSize = (bytes: number) => {
+  if (!bytes) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let size = bytes
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+
+  return `${size.toFixed(1)} ${units[unitIndex]}`
+}
+
+function handleAddMedia() {
+  isEdit.value = false
+  resetForm()
+  addMediaDialogVisible.value = true
+}
 </script>
 
 <style scoped>
@@ -1539,24 +1451,6 @@ export default defineComponent({
   padding-top: 10px; /* 增加顶部间距 */
   text-align: right;
 }
-
-/* 更新日标签样式 */
-:deep(.weekday-tag) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
-  height: 24px;
-  background-color: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* 表格单元格样式调整 */
 
 .file-name {
   color: var(--el-text-color-primary);
