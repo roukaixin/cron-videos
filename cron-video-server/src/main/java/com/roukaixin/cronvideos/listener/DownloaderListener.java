@@ -1,68 +1,78 @@
 package com.roukaixin.cronvideos.listener;
 
 
-import com.alibaba.fastjson2.JSONArray;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.roukaixin.cronvideos.domain.DownloadTask;
 import com.roukaixin.cronvideos.domain.Downloader;
-import com.roukaixin.cronvideos.listener.event.Aria2Task;
-import com.roukaixin.cronvideos.listener.event.DownloadTaskStatus;
-import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
+import com.roukaixin.cronvideos.downloader.aria2.http.Aria2HttpClient;
+import com.roukaixin.cronvideos.downloader.aria2.ws.Aria2WebSocketClient;
+import com.roukaixin.cronvideos.enums.DownloaderProtocolEnum;
+import com.roukaixin.cronvideos.enums.DownloaderTypeEnum;
+import com.roukaixin.cronvideos.listener.event.DownloaderEvent;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.utils.Aria2Utils;
+import com.roukaixin.cronvideos.pooled.PooledClient;
+import com.roukaixin.cronvideos.pooled.PooledDownloader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
+/**
+ * 下载器监听器
+ *
+ * @author roukaixin
+ * @date 2026/1/13 19:09
+ */
 @Component
 @Slf4j
 public class DownloaderListener {
 
+    private final PooledDownloader downloader;
+
     private final DownloaderMapper downloaderMapper;
 
-    private final DownloadTaskMapper downloadTaskMapper;
-
-    public DownloaderListener(DownloaderMapper downloaderMapper,
-                              DownloadTaskMapper downloadTaskMapper) {
+    public DownloaderListener(PooledDownloader downloader,
+                              DownloaderMapper downloaderMapper) {
+        this.downloader = downloader;
         this.downloaderMapper = downloaderMapper;
-        this.downloadTaskMapper = downloadTaskMapper;
     }
 
-    @EventListener
     @Async
-    public void changeDownloadTaskStatus(DownloadTaskStatus event) {
-        if (log.isDebugEnabled()) {
-            log.debug("监听到改变下载任务 -> {}", event);
-        }
-        downloadTaskMapper.update(Wrappers.<DownloadTask>lambdaUpdate()
-                .set(DownloadTask::getStatus, event.getStatus())
-                .eq(DownloadTask::getGid, event.getGid())
-                .eq(DownloadTask::getStatus, event.getOriginalStatus())
-                .eq(DownloadTask::getDownloaderId, event.getId()));
-    }
-
-
-    @EventListener
-    @Async
-    public void removeAria2Task(Aria2Task event) {
-        if (log.isDebugEnabled()) {
-            log.debug("监听到删除 aria2 任务 -> {}", event);
-        }
-        Downloader downloader = downloaderMapper.selectById(event.getId());
-        if (downloader != null) {
-            String removeDownloadResult = Aria2Utils.removeDownloadResult(
-                    downloader.getHost(),
-                    downloader.getPort(),
-                    JSONArray.of(
-                            "token:" + downloader.getSecret(),
-                            event.getGid()
-                    ).toJSONString()
-            );
-            if (log.isDebugEnabled()) {
-                log.debug("aria2 删除错误任务 -> {}", removeDownloadResult);
+    @EventListener(classes = DownloaderEvent.class)
+    public void changePoole(DownloaderEvent event) {
+        Downloader downloaderInfo = event.getDownloader();
+        switch (event.getOperation()) {
+            case QUERY, SAVE, UPDATE -> {
+                PooledClient client = this.client(downloaderInfo);
+                if (Objects.nonNull(client) && client.isValid() != (downloaderInfo.getIsOnline() == 1)) {
+                    downloaderMapper.updateIsOnlineById(downloaderInfo.getId(), client.isValid() ? 1 : 0);
+                }
+                downloader.pushClient(client);
+            }
+            case DELETE -> {
             }
         }
+    }
+
+    private PooledClient client(Downloader downloaderInfo) {
+        DownloaderTypeEnum type = downloaderInfo.getType();
+        PooledClient client = null;
+        switch (type) {
+            case aria2 -> {
+                DownloaderProtocolEnum protocol = downloaderInfo.getProtocol();
+                if (protocol.equals(DownloaderProtocolEnum.ws) || protocol.equals(DownloaderProtocolEnum.wss)) {
+                    Aria2WebSocketClient aria2WebSocketClient = new Aria2WebSocketClient(downloaderInfo);
+                    client = new PooledClient(aria2WebSocketClient, downloader);
+                } else if (protocol.equals(DownloaderProtocolEnum.http) || protocol.equals(DownloaderProtocolEnum.https)) {
+                    Aria2HttpClient aria2HttpClient = new Aria2HttpClient(downloaderInfo);
+                    client = new PooledClient(aria2HttpClient, downloader);
+                }
+            }
+            case qbittorrent -> {
+
+            }
+        }
+        return client;
     }
 
 }
