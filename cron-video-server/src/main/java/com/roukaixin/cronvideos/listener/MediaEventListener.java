@@ -1,12 +1,11 @@
 package com.roukaixin.cronvideos.listener;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
-import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
-import com.roukaixin.cronvideos.mapper.MediaMapper;
+
 import com.roukaixin.cronvideos.domain.DownloadTask;
 import com.roukaixin.cronvideos.domain.Media;
+import com.roukaixin.cronvideos.mapper.DownloadTaskMapper;
+import com.roukaixin.cronvideos.mapper.MediaMapper;
+import com.roukaixin.cronvideos.utils.JsonUtils;
 import com.roukaixin.cronvideos.utils.SshUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -17,6 +16,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
 
 import java.io.IOException;
 
@@ -38,7 +39,7 @@ public class MediaEventListener {
     @Async
     public void formatAndMoveMedia(DownloadTask downloadTask) {
         if (log.isDebugEnabled()) {
-            log.info("监听到格式化和移动视频 -> {}", JSON.toJSONString(downloadTask));
+            log.info("监听到格式化和移动视频 -> {}", JsonUtils.toJSONString(downloadTask));
         }
         if (!ObjectUtils.isEmpty(downloadTask.getOutName())) {
             log.info("开始转化和移动视频 -> {}", downloadTask.getOutName());
@@ -63,7 +64,7 @@ public class MediaEventListener {
                     // 修改成功
                     log.info("视频使用 ffmpeg 转化成功 -> {}", outName);
                 }
-                Media media = mediaMapper.selectById(downloadTask.getMediaId());
+                Media media = mediaMapper.selectOneById(downloadTask.getMediaId());
                 if (!ObjectUtils.isEmpty(media.getTypeAlias())) {
                     try {
                         // 媒体服务器 ip 地址 session
@@ -104,17 +105,17 @@ public class MediaEventListener {
     private String getFfmpegMapCommand(ClientSession tnt, String savePath, String outName) {
         StringBuilder exclude_maps = new StringBuilder();
         String ffprobe = SshUtils.execFfprobe(tnt, getFfprobe(savePath, outName));
-        JSONObject ffprobeJson = JSONObject.parseObject(ffprobe);
+        JsonNode ffprobeJson = JsonUtils.readTree(ffprobe);
         if (!ObjectUtils.isEmpty(ffprobeJson)) {
-            JSONArray streams = ffprobeJson.getJSONArray("streams");
+            ArrayNode streams = ffprobeJson.withArrayProperty("streams");
             for (int i = 0; i < streams.size(); i++) {
-                JSONObject stream = streams.getJSONObject(i);
-                JSONObject disposition = stream.getJSONObject("disposition");
-                String codecName = stream.getString("codec_name");
-                String codecType = stream.getString("codec_type");
-                Integer index = stream.getInteger("index");
+                JsonNode stream = streams.get(i);
+                JsonNode disposition = stream.get("disposition");
+                String codecName = stream.get("codec_name").asString();
+                String codecType = stream.get("codec_type").asString();
+                Integer index = stream.get("index").asInt();
                 if (!"unknown".equals(codecName)) {
-                    int attachedPic = disposition.getIntValue("attached_pic");
+                    int attachedPic = disposition.get("attached_pic").asInt();
                     if ("video".equals(codecType) && attachedPic != 1) {
                         exclude_maps.append("-map").append(" ").append("0:").append(index).append(" ");
                     }

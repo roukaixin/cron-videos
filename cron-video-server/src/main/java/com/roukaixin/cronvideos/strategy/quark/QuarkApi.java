@@ -1,7 +1,8 @@
 package com.roukaixin.cronvideos.strategy.quark;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+
+import com.roukaixin.cronvideos.utils.JsonUtils;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.net.URI;
@@ -31,13 +34,13 @@ public class QuarkApi {
 
     public Map<String, Object> shareSharepageToken(String pwdId) {
         Map<String, Object> map = new HashMap<>();
+        ObjectNode body = JsonUtils.createObjectNode();
+        body.put("pwd_id", pwdId);
+        body.put("passcode", "");
         String responseBody = restClient
                 .post()
                 .uri("https://drive-h.quark.cn/1/clouddrive/share/sharepage/token")
-                .body(JSONObject.of(
-                        "pwd_id", pwdId,
-                        "passcode", ""
-                ))
+                .body(body)
                 .exchange((clientRequest, clientResponse) -> {
                     map.put("is_ok", clientResponse.getStatusCode().equals(HttpStatus.OK));
                     log(clientRequest, clientResponse);
@@ -78,15 +81,22 @@ public class QuarkApi {
         return exchange(cookies, uri);
     }
 
-    public String file(String pdirFid, String fileName, MultiValueMap<String, String> cookies) {
+    public String file(String pdirFid, String fileName, @Nonnull MultiValueMap<String, String> cookies) {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/file")
                 .build()
                 .toUri();
+        ObjectNode body = JsonUtils.createObjectNode();
+        body.put("pdir_fid", pdirFid);
+        body.put("file_name", fileName);
+        return exchange(cookies, uri, body);
+    }
+
+    private String exchange(@Nonnull MultiValueMap<String, String> cookies, URI uri, ObjectNode body) {
         return restClient
                 .post()
                 .uri(uri)
                 .cookies(cookie -> cookie.addAll(cookies))
-                .body(JSONObject.of("pdir_fid", pdirFid, "file_name", fileName))
+                .body(body)
                 .exchange((clientRequest, clientResponse) -> {
                     String responseBody = "";
                     if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
@@ -101,25 +111,16 @@ public class QuarkApi {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/share/sharepage/save")
                 .build()
                 .toUri();
-        return restClient
-                .post()
-                .uri(uri)
-                .cookies(c -> c.addAll(cookies))
-                .body(JSONObject.of(
-                                "pwd_id", pwdId,
-                                "stoken", stoken,
-                                "to_pdir_fid", toPdirFid,
-                                "fid_list", fidList
-                        )
-                )
-                .exchange((clientRequest, clientResponse) -> {
-                    String responseBody = "";
-                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
-                        responseBody = clientResponse.bodyTo(String.class);
-                    }
-                    log(clientRequest, clientResponse);
-                    return responseBody;
-                });
+        ObjectNode body = JsonUtils.createObjectNode();
+        body.put("pwd_id", pwdId);
+        body.put("stoken", stoken);
+        body.put("to_pdir_fid", toPdirFid);
+        ArrayNode fidListParam = JsonUtils.createArrayNode();
+        for (String fid : fidList) {
+            fidListParam.add(fid);
+        }
+        body.set("fid_list", fidListParam);
+        return exchange(cookies, uri, body);
     }
 
     public String task(String taskId, Integer retryIndex, MultiValueMap<String, String> cookies) {
@@ -138,14 +139,14 @@ public class QuarkApi {
         URI uri = getUriComponentsBuilder("https://drive-pc.quark.cn/1/clouddrive/file/delete")
                 .build()
                 .toUri();
+        ObjectNode body = JsonUtils.createObjectNode();
+        body.put("action_type", 1);
+        body.set("filelist", JsonUtils.convertArrayNode(filelist));
+        body.set("exclude_fids", JsonUtils.createArrayNode());
         return restClient
                 .post()
                 .uri(uri)
-                .body(JSONObject.of(
-                        "action_type", 1,
-                        "filelist", filelist,
-                        "exclude_fids", new JSONArray())
-                )
+                .body(body)
                 .cookies(c -> c.addAll(cookies))
                 .exchange((clientRequest, clientResponse) -> {
                     String responseBody = "";
@@ -163,12 +164,14 @@ public class QuarkApi {
                 .toUri();
         String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) quark-cloud-drive/2.5.20 Chrome/100.0.4896.160 Electron/18.3.5.4-b478491100 Safari/537.36 Channel/pckk_other_ch";
         Map<String, String> map = new HashMap<>();
+        ObjectNode body = JsonUtils.createObjectNode();
+        body.set("fids", JsonUtils.convertArrayNode(fids));
         String response = restClient
                 .post()
                 .uri(uri)
                 .header("User-Agent", userAgent)
                 .cookies(c -> c.addAll(cookies))
-                .body(JSONObject.of("fids", fids))
+                .body(body)
                 .exchange((clientRequest, clientResponse) -> {
                     String responseBody = "";
                     if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {

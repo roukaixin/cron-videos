@@ -1,23 +1,22 @@
 package com.roukaixin.cronvideos.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
-import com.roukaixin.cronvideos.client.Aria2DownloaderClient;
-import com.roukaixin.cronvideos.client.DownloaderClient;
+import com.roukaixin.cronvideos.algorithm.SnowflakeIdWorker;
 import com.roukaixin.cronvideos.domain.Downloader;
-import com.roukaixin.cronvideos.domain.R;
 import com.roukaixin.cronvideos.domain.dto.DownloaderDTO;
+import com.roukaixin.cronvideos.domain.vo.DownloaderVO;
+import com.roukaixin.cronvideos.listener.event.DownloaderEvent;
 import com.roukaixin.cronvideos.mapper.DownloaderMapper;
-import com.roukaixin.cronvideos.pool.Aria2WebSocketPool;
+import com.roukaixin.cronvideos.pooled.PooledDownloader;
 import com.roukaixin.cronvideos.service.DownloaderService;
+import com.roukaixin.cronvideos.utils.EventUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.java_websocket.client.WebSocketClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URI;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author pankx
@@ -25,66 +24,75 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @Slf4j
-public class DownloaderServiceImpl extends ServiceImpl<DownloaderMapper, Downloader>
-        implements DownloaderService {
+public class DownloaderServiceImpl implements DownloaderService {
 
-    private final Aria2WebSocketPool aria2WebSocketPool;
+    private final DownloaderMapper downloaderMapper;
 
-    public DownloaderServiceImpl(Aria2WebSocketPool aria2WebSocketPool) {
-        this.aria2WebSocketPool = aria2WebSocketPool;
+    private final SnowflakeIdWorker snowflakeIdWorker;
+
+    private final PooledDownloader pooledDownloader;
+
+
+    public DownloaderServiceImpl(DownloaderMapper downloaderMapper,
+                                 SnowflakeIdWorker snowflakeIdWorker,
+                                 PooledDownloader pooledDownloader) {
+        this.downloaderMapper = downloaderMapper;
+        this.snowflakeIdWorker = snowflakeIdWorker;
+        this.pooledDownloader = pooledDownloader;
     }
 
     @Override
-    public R<String> add(DownloaderDTO downloaderDto) {
+    public List<DownloaderVO> list() {
+        List<Downloader> downloaderList = downloaderMapper.selectAll();
+        List<DownloaderVO> vos = new ArrayList<>();
+        downloaderList.forEach(aria2 -> {
+            DownloaderVO vo = new DownloaderVO();
+            BeanUtils.copyProperties(aria2, vo);
+            vos.add(vo);
+        });
+        return vos;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void add(DownloaderDTO add) {
         Downloader downloader = new Downloader();
-        BeanUtils.copyProperties(downloaderDto, downloader);
-        this.save(downloader);
-        CompletableFuture.runAsync(() -> addWebSocketClient(downloader));
-        return R.<String>builder().code(200).message("添加成功").build();
+        downloader.setId(snowflakeIdWorker.nextId());
+        buildDownloader(add, downloader);
+        LocalDateTime now = LocalDateTime.now();
+        downloader.setCreateDate(now);
+        downloader.setUpdateDate(now);
+        downloaderMapper.insert(downloader);
+        EventUtils.publishEvent(new DownloaderEvent(DownloaderEvent.Operation.SAVE, downloader));
     }
 
 
     @Override
-    public R<String> delete(Long id) {
-        this.removeById(id);
-        DownloaderClient aria2Client =  aria2WebSocketPool.get(id);
-        if (aria2Client != null) {
-            aria2Client.stop();
-        }
-        return R.<String>builder().code(200).message("删除成功").build();
-    }
-
-    @Override
-    public R<String> update(Long id, DownloaderDTO downloaderDto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void update(Long id, DownloaderDTO update) {
         Downloader downloader = new Downloader();
-        BeanUtils.copyProperties(downloaderDto, downloader);
         downloader.setId(id);
-        DownloaderClient downloaderClient =  aria2WebSocketPool.get(id);
-        if (downloaderClient != null) {
-            downloaderClient.stop();
-        }
-        aria2WebSocketPool.remove(id);
-        addWebSocketClient(downloader);
-        this.updateById(downloader);
-        return R.<String>builder().code(200).message("修改成功").build();
+        buildDownloader(update, downloader);
+        LocalDateTime now = LocalDateTime.now();
+        downloader.setUpdateDate(now);
+        downloaderMapper.updateById(downloader);
+        EventUtils.publishEvent(new DownloaderEvent(DownloaderEvent.Operation.SAVE, downloader));
     }
 
-    private void addWebSocketClient(Downloader downloader) {
-        WebSocketClient aria2Client = new Aria2DownloaderClient(URI.create(downloader.getProtocol() + "://" + downloader.getHost() + ":" + downloader.getPort() + "/jsonrpc"), downloader.getId(), downloader.getWeight());
-        aria2Client.setConnectionLostTimeout(0);
-        try {
-            if (aria2Client.connectBlocking(2, TimeUnit.SECONDS)) {
-                SmoothWeightedRoundRobin.getInstance().put(downloader.getId(), downloader.getWeight());
-                aria2WebSocketPool.put(downloader.getId(), (DownloaderClient) aria2Client);
-                downloader.setIsOnline(1);
-                updateById(downloader);
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
+    @Override
+    public void delete(Long id) {
+        downloaderMapper.deleteById(id);
+        EventUtils.publishEvent(new DownloaderEvent(DownloaderEvent.Operation.SAVE, Downloader.builder().id(id).build()));
     }
 
+    private void buildDownloader(DownloaderDTO update, Downloader downloader) {
+        downloader.setType(update.getType());
+        downloader.setProtocol(update.getProtocol());
+        downloader.setHost(update.getHost());
+        downloader.setPort(update.getPort());
+        downloader.setSecret(update.getSecret());
+        downloader.setWeight(update.getWeight());
+    }
 }
 
 

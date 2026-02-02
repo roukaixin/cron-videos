@@ -1,9 +1,10 @@
 package com.roukaixin.cronvideos.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.roukaixin.cronvideos.enums.CloudProviderEnum;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,15 +12,16 @@ import java.util.List;
 /**
  * 网盘分享链接
  *
- * @TableName cloud_shares
  */
-@TableName(value = "cloud", autoResultMap = true)
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Cloud {
+
     /**
      * 唯一 ID
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -67,11 +69,10 @@ public class Cloud {
     /**
      * 排除的目录
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<String> excludedDir;
 
     /**
-     *  是否失效（0:否、1:是）
+     * 是否失效（0:否、1:是）
      */
     private Integer isLapse;
 
@@ -83,18 +84,15 @@ public class Cloud {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
     /**
      * 逻辑删除 (0=正常, 1=删除)
      */
-    @TableLogic
     private Integer isDeleted;
 }

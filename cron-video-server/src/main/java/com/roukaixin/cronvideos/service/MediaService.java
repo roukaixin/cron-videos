@@ -1,13 +1,20 @@
 package com.roukaixin.cronvideos.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.roukaixin.cronvideos.domain.Media;
+import com.roukaixin.cronvideos.domain.dto.MediaDTO;
+import com.roukaixin.cronvideos.domain.dto.MediaUpdateDTO;
+import com.roukaixin.cronvideos.domain.vo.MediaVO;
 
+import java.util.List;
 
 /**
 * @author pankx
 * @description 针对表【media(影视列表)】的数据库操作Service
 */
-public interface MediaService extends IService<Media> {
+public interface MediaService  {
 
+    List<MediaVO> list();
+
+    void updateById(Long id, MediaUpdateDTO update);
+
+    void add(MediaDTO add);
 }

@@ -1,7 +1,9 @@
 package com.roukaixin.cronvideos.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -10,13 +12,15 @@ import java.time.LocalDateTime;
  *
  * @TableName media_episode
  */
-@TableName(value = "media_episode")
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class MediaEpisode {
+
     /**
      * 主键id
      */
-    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -47,12 +51,10 @@ public class MediaEpisode {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LocalDateTime createDate;
 
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateDate;
 }

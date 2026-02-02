@@ -2,7 +2,6 @@ package com.roukaixin.cronvideos.utils;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -10,23 +9,22 @@ import org.springframework.stereotype.Component;
 @Component
 public class EventUtils {
 
-    private static ApplicationContext applicationContext;
+    private static ApplicationEventPublisher applicationEventPublisher;
 
-    private final ApplicationContext ctx;
+    private final ApplicationEventPublisher ctx;
 
-    public EventUtils(ApplicationContext ctx) {
+    public EventUtils(ApplicationEventPublisher ctx) {
         this.ctx = ctx;
     }
 
     @PostConstruct
     public void init() {
-        EventUtils.applicationContext = ctx;
+        EventUtils.applicationEventPublisher = ctx;
     }
 
-    public static <T> void publishEvent(T data) {
-        if (applicationContext != null) {
-            ApplicationEventPublisher publisher = applicationContext;
-            publisher.publishEvent(data);
+    public static <T> void publishEvent(Object data) {
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(data);
             if (log.isDebugEnabled()) {
                 log.debug("监听到的数据 -> {}", data);
             }

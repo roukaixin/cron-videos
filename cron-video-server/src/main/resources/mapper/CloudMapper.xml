@@ -17,4 +17,18 @@
             <result property="isDeleted" column="is_deleted" />
     </resultMap>
 
+    <update id="updateById">
+
+    </update>
+    <select id="selectListByMediaId" resultType="com.roukaixin.cronvideos.domain.Cloud">
+        select
+            *
+        from
+            cloud
+        where
+            media_id = #{mediaId}
+            and is_deleted = 0
+            and is_lapse = 0
+    </select>
+
 </mapper>

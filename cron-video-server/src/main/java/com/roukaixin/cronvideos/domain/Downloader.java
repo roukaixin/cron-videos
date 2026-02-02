@@ -1,25 +1,28 @@
 package com.roukaixin.cronvideos.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.roukaixin.cronvideos.domain.base.BaseEntity;
 import com.roukaixin.cronvideos.enums.DownloaderProtocolEnum;
 import com.roukaixin.cronvideos.enums.DownloaderTypeEnum;
-import lombok.Data;
+import lombok.*;
 
-import java.time.LocalDateTime;
 
 /**
  * 下载器连接信息
+ * 表名 downloader
  *
- * @TableName downloader
+ * @author roukaixin
+ * @date 2026/1/12 08:09
  */
-@TableName(value = "downloader")
-@Data
-public class Downloader {
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class Downloader extends BaseEntity {
 
     /**
      * 唯一 ID
      */
-    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -53,25 +56,7 @@ public class Downloader {
     private Integer weight;
 
     /**
-     * 在线状态（1: 在线, 0: 离线）
+     * 是否在线（1: 在线, 0: 离线）
      */
     private Integer isOnline;
-
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
-
-    /**
-     * 逻辑删除字段（0: 正常, 1: 删除）
-     */
-    @TableLogic
-    private Integer isDeleted;
 }

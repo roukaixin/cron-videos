@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.handler;
+package com.roukaixin.cronvideos.handler.exception;
 
 import com.roukaixin.cronvideos.domain.R;
 import lombok.extern.slf4j.Slf4j;

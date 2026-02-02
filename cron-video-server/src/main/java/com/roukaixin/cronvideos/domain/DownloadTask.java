@@ -1,23 +1,29 @@
 package com.roukaixin.cronvideos.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+
 /**
  * 下载器下载任务
+ * 表名 download_task
  *
- * @TableName download_task
+ * @author roukaixin
+ * @date 2026/1/12 07:21
  */
-@TableName(value = "download_task")
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class DownloadTask {
 
     /**
-     * 任务唯一ID
+     * 任务唯一 ID
      */
-    @TableId(value = "id", type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -78,13 +84,11 @@ public class DownloadTask {
     /**
      * 任务创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 任务更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
 }

@@ -1,6 +1,5 @@
 package com.roukaixin.cronvideos.algorithm;
 
-import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,15 +22,10 @@ public class SmoothWeightedRoundRobin {
         return InnerEnum.INSTANCE.getInstance();
     }
 
-    @PostConstruct
-    public void init() {
-
-    }
-
     public Long getDownloaderId() {
         Long id = null;
         AtomicReference<Integer> totalWeight = new AtomicReference<>(0);
-        weightMap.forEach((key, value) -> {
+        weightMap.forEach((_, value) -> {
             value.setCurrentWeight(value.getCurrentWeight() + value.getWeight());
             totalWeight.updateAndGet(v -> v + value.getWeight());
         });
@@ -50,12 +44,12 @@ public class SmoothWeightedRoundRobin {
 
     public void put(Long key, Integer weight) {
         weightMap.put(key, new Weight(key, weight, 0));
-        weightMap.forEach((k,v) -> v.setCurrentWeight(0));
+        weightMap.forEach((_, v) -> v.setCurrentWeight(0));
     }
 
     public void remove(Long key) {
         weightMap.remove(key);
-        weightMap.forEach((k, v) -> v.setCurrentWeight(0));
+        weightMap.forEach((_, v) -> v.setCurrentWeight(0));
     }
 
     public int size() {
@@ -76,6 +70,7 @@ public class SmoothWeightedRoundRobin {
     }
 
     private enum InnerEnum {
+
         INSTANCE;
 
         private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;

@@ -1,19 +1,22 @@
 package com.roukaixin.cronvideos.service;
 
-import com.roukaixin.cronvideos.domain.Downloader;
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.roukaixin.cronvideos.domain.R;
 import com.roukaixin.cronvideos.domain.dto.DownloaderDTO;
+import com.roukaixin.cronvideos.domain.vo.DownloaderVO;
+
+import java.util.List;
 
 /**
  * @author pankx
  * @description 针对表【aria2_connection(aria2 连接信息)】的数据库操作Service
  */
-public interface DownloaderService extends IService<Downloader> {
+public interface DownloaderService {
 
-    R<String> add(DownloaderDTO downloaderDto);
+    List<DownloaderVO> list();
 
-    R<String> delete(Long id);
+    void add(DownloaderDTO add);
 
-    R<String> update(Long id, DownloaderDTO downloaderDto);
+    void update(Long id, DownloaderDTO update);
+
+    void delete(Long id);
+
 }

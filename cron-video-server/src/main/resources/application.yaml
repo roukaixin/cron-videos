@@ -1,5 +1,3 @@
-
-
 spring:
   application:
     name: cron-videos
@@ -18,20 +16,12 @@ spring:
     scheduling:
       pool:
         size: 5
-mybatis-plus:
-  global-config:
-    db-config:
-      logic-delete-field: isDeleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-  configuration:
-    map-underscore-to-camel-case: true
 logging:
   level:
     com.roukaixin.cronvideos.mapper: debug
     com.roukaixin.cronvideos.service: debug
     com.roukaixin.cronvideos.listener: debug
-    com.roukaixin.cronvideos.client: debug
+    com.roukaixin.cronvideos.downloader: debug
 
   file:
     path: ./log
@@ -40,3 +30,9 @@ logging:
       max-history: 2
 server:
   port: 9080
+mybatis:
+  type-handlers-package: com.roukaixin.cronvideos.handler.mybatis
+  type-aliases-package: com.roukaixin.cronvideos.domain
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: "classpath:mapper/**"

@@ -1,6 +1,5 @@
 package com.roukaixin.cronvideos.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
 import com.roukaixin.cronvideos.enums.MediaTypeEnum;
 import lombok.Data;
 
@@ -9,16 +8,13 @@ import java.time.LocalDateTime;
 /**
  * 媒体列表
  *
- * @TableName media
  */
-@TableName(value = "media")
 @Data
 public class Media {
 
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -51,7 +47,6 @@ public class Media {
     /**
      * 开始集数（beginEpisode）
      */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS, insertStrategy = FieldStrategy.ALWAYS)
     private Integer startEpisode;
 
     /**
@@ -68,18 +63,15 @@ public class Media {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
     /**
      * 逻辑删除字段（0未删除,1已删除）
      */
-    @TableLogic
     private Integer isDeleted;
 }

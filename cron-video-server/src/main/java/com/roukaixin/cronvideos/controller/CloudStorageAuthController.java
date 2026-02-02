@@ -23,36 +23,24 @@ public class CloudStorageAuthController {
 
     @GetMapping("/list")
     public R<List<CloudStorageAuthVO>> list() {
-        List<CloudStorageAuth> list = cloudStorageAuthService.list();
-        List<CloudStorageAuthVO> vos = new ArrayList<>();
-        list.forEach(e -> {
-            CloudStorageAuthVO vo = new CloudStorageAuthVO();
-            BeanUtils.copyProperties(e, vo);
-            vos.add(vo);
-        });
-        return R.<List<CloudStorageAuthVO>>builder().code(200).data(vos).build();
+        return R.<List<CloudStorageAuthVO>>builder().code(200).data(cloudStorageAuthService.list()).build();
     }
 
     @PostMapping("/add")
     public R<String> add(@RequestBody CloudStorageAuthDTO cloudStorageAuthDto) {
-        CloudStorageAuth cloudStorageAuth = new CloudStorageAuth();
-        BeanUtils.copyProperties(cloudStorageAuthDto, cloudStorageAuth);
-        cloudStorageAuthService.save(cloudStorageAuth);
+        cloudStorageAuthService.add(cloudStorageAuthDto);
         return R.<String>builder().code(200).message("添加成功").build();
     }
 
     @DeleteMapping("/delete/{id}")
     public R<String> delete(@PathVariable Long id) {
-        cloudStorageAuthService.removeById(id);
+        cloudStorageAuthService.delete(id);
         return R.<String>builder().message("删除成功").code(200).build();
     }
 
     @PutMapping("/update/{id}")
-    public R<String> update(@PathVariable Long id, @RequestBody CloudStorageAuthDTO cloudStorageAuthDto) {
-        CloudStorageAuth cloudStorageAuth = new CloudStorageAuth();
-        BeanUtils.copyProperties(cloudStorageAuthDto, cloudStorageAuth);
-        cloudStorageAuth.setId(id);
-        cloudStorageAuthService.updateById(cloudStorageAuth);
+    public R<String> update(@PathVariable Long id, @RequestBody CloudStorageAuthDTO update) {
+        cloudStorageAuthService.update(id, update);
         return R.<String>builder().code(200).message("修改成功").build();
     }
 }

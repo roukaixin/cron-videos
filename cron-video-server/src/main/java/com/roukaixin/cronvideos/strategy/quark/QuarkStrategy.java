@@ -1,9 +1,6 @@
 package com.roukaixin.cronvideos.strategy.quark;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
 import com.roukaixin.cronvideos.domain.*;
 import com.roukaixin.cronvideos.enums.CloudProviderEnum;
@@ -18,13 +15,19 @@ import com.roukaixin.cronvideos.strategy.domain.FileInfo;
 import com.roukaixin.cronvideos.strategy.domain.MediaMetadata;
 import com.roukaixin.cronvideos.utils.Aria2Utils;
 import com.roukaixin.cronvideos.utils.FileUtils;
+import com.roukaixin.cronvideos.utils.JsonUtils;
 import com.roukaixin.cronvideos.utils.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.text.Collator;
 import java.util.*;
@@ -118,10 +121,9 @@ public class QuarkStrategy implements CloudDrive {
             cloudMapper.updateById(cloud);
             log.info("分享链接已经失效 -> {} -> {}", shareId, data);
         } else {
-            JSONObject responseJson = JSONObject.parseObject(data);
-            if (responseJson.getInteger("status").equals(200)) {
-                shareToken = responseJson.getObject("data", JSONObject.class)
-                        .getString("stoken");
+            JsonNode responseJson = JsonUtils.readTree(data);
+            if (responseJson.get("status").asInt() == 200) {
+                shareToken = responseJson.get("data").get("stoken").asString();
             }
         }
         return shareToken;
@@ -134,10 +136,11 @@ public class QuarkStrategy implements CloudDrive {
         String response = quarkApi.shareSharepageDetail(cloud.getShareId(), stoken, pdirFid, page);
         List<QuarkFileInfo> fileInfoList = new ArrayList<>();
         if (!ObjectUtils.isEmpty(response)) {
-            JSONObject responseJson = JSONObject.parseObject(response);
-            if (responseJson.getInteger("status").equals(200)) {
-                JSONObject data = responseJson.getJSONObject("data");
-                List<QuarkFileInfo> dataList = data.getList("list", QuarkFileInfo.class);
+            JsonNode responseJson = JsonUtils.readTree(response);
+            if (responseJson.get("status").asInt() == 200) {
+                JsonNode data = responseJson.get("data").get("list");
+                List<QuarkFileInfo> dataList = JsonUtils.readValue(data, new TypeReference<>() {
+                });
                 for (QuarkFileInfo info : dataList) {
                     if (info.getCategory().equals(0)) {
                         if (!ObjectUtils.isEmpty(cloud.getExcludedDir()) &&
@@ -151,7 +154,7 @@ public class QuarkStrategy implements CloudDrive {
                     }
 
                 }
-                Integer total = responseJson.getJSONObject("metadata").getInteger("_total");
+                int total = responseJson.get("metadata").get("_total").asInt();
                 if (total > page * 100) {
                     fileInfoList.addAll(getSharepageFileList(cloud, stoken, pdirFid, page + 1));
                 }
@@ -170,10 +173,12 @@ public class QuarkStrategy implements CloudDrive {
     private String getSaveFolderFid(String name, Integer season) {
         // 以下请求都需要 cookie
         String response = quarkApi.fileSort("0", getCookies());
-        JSONObject responseJson = JSONObject.parseObject(response);
+        JsonNode responseJson = JsonUtils.readTree(response);
         String fid = "";
-        if (responseJson.getInteger("status").equals(200)) {
-            List<QuarkFileInfo> list = responseJson.getJSONObject("data").getList("list", QuarkFileInfo.class);
+        if (responseJson.get("status").asInt() == 200) {
+            JsonNode data = responseJson.get("data").get("list");
+            List<QuarkFileInfo> list = JsonUtils.readValue(data, new TypeReference<>() {
+            });
             boolean exit = false;
             for (QuarkFileInfo fileInfo : list) {
                 if (fileInfo.getFileName().equals("来自：分享")) {
@@ -184,9 +189,11 @@ public class QuarkStrategy implements CloudDrive {
             }
             if (exit) {
                 response = quarkApi.fileSort(fid, getCookies());
-                responseJson = JSONObject.parseObject(response);
-                if (responseJson.getInteger("status").equals(200)) {
-                    list = responseJson.getJSONObject("data").getList("list", QuarkFileInfo.class);
+                responseJson = JsonUtils.readTree(response);
+                if (responseJson.get("status").asInt() == 200) {
+                    responseJson = responseJson.get("data").get("list");
+                    list = JsonUtils.readValue(responseJson, new TypeReference<>() {
+                    });
                     exit = false;
                     for (QuarkFileInfo fileInfo : list) {
                         if (fileInfo.getFileName().equals(name)) {
@@ -198,9 +205,11 @@ public class QuarkStrategy implements CloudDrive {
                     if (exit) {
                         // title 存在,不知道 season 存不存在.判断 season 是否存在
                         response = quarkApi.fileSort(fid, getCookies());
-                        responseJson = JSONObject.parseObject(response);
-                        if (responseJson.getInteger("status").equals(200)) {
-                            list = responseJson.getJSONObject("data").getList("list", QuarkFileInfo.class);
+                        responseJson = JsonUtils.readTree(response);
+                        if (responseJson.get("status").asInt() == 200) {
+                            responseJson = responseJson.get("data").get("list");
+                            list = JsonUtils.readValue(responseJson, new TypeReference<>() {
+                            });
                             exit = false;
                             for (QuarkFileInfo fileInfo : list) {
                                 if (fileInfo.getFileName().equals(String.format("Season %02d", season))) {
@@ -238,9 +247,9 @@ public class QuarkStrategy implements CloudDrive {
         String fid = "";
         String response = quarkApi.file(pdirFid, fileName, getCookies());
         if (response != null && !response.isEmpty()) {
-            JSONObject responseJson = JSONObject.parseObject(response);
-            if (responseJson.getInteger("status").equals(200)) {
-                fid = responseJson.getJSONObject("data").getString("fid");
+            JsonNode responseJson = JsonUtils.readTree(response);
+            if (responseJson.get("status").asInt() == 200) {
+                fid = responseJson.get("data").get("fid").asString();
             }
         }
         return fid;
@@ -250,7 +259,7 @@ public class QuarkStrategy implements CloudDrive {
      * 过滤视频
      *
      * @param sharepageFileList 分享文件列表
-     * @param fileRegex file 正则
+     * @param fileRegex         file 正则
      * @return 过滤后的视频
      */
     private List<QuarkFileInfo> getFilterVideos(List<QuarkFileInfo> sharepageFileList, String fileRegex) {
@@ -262,7 +271,7 @@ public class QuarkStrategy implements CloudDrive {
                 .sorted(Comparator.comparing(QuarkFileInfo::getFileName, Collator.getInstance()))
                 .toList();
         if (log.isInfoEnabled()) {
-            log.info("{} -> 文件大小：{} -> 文件过滤之前 -> {}", CloudProviderEnum.QUARK, videoList.size(), JSON.toJSONString(videoList));
+            log.info("{} -> 文件大小：{} -> 文件过滤之前 -> {}", CloudProviderEnum.QUARK, videoList.size(), JsonUtils.toJSONString(videoList));
         }
         // 过滤出大于 1080p 的媒体视频
         videoList = videoList
@@ -279,15 +288,16 @@ public class QuarkStrategy implements CloudDrive {
                     .toList();
         }
         if (log.isInfoEnabled()) {
-            log.info("{} -> 文件大小：{} -> 文件过滤之后 -> {}", CloudProviderEnum.QUARK, videoList.size(), JSON.toJSONString(videoList));
+            log.info("{} -> 文件大小：{} -> 文件过滤之后 -> {}", CloudProviderEnum.QUARK, videoList.size(), JsonUtils.toJSONString(videoList));
         }
         return videoList;
     }
 
     /**
      * 获取媒体视频的集数
+     *
      * @param source 匹配出来的集数
-     * @param begin 开始集数
+     * @param begin  开始集数
      * @return 实际媒体集数
      */
     private Integer getEpisodeNumber(Integer source, Integer begin) {
@@ -355,23 +365,26 @@ public class QuarkStrategy implements CloudDrive {
         return getTaskId(response);
     }
 
+    @NullMarked
     private MultiValueMap<String, String> getCookies() {
         String cookies = (String) redisTemplate.opsForValue().get("cookies");
         MultiValueMap<String, String> cookiesMap = new LinkedMultiValueMap<>();
         if (ObjectUtils.isEmpty(cookies)) {
-            CloudStorageAuth cloudStorageAuth = cloudStorageAuthMapper.selectOne(
-                    Wrappers.<CloudStorageAuth>lambdaQuery().eq(CloudStorageAuth::getProvider, 1));
+            CloudStorageAuth cloudStorageAuth = cloudStorageAuthMapper.selectOneByProvider(1);
             if (!ObjectUtils.isEmpty(cloudStorageAuth)) {
                 cookies = cloudStorageAuth.getCookie();
                 redisTemplate.opsForValue().set("cookies", cookies);
-            } else {
-                return cookiesMap;
             }
         }
 
-        for (String s : cookies.split(";")) {
+        for (String s : Optional.ofNullable(cookies).orElse("").split(";")) {
             String[] split = s.split("=", 2);
-            cookiesMap.add(split[0], split[1]);
+            String key = split[0].trim();
+            if (StringUtils.hasText(key)) {
+                continue;
+            }
+            String value = split.length > 1 ? split[1].trim() : "";
+            cookiesMap.add(key, value);
         }
         return cookiesMap;
     }
@@ -379,9 +392,9 @@ public class QuarkStrategy implements CloudDrive {
     private String getTaskId(String response) {
         String taskId = "";
         if (response != null && !response.isEmpty()) {
-            JSONObject responseJson = JSONObject.parseObject(response);
-            if (responseJson.getInteger("status").equals(200) && responseJson.getInteger("code").equals(0)) {
-                taskId = responseJson.getJSONObject("data").getString("task_id");
+            JsonNode responseJson = JsonUtils.readTree(response);
+            if (responseJson.get("status").asInt() == 200 && responseJson.get("code").asInt() == 0) {
+                taskId = responseJson.get("data").get("task_id").asString();
             }
         }
         return taskId;
@@ -404,15 +417,11 @@ public class QuarkStrategy implements CloudDrive {
         String response = quarkApi.task(taskId, retryCount, getCookies());
         String downloadFid = "";
         if (response != null && !response.isEmpty()) {
-            JSONObject responseJson = JSONObject.parseObject(response);
-            if (responseJson.getInteger("status").equals(200)) {
-                JSONObject data = responseJson
-                        .getJSONObject("data");
-                if (data.getInteger("status").equals(2)) {
-                    downloadFid = data
-                            .getJSONObject("save_as")
-                            .getJSONArray("save_as_top_fids")
-                            .getString(0);
+            JsonNode responseJson = JsonUtils.readTree(response);
+            if (responseJson.get("status").asInt() == 200) {
+                JsonNode data = responseJson.get("data");
+                if (data.get("status").asInt() == 2) {
+                    downloadFid = data.get("save_as").withArrayProperty("save_as_top_fids").get(0).asString();
                 } else {
                     return getDownloadFileId(taskId, retryCount + 1, maxRetries);
                 }
@@ -428,11 +437,11 @@ public class QuarkStrategy implements CloudDrive {
         String responseBody = response.get("response");
         map.put("cookie", response.get("cookies"));
         if (!responseBody.isEmpty()) {
-            JSONObject responseJson = JSONObject.parseObject(responseBody);
-            if (responseJson.getInteger("status").equals(200) && responseJson.getInteger("code").equals(0)) {
-                JSONObject downloadBodyData = responseJson.getJSONArray("data").getJSONObject(0);
-                map.put("download_url", downloadBodyData.getString("download_url"));
-                map.put("format_type", downloadBodyData.getString("format_type"));
+            JsonNode responseJson = JsonUtils.readTree(responseBody);
+            if (responseJson.get("status").asInt() == 200 && responseJson.get("code").asInt() == 0) {
+                JsonNode downloadBodyData = responseJson.withArrayProperty("data").get(0);
+                map.put("download_url", downloadBodyData.get("download_url").asString());
+                map.put("format_type", downloadBodyData.get("format_type").asString());
             }
         }
         return map;
@@ -441,11 +450,7 @@ public class QuarkStrategy implements CloudDrive {
     private String sendDownload(String url, String cookie, String mimeType, Media media, FileInfo fileInfo) {
         String gid = "";
         // 获取下载任务
-        DownloadTask downloadTask = downloadTaskMapper.selectOne(
-                Wrappers.<DownloadTask>lambdaQuery()
-                        .eq(DownloadTask::getMediaId, media.getId())
-                        .eq(DownloadTask::getEpisodeNumber, fileInfo.getEpisodeNumber())
-        );
+        DownloadTask downloadTask = downloadTaskMapper.selectOneByMediaIdAndEpisodeNumber(media.getId(), fileInfo.getEpisodeNumber());
         // __puus= (下载需要)
         Long aria2ServerId = SmoothWeightedRoundRobin.getInstance().getDownloaderId();
         if (log.isDebugEnabled()) {
@@ -478,7 +483,7 @@ public class QuarkStrategy implements CloudDrive {
             downloadTask.setStatus(0);
             downloadTask.setOutName(outName);
             downloadTask.setResourceStatus(0);
-            Downloader downloader = downloaderMapper.selectById(aria2ServerId);
+            Downloader downloader = downloaderMapper.selectOneById(aria2ServerId);
             // 更新(失败的)或者插入
             downloadTaskMapper.insertOrUpdate(downloadTask);
             // 下载之前先判断任务是否在等待下载
@@ -495,7 +500,7 @@ public class QuarkStrategy implements CloudDrive {
                 String response = aria2Download(
                         downloader, url, dir + savePath, outName, cookie
                 );
-                gid = JSONObject.parseObject(response).getString("result");
+                gid = JsonUtils.readTree(response).get("result").asString();
                 // 暂时不考虑发生到aria2失败,更新数据
                 downloadTask.setGid(gid);
                 downloadTaskMapper.updateById(downloadTask);
@@ -507,15 +512,16 @@ public class QuarkStrategy implements CloudDrive {
     private boolean taskIsWaiting(Downloader downloader, String gid) {
         boolean wait = false;
         if (!ObjectUtils.isEmpty(gid)) {
-            JSONArray params = new JSONArray();
+            ArrayNode params = JsonUtils.createArrayNode();
             params.add("token:" + downloader.getSecret());
             params.add(gid);
-            params.add(new ArrayList<>().add("status"));
-            String tellStatus = Aria2Utils.tellStatus(downloader.getHost(), downloader.getPort(), params.toJSONString());
+            params.addPOJO(List.of("status"));
+            // secret：可选、gid：必填、keys：结果返回包含那些信息
+            String tellStatus = Aria2Utils.tellStatus(downloader.getHost(), downloader.getPort(), params.toString());
             if (!ObjectUtils.isEmpty(tellStatus)) {
-                JSONObject result = JSONObject.parseObject(tellStatus).getJSONObject("result");
+                JsonNode result = JsonUtils.readTree(tellStatus).get("result");
                 if (!ObjectUtils.isEmpty(result)) {
-                    String status = result.getString("status");
+                    String status = result.get("status").asString();
                     if (!ObjectUtils.isEmpty(status) && status.equals("waiting")) {
                         wait = true;
                     }
@@ -537,18 +543,18 @@ public class QuarkStrategy implements CloudDrive {
 
     private String aria2Download(Downloader downloader, String downloadUrl, String aria2DownloadDir, String out, String cookies) {
         // 调用 aria2 下载
-        JSONArray params = new JSONArray();
+        ArrayNode params = JsonUtils.createArrayNode();
         params.add("token:" + downloader.getSecret());
-        params.add(JSONArray.of(downloadUrl));
-        params.add(JSONObject.of(
-                "dir", aria2DownloadDir,
-                "split", "16",
-                "max-connection-per-server", 16,
-                "out", out,
-                "allow-overwrite", true,
-                "header", JSONArray.of("Cookie:" + cookies)
-        ));
-        String s = Aria2Utils.addUri(downloader.getHost(), downloader.getPort(), params.toJSONString());
+        params.addPOJO(List.of(downloadUrl));
+        ObjectNode options = JsonUtils.createObjectNode();
+        options.put("dir", aria2DownloadDir);
+        options.put("split", "16");
+        options.put("max-connection-per-server", 16);
+        options.put("out", out);
+        options.put("allow-overwrite", true);
+        options.putPOJO("header", List.of("Cookie:" + cookies));
+        params.add(options);
+        String s = Aria2Utils.addUri(downloader.getHost(), downloader.getPort(), params.toString());
         log.info("发送下载结果 {}", s);
         return s;
     }
@@ -568,11 +574,10 @@ public class QuarkStrategy implements CloudDrive {
         }
         String response = quarkApi.task(taskId, retryCount, getCookies());
         if (response != null && !response.isEmpty()) {
-            JSONObject responseJson = JSONObject.parseObject(response);
-            if (responseJson.getInteger("status").equals(200)) {
-                JSONObject data = responseJson
-                        .getJSONObject("data");
-                if (data.getInteger("status").equals(2)) {
+            JsonNode responseJson = JsonUtils.readTree(response);
+            if (responseJson.get("status").asInt() == 200) {
+                JsonNode data = responseJson.get("data");
+                if (data.get("status").asInt() == 2) {
                     flag = true;
                 } else {
                     return deleteSourceFileTask(taskId, retryCount + 1, maxRetries);

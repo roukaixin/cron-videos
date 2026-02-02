@@ -1,13 +1,15 @@
 package com.roukaixin.cronvideos.utils;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.net.URI;
 import java.util.Base64;
@@ -20,14 +22,15 @@ public class Aria2Utils {
             .build();
 
     public static String getDir(String ip, Integer port, String secret) {
-        JSONArray params = new JSONArray();
+        ArrayNode params = JsonUtils.createArrayNode();
         if (secret != null && !secret.isEmpty()) {
             params.add("token:" + secret);
         }
-        String body = exchange(ip, port, "aria2.getGlobalOption", params.toJSONString());
+        String body = exchange(ip, port, "aria2.getGlobalOption", params.toString());
         String dir = "";
         if (body != null) {
-            dir = JSONObject.parseObject(body).getJSONObject("result").getString("dir");
+            JsonNode jsonNode = JsonUtils.readTree(body);
+            dir = jsonNode.get("result").get("dir").asString();
         }
         return dir;
     }
@@ -37,7 +40,7 @@ public class Aria2Utils {
     }
 
     public static String getUri(String scheme, String ip, Integer port) {
-        return  scheme + "://" + ip + ":" + port + "/jsonrpc";
+        return scheme + "://" + ip + ":" + port + "/jsonrpc";
     }
 
     public static String removeDownloadResult(String ip, Integer port, String paramsJsonString) {
@@ -85,14 +88,14 @@ public class Aria2Utils {
                         response = clientResponse.bodyTo(String.class);
                     }
                     if (log.isDebugEnabled()) {
+                        ObjectNode params = JsonUtils.createObjectNode();
+                        params.put("id", id);
+                        params.put("method", method);
+                        params.put("params", paramsJsonString);
                         log.debug("==================ARIA2=================");
                         log.debug("请求 URL : {}", clientRequest.getURI());
                         log.debug("请求方法 : {}", clientRequest.getMethod());
-                        log.debug("请求参数 : {}", JSONObject.of(
-                                "id", id,
-                                "method", method,
-                                "params", paramsJsonString
-                        ));
+                        log.debug("请求参数 : {}", params);
                         log.debug("响应状态 : {}", clientResponse.getStatusCode());
                         log.debug("响应结果 : {}", clientResponse.bodyTo(String.class));
                         log.debug("========================================");

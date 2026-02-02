@@ -1,23 +1,29 @@
 package com.roukaixin.cronvideos.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+
 /**
  * 网盘认证信息存储
+ * 表名 cloud_storage_auth
  *
- * @TableName cloud_storage_auth
+ * @author roukaixin
+ * @date 2026/1/12 18:36
  */
-@TableName(value = "cloud_storage_auth")
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CloudStorageAuth {
 
     /**
      * 唯一 ID
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -48,12 +54,10 @@ public class CloudStorageAuth {
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
     /**
      * 逻辑删除字段（0: 正常, 1: 已删除）
      */
-    @TableLogic
     private Integer isDeleted;
 }

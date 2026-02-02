@@ -1,14 +1,13 @@
 package com.roukaixin.cronvideos.listener.event;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Aria2Task {
+public class Aria2TaskEvent {
 
     private Long id;
 

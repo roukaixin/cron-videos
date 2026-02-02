@@ -21,25 +21,19 @@ public class CloudController {
     }
 
     @PostMapping("/add")
-    private R<String> add(@RequestBody CloudShareDTO cloudSharesDto) {
-        Cloud cloudShare = new Cloud();
-        BeanUtils.copyProperties(cloudSharesDto, cloudShare);
-        cloudService.save(cloudShare);
+    private R<String> add(@RequestBody CloudShareDTO add) {
+        cloudService.add(add);
         return R.<String>builder().code(200).message("添加成功").build();
     }
 
     @GetMapping("/{mediaId}")
-    public R<List<CloudShareVO>> share(@PathVariable("mediaId") String mediaId){
+    public R<List<CloudShareVO>> share(@PathVariable Long mediaId) {
         return cloudService.share(mediaId);
     }
 
     @PutMapping("/{id}")
-    public R<String> update(@PathVariable("id") Long id, @RequestBody CloudShareDTO update) {
-        Cloud cloudShare = new Cloud();
-        BeanUtils.copyProperties(update, cloudShare);
-        cloudShare.setId(id);
-        cloudShare.setMediaId(null);
-        cloudService.updateById(cloudShare);
+    public R<String> update(@PathVariable Long id, @RequestBody CloudShareDTO update) {
+        cloudService.update(id, update);
         return R.<String>builder().code(200).message("编辑成功").build();
     }
 }

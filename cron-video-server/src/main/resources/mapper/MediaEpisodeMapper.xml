@@ -11,8 +11,51 @@
             <result property="episodeNumber" column="episode_number" />
             <result property="airDate" column="air_date" />
             <result property="isUpdate" column="is_update" />
-            <result property="createdAt" column="created_at" />
-            <result property="updatedAt" column="updated_at" />
+            <result property="createDate" column="create_date" />
+            <result property="updateDate" column="update_date" />
     </resultMap>
+
+    <insert id="insertBatch">
+        insert into media_episode(id, media_id, season_number, episode_number, air_date, isUpdate, create_date, update_date)
+        values <foreach collection="add" separator="," item="item">(#{item.id}, #{item.mediaId}, #{item.seasonNumber}, #{item.episodeNumber}, #{item.airDate}, #{item.isUpdate}, #{item.createDate}, #{item.updateDate})</foreach>
+    </insert>
+    <update id="updateBatch">
+        update media_episode
+        <set>
+            media_id = case id
+                <foreach collection="update" item="item">
+                    WHEN #{item.id} THEN #{item.mediaId}
+                </foreach>
+            END,
+            season_number = case id
+            <foreach collection="update" item="item">
+                WHEN #{item.id} THEN #{item.seasonNumber}
+            </foreach>
+            END,
+            episode_number = case id
+            <foreach collection="update" item="item">
+                WHEN #{item.id} THEN #{item.episodeNumber}
+            </foreach>
+            END,
+            air_date = case id
+            <foreach collection="update" item="item">
+                WHEN #{item.id} THEN #{item.airDate}
+            </foreach>
+            END
+        </set>
+        where
+            id in <foreach collection="update" open="(" close=")" separator="," item="item">#{item.id}</foreach>
+    </update>
+
+    <select id="selectEpisodeNumberByMediaId" resultType="com.roukaixin.cronvideos.domain.MediaEpisode">
+        select
+            episode_number
+        from
+            media_episode
+        where
+            media_id = #{mediaId}
+            and air_date &lt;= #{airDate}
+            and is_update = 0
+    </select>
 
 </mapper>

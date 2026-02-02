@@ -1,7 +1,5 @@
 package com.roukaixin.cronvideos.domain.vo;
 
-import com.baomidou.mybatisplus.annotation.FieldStrategy;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.roukaixin.cronvideos.enums.CloudProviderEnum;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,10 +7,13 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 /**
  * 网盘分享链接
+ * 表名 cloud_shares
  *
- * @TableName cloud_shares
+ * @author roukaixin
+ * @date 2026/1/12 12:36
  */
 @Setter
 @Getter
@@ -51,7 +52,6 @@ public class CloudShareVO {
     /**
      * 用于提取文件的正则表达式
      */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String fileRegex;
 
     /**
@@ -70,7 +70,7 @@ public class CloudShareVO {
     private List<String> excludedDir;
 
     /**
-     *  是否失效（0:否、1:是）
+     * 是否失效（0:否、1:是）
      */
     private Integer isLapse;
 

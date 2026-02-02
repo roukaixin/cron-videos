@@ -1,6 +1,5 @@
 package com.roukaixin.cronvideos.enums;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +12,6 @@ public enum CloudProviderEnum {
     ALIYUN(2, "阿里云盘"),
     BAIDU(3, "百度网盘");
 
-    @EnumValue
     @JsonValue
     private final Integer provider;
 
