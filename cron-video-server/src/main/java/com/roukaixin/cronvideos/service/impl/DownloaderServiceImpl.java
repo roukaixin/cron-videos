@@ -1,6 +1,5 @@
 package com.roukaixin.cronvideos.service.impl;
 
-import com.roukaixin.cronvideos.algorithm.SnowflakeIdWorker;
 import com.roukaixin.cronvideos.domain.Downloader;
 import com.roukaixin.cronvideos.domain.dto.DownloaderDTO;
 import com.roukaixin.cronvideos.domain.vo.DownloaderVO;
@@ -9,6 +8,7 @@ import com.roukaixin.cronvideos.mapper.DownloaderMapper;
 import com.roukaixin.cronvideos.pooled.PooledDownloader;
 import com.roukaixin.cronvideos.service.DownloaderService;
 import com.roukaixin.cronvideos.utils.EventUtils;
+import com.roukaixin.cronvideos.utils.IdentifierUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -28,16 +28,12 @@ public class DownloaderServiceImpl implements DownloaderService {
 
     private final DownloaderMapper downloaderMapper;
 
-    private final SnowflakeIdWorker snowflakeIdWorker;
-
     private final PooledDownloader pooledDownloader;
 
 
     public DownloaderServiceImpl(DownloaderMapper downloaderMapper,
-                                 SnowflakeIdWorker snowflakeIdWorker,
                                  PooledDownloader pooledDownloader) {
         this.downloaderMapper = downloaderMapper;
-        this.snowflakeIdWorker = snowflakeIdWorker;
         this.pooledDownloader = pooledDownloader;
     }
 
@@ -57,7 +53,7 @@ public class DownloaderServiceImpl implements DownloaderService {
     @Transactional(rollbackFor = Exception.class)
     public void add(DownloaderDTO add) {
         Downloader downloader = new Downloader();
-        downloader.setId(snowflakeIdWorker.nextId());
+        downloader.setId(IdentifierUtils.nextId());
         buildDownloader(add, downloader);
         LocalDateTime now = LocalDateTime.now();
         downloader.setCreateDate(now);

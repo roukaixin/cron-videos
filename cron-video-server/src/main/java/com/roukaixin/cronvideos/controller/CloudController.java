@@ -1,11 +1,9 @@
 package com.roukaixin.cronvideos.controller;
 
-import com.roukaixin.cronvideos.domain.Cloud;
 import com.roukaixin.cronvideos.domain.R;
 import com.roukaixin.cronvideos.domain.dto.CloudShareDTO;
 import com.roukaixin.cronvideos.domain.vo.CloudShareVO;
 import com.roukaixin.cronvideos.service.CloudService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

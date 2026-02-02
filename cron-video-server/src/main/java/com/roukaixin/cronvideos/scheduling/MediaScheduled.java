@@ -2,7 +2,6 @@ package com.roukaixin.cronvideos.scheduling;
 
 
 import com.roukaixin.cronvideos.algorithm.SmoothWeightedRoundRobin;
-import com.roukaixin.cronvideos.algorithm.SnowflakeIdWorker;
 import com.roukaixin.cronvideos.api.TmdbApi;
 import com.roukaixin.cronvideos.api.domain.Episode;
 import com.roukaixin.cronvideos.domain.Cloud;
@@ -16,6 +15,7 @@ import com.roukaixin.cronvideos.mapper.MediaMapper;
 import com.roukaixin.cronvideos.strategy.CloudDrive;
 import com.roukaixin.cronvideos.strategy.CloudDriveContext;
 import com.roukaixin.cronvideos.strategy.domain.FileInfo;
+import com.roukaixin.cronvideos.utils.IdentifierUtils;
 import com.roukaixin.cronvideos.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,23 +43,19 @@ public class MediaScheduled {
 
     private final TmdbApi tmdbApi;
 
-    private final SnowflakeIdWorker idWorker;
-
 
     public MediaScheduled(CloudMapper cloudMapper,
                           MediaMapper mediaMapper,
                           CloudDriveContext cloudDriveContext,
                           DownloadTaskMapper downloadTaskMapper,
                           MediaEpisodeMapper mediaEpisodeMapper,
-                          TmdbApi tmdbApi,
-                          SnowflakeIdWorker idWorker) {
+                          TmdbApi tmdbApi) {
         this.cloudMapper = cloudMapper;
         this.mediaMapper = mediaMapper;
         this.cloudDriveContext = cloudDriveContext;
         this.downloadTaskMapper = downloadTaskMapper;
         this.mediaEpisodeMapper = mediaEpisodeMapper;
         this.tmdbApi = tmdbApi;
-        this.idWorker = idWorker;
     }
 
     @Scheduled(fixedDelay = 1000 * 60 * 10, initialDelay = 1000)
@@ -162,7 +158,7 @@ public class MediaScheduled {
                                 MediaEpisode mediaEpisode = mediaEpisodeMap.get(episode.getSeasonNumber() + ":" + episode.getEpisodeNumber());
                                 if (Objects.isNull(mediaEpisode)) {
                                     mediaEpisode = new MediaEpisode();
-                                    mediaEpisode.setId(idWorker.nextId());
+                                    mediaEpisode.setId(IdentifierUtils.nextId());
                                     mediaEpisode.setMediaId(media.getId());
                                     mediaEpisode.setSeasonNumber(episode.getSeasonNumber());
                                     mediaEpisode.setEpisodeNumber(episode.getEpisodeNumber());

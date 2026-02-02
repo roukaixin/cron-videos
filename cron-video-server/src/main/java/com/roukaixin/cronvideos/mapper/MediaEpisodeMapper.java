@@ -9,11 +9,13 @@ import org.apache.ibatis.annotations.Update;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 /**
- * @author pankx
- * @description 针对表【media_episode( 媒体库剧集信息)】的数据库操作Mapper
- * @date  2025-03-30 22:44:13
- * @Entity com.roukaixin.cronvideos.pojo.MediaEpisode
+ * 针对表【media_episode( 媒体库剧集信息)】的数据库操作Mapper
+ * 实体 {@link com.roukaixin.cronvideos.domain.MediaEpisode}
+ *
+ * @author roukaixin
+ * @date 2026/2/2 23:00
  */
 @Mapper
 public interface MediaEpisodeMapper {
@@ -25,7 +27,7 @@ public interface MediaEpisodeMapper {
     MediaEpisode selectOne(@Param("mediaId") Long mediaId, @Param("episodeNumber") Integer episodeNumber);
 
     @Update("update media_episode set is_update = #{isUpdate} where id = #{id}")
-    void updateIsUpdateById(@Param("isUpdate") int isUpdate,@Param("id") Long id);
+    void updateIsUpdateById(@Param("isUpdate") int isUpdate, @Param("id") Long id);
 
     @Select("select * from media_episode where media_id = #{mediaId}")
     List<MediaEpisode> selectOneByMediaId(@Param("mediaId") Long mediaId);

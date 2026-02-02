@@ -1,14 +1,11 @@
 package com.roukaixin.cronvideos.controller;
 
-import com.roukaixin.cronvideos.domain.CloudStorageAuth;
 import com.roukaixin.cronvideos.domain.R;
 import com.roukaixin.cronvideos.domain.dto.CloudStorageAuthDTO;
 import com.roukaixin.cronvideos.domain.vo.CloudStorageAuthVO;
 import com.roukaixin.cronvideos.service.CloudStorageAuthService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController

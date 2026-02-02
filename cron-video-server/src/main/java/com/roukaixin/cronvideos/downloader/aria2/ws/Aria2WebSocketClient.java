@@ -7,6 +7,7 @@ import com.roukaixin.cronvideos.downloader.aria2.MethodEnum;
 import com.roukaixin.cronvideos.listener.event.Aria2TaskEvent;
 import com.roukaixin.cronvideos.listener.event.DownloadTaskEvent;
 import com.roukaixin.cronvideos.utils.EventUtils;
+import com.roukaixin.cronvideos.utils.IdentifierUtils;
 import com.roukaixin.cronvideos.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
@@ -99,7 +100,7 @@ public class Aria2WebSocketClient extends WebSocketClient implements Client {
     private String buildVersionParams() {
         synchronized (request) {
             Map<String, Object> map = new HashMap<>();
-            String id = identifier + UUID.randomUUID().toString();
+            String id = identifier + "_" + IdentifierUtils.nextId();
             map.put("id", id);
             map.put("method", MethodEnum.aria2_getVersion.getMethod());
             map.put("params", StringUtils.hasText(password) ? List.of("token:" + this.password) : new ArrayList<>());
@@ -130,9 +131,7 @@ public class Aria2WebSocketClient extends WebSocketClient implements Client {
                     }
                     request.remove(id);
                 }
-                case null -> {
-                    log.info("Aria2WebSocketClient 下载器[{}] 不是本程序请求的结果", this.identifier);
-                }
+                case null -> log.info("Aria2WebSocketClient 下载器[{}] 不是本程序请求的结果", this.identifier);
                 default -> {
                     String method = repose.get("method").asString();
                     if (method != null) {

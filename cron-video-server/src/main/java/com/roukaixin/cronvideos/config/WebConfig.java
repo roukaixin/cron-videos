@@ -1,6 +1,5 @@
 package com.roukaixin.cronvideos.config;
 
-import com.roukaixin.cronvideos.algorithm.SnowflakeIdWorker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,11 +20,6 @@ public class WebConfig {
                 .builder()
                 .requestFactory(new BufferingClientHttpRequestFactory(new JdkClientHttpRequestFactory()))
                 .build();
-    }
-
-    @Bean
-    public SnowflakeIdWorker snowflakeIdWorker() {
-        return new SnowflakeIdWorker(1, 1);
     }
 
     @Bean

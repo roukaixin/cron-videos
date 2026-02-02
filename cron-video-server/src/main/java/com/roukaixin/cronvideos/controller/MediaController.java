@@ -1,15 +1,12 @@
 package com.roukaixin.cronvideos.controller;
 
-import com.roukaixin.cronvideos.domain.Media;
 import com.roukaixin.cronvideos.domain.R;
 import com.roukaixin.cronvideos.domain.dto.MediaDTO;
 import com.roukaixin.cronvideos.domain.dto.MediaUpdateDTO;
 import com.roukaixin.cronvideos.domain.vo.MediaVO;
 import com.roukaixin.cronvideos.service.MediaService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController

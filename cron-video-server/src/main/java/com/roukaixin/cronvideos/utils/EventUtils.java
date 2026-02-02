@@ -22,7 +22,7 @@ public class EventUtils {
         EventUtils.applicationEventPublisher = ctx;
     }
 
-    public static <T> void publishEvent(Object data) {
+    public static <T> void publishEvent(T data) {
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(data);
             if (log.isDebugEnabled()) {
