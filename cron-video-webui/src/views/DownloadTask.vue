@@ -393,14 +393,14 @@ onMounted(() => {
 }
 
 :deep(.page-card > .el-card__header) {
-  padding: 14px 16px 10px;
+  padding: 12px;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 :deep(.page-card > .el-card__body) {
   height: calc(100% - 57px);
   box-sizing: border-box;
-  padding: 12px 16px 16px;
+  padding: 0;
   display: flex;
   flex-direction: column;
 }

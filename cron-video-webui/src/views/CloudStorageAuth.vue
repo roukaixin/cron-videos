@@ -397,14 +397,14 @@ onMounted(() => {
 }
 
 :deep(.auth-card > .el-card__header) {
-  padding: 14px 16px 10px;
+  padding: 12px;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 :deep(.auth-card > .el-card__body) {
   height: calc(100% - 57px);
   box-sizing: border-box;
-  padding: 12px 16px 16px;
+  padding: 0;
 }
 
 .card-body {
@@ -562,7 +562,7 @@ onMounted(() => {
 
   :deep(.auth-card > .el-card__body) {
     height: calc(100% - 50px);
-    padding: 8px 12px 12px;
+    padding: 8px 0 0;
   }
 
   .header-title {

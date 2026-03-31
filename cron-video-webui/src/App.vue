@@ -106,7 +106,6 @@ defineOptions({
 .content-scroll {
   height: 100%;
   overflow: hidden;
-  scrollbar-gutter: stable;
 }
 
 .nav-shell {
