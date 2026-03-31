@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <el-card class="page-card">
+    <el-card class="page-card" shadow="never">
       <template #header>
         <div class="card-header">
           <span class="header-title">影视管理</span>
@@ -1134,7 +1134,7 @@ function handleAddMedia() {
 .page-card {
   height: 100%;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 :deep(.page-card > .el-card__header) {
@@ -1160,7 +1160,7 @@ function handleAddMedia() {
   margin-top: 10px;
   padding: 8px;
   border: 1px solid #dfe7f3;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f7faff;
 }
 
@@ -1170,7 +1170,7 @@ function handleAddMedia() {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #ffffff;
 }
 

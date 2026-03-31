@@ -1,6 +1,6 @@
 <template>
   <el-container class="app-shell">
-    <el-card class="layout-card">
+    <el-card class="layout-card" shadow="never">
       <template #header>
         <div class="nav-shell">
           <el-header class="nav-header">
@@ -106,7 +106,7 @@ defineOptions({
 
 .nav-shell {
   padding: 6px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f5f8fc;
   border: 1px solid #dbe5f1;
 }
@@ -134,7 +134,7 @@ defineOptions({
   transition: all 0.25s ease;
   position: relative;
   padding: 12px 14px;
-  border-radius: 8px;
+  border-radius: 6px;
   min-height: 46px;
   text-align: center;
   border: 1px solid #dbe5f1;
@@ -198,7 +198,7 @@ defineOptions({
 
   .nav-shell {
     padding: 0;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .nav-row {
@@ -208,7 +208,7 @@ defineOptions({
   .nav-item {
     min-height: 40px;
     padding: 8px 6px;
-    border-radius: 7px;
+    border-radius: 6px;
   }
 
   .nav-item span {

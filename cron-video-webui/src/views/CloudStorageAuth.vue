@@ -393,7 +393,7 @@ onMounted(() => {
 .auth-card {
   height: 100%;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 :deep(.auth-card > .el-card__header) {
@@ -505,7 +505,7 @@ onMounted(() => {
   margin-top: 10px;
   padding: 8px;
   border: 1px solid #dfe7f3;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   background: #f7faff;
 }
@@ -513,7 +513,7 @@ onMounted(() => {
 .data-table {
   height: 100%;
   width: 100%;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #ffffff;
 }
 
