@@ -28,7 +28,7 @@
             class="data-table"
             border
             stripe
-            height="100%"
+            height="calc(100% - 12px)"
         >
           <el-table-column
               prop="name"
@@ -1157,6 +1157,7 @@ function handleAddMedia() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   margin-top: 10px;
   padding: 8px;
   border: 1px solid #dfe7f3;
@@ -1164,14 +1165,22 @@ function handleAddMedia() {
   background: #f7faff;
 }
 
+.table-container::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border-bottom: 1px solid #d9e2ef;
+  pointer-events: none;
+}
+
 /* 主页表格样式 */
 .data-table {
   width: 100%;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
   border-radius: 6px;
   background: #ffffff;
+  box-shadow: inset 0 0 0 1px #dfe7f3;
 }
 
 :deep(.data-table .el-table__header th) {
@@ -1476,8 +1485,6 @@ function handleAddMedia() {
 /* 修改表格样式以保持一致性 */
 .data-table {
   width: 100%;
-  flex: 1;
-  overflow: hidden;
 }
 
 /* 分享对话框表格样式 */

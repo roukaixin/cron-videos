@@ -60,7 +60,7 @@
             border
             stripe
             class="data-table"
-            height="100%"
+            height="calc(100% - 12px)"
             @selection-change="handleSelectionChange"
         >
           <el-table-column type="selection" width="50" align="center"/>
@@ -406,11 +406,6 @@ onMounted(() => {
   flex-direction: column;
 }
 
-.data-table {
-  flex: 1;
-  min-height: 0;
-}
-
 .save-path {
   color: var(--el-text-color-secondary);
   font-size: 13px;
@@ -503,11 +498,22 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   margin-top: 10px;
   padding: 8px;
   border: 1px solid #dfe7f3;
   border-radius: 8px;
   background: #f7faff;
+}
+
+.table-container::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border-bottom: 1px solid #d9e2ef;
+  pointer-events: none;
 }
 
 /* 表格相关样式 */
@@ -530,6 +536,7 @@ onMounted(() => {
 .data-table {
   border-radius: 6px;
   background: #ffffff;
+  box-shadow: inset 0 0 0 1px #dfe7f3;
 }
 
 :deep(.data-table .el-table__header th) {

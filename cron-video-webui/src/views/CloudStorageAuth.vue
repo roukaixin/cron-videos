@@ -30,7 +30,7 @@
               stripe
               empty-text="暂无认证数据"
               class="data-table"
-              height="100%"
+              height="calc(100% - 12px)"
           >
             <el-table-column
                 label="网盘类型"
@@ -515,6 +515,7 @@ onMounted(() => {
 .table-container {
   flex: 1;
   min-height: 0;
+  position: relative;
   margin-top: 10px;
   padding: 8px;
   border: 1px solid #dfe7f3;
@@ -523,11 +524,21 @@ onMounted(() => {
   background: #f7faff;
 }
 
+.table-container::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border-bottom: 1px solid #d9e2ef;
+  pointer-events: none;
+}
+
 .data-table {
-  height: 100%;
   width: 100%;
   border-radius: 6px;
   background: #ffffff;
+  box-shadow: inset 0 0 0 1px #dfe7f3;
 }
 
 :deep(.el-table__header th) {
