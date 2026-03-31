@@ -475,15 +475,24 @@ onMounted(() => {
 .table-container {
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 10px;
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid #dfe7f3;
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--el-bg-color);
+  background: #f7faff;
 }
 
 .data-table {
   width: 100%;
   height: 100%;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+:deep(.data-table .el-table__header th) {
+  font-weight: 500;
+  background-color: var(--el-fill-color-lighter) !important;
 }
 
 .header-title {

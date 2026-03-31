@@ -490,10 +490,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  margin-top: 0; /* 移除表格顶部间距 */
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 10px;
-  background: var(--el-bg-color);
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid #dfe7f3;
+  border-radius: 12px;
+  background: #f7faff;
 }
 
 /* 表格相关样式 */
@@ -510,7 +511,17 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
-  padding: 0 12px 4px;
+  padding: 0 8px 4px;
+}
+
+.data-table {
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+:deep(.data-table .el-table__header th) {
+  font-weight: 500;
+  background-color: var(--el-fill-color-lighter) !important;
 }
 
 </style>

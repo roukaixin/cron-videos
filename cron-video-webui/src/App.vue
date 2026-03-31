@@ -51,11 +51,7 @@
       </template>
       <el-main class="app-main">
         <div class="content-scroll">
-          <router-view v-slot="{ Component }">
-            <keep-alive>
-              <component :is="Component"/>
-            </keep-alive>
-          </router-view>
+          <router-view />
         </div>
       </el-main>
     </el-card>
