@@ -5,13 +5,13 @@
         <div class="card-header">
           <span class="header-title">影视管理</span>
           <div class="operation-buttons">
-            <el-button type="primary" @click="handleAddMedia" plain>
+            <el-button class="toolbar-btn add-btn" type="primary" @click="handleAddMedia" plain>
               <el-icon>
                 <Plus/>
               </el-icon>
               添加影视
             </el-button>
-            <el-button type="success" @click="refreshMediaList" plain>
+            <el-button class="toolbar-btn refresh-btn" type="success" @click="refreshMediaList" plain>
               <el-icon>
                 <Refresh/>
               </el-icon>
@@ -1418,6 +1418,7 @@ function handleAddMedia() {
   justify-content: space-between;
   width: 100%;
   white-space: nowrap;
+  min-height: 42px;
 }
 
 .header-title {
@@ -1444,6 +1445,22 @@ function handleAddMedia() {
   justify-content: flex-end; /* 改为靠右对齐 */
   gap: 12px;
   margin-left: auto; /* 确保靠右 */
+  flex-shrink: 0;
+}
+
+.toolbar-btn {
+  height: 32px;
+  min-width: 96px;
+  padding: 0 12px;
+  transition: none !important;
+}
+
+.refresh-btn {
+  width: 108px;
+}
+
+.add-btn {
+  width: 108px;
 }
 
 /* 表格相关样式 */

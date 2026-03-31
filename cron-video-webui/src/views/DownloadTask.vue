@@ -32,6 +32,7 @@
               <el-option label="已失败" :value="3"/>
             </el-select>
             <el-button
+                class="toolbar-btn"
                 type="danger"
                 :disabled="!selectedTasks.length"
                 @click="handleBatchDelete"
@@ -42,7 +43,7 @@
               </el-icon>
               批量删除
             </el-button>
-            <el-button type="primary" @click="loadDownloads" :loading="loading" plain>
+            <el-button class="toolbar-btn refresh-btn" type="success" @click="loadDownloads" plain>
               <el-icon>
                 <Refresh/>
               </el-icon>
@@ -446,6 +447,7 @@ onMounted(() => {
   justify-content: space-between;
   width: 100%;
   white-space: nowrap;
+  min-height: 42px;
 }
 
 /* 头部按钮组样式 */
@@ -455,6 +457,7 @@ onMounted(() => {
   justify-content: flex-end; /* 改为靠右对齐 */
   gap: 12px;
   margin-left: auto; /* 确保靠右 */
+  flex-shrink: 0;
 }
 
 .header-title {
@@ -481,6 +484,16 @@ onMounted(() => {
   justify-content: center;
   gap: 12px; /* 增加按钮之间的间距 */
   min-width: 340px; /* 确保有足够的最小宽度 */
+}
+
+.toolbar-btn {
+  height: 32px;
+  min-width: 96px;
+  padding: 0 12px;
+}
+
+.refresh-btn {
+  width: 108px;
 }
 
 /* 表格容器 */

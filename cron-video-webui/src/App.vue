@@ -78,6 +78,8 @@ defineOptions({
   height: 100%;
   display: flex;
   flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .layout-card :deep(.el-card__header) {
@@ -106,9 +108,9 @@ defineOptions({
 
 .nav-shell {
   padding: 6px;
-  border-radius: 8px;
-  background: #f5f8fc;
-  border: 1px solid #dbe5f1;
+  border-radius: 6px;
+  background: #f7f9fc;
+  border: 1px solid #dfe6f3;
 }
 
 .nav-header {
@@ -157,8 +159,8 @@ defineOptions({
 
 .nav-item.active {
   color: #2f72e8;
-  background-color: #eaf2ff;
-  border-color: #bcd3f3;
+  background-color: #edf3fc;
+  border-color: #c8d7eb;
   box-shadow: none;
 }
 
@@ -198,7 +200,7 @@ defineOptions({
 
   .nav-shell {
     padding: 0;
-    border-radius: 8px;
+    border-radius: 6px;
   }
 
   .nav-row {

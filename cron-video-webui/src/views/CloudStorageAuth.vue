@@ -5,13 +5,13 @@
         <div class="card-header">
           <span class="header-title">网盘认证管理</span>
           <div class="operation-buttons">
-            <el-button class="toolbar-btn" type="primary" @click="handleAddAuth" plain>
+            <el-button class="toolbar-btn add-btn" type="primary" @click="handleAddAuth" plain>
               <el-icon>
                 <Plus/>
               </el-icon>
               添加认证
             </el-button>
-            <el-button class="toolbar-btn" type="success" @click="loadAuths" plain>
+            <el-button class="toolbar-btn refresh-btn" type="success" @click="loadAuths" plain>
               <el-icon>
                 <Refresh/>
               </el-icon>
@@ -467,6 +467,7 @@ onMounted(() => {
   width: 100%;
   gap: 12px;
   flex-wrap: wrap;
+  min-height: 42px;
 }
 
 .header-title {
@@ -490,13 +491,25 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   margin-left: auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .toolbar-btn {
-  min-width: 92px;
+  height: 32px;
+  min-width: 96px;
+  padding: 0 12px;
+  transition: none !important;
+}
+
+.refresh-btn {
+  width: 108px;
+}
+
+.add-btn {
+  width: 108px;
 }
 
 .table-container {
@@ -581,6 +594,14 @@ onMounted(() => {
 
   .toolbar-btn {
     min-width: 84px;
+  }
+
+  .refresh-btn {
+    width: 84px;
+  }
+
+  .add-btn {
+    width: 96px;
   }
 }
 </style>

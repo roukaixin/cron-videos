@@ -5,13 +5,13 @@
         <div class="card-header">
           <span class="header-title">Aria2 配置</span>
           <div class="operation-buttons">
-            <el-button type="primary" @click="handleAddConnection" plain>
+            <el-button class="toolbar-btn add-btn" type="primary" @click="handleAddConnection" plain>
               <el-icon>
                 <Plus/>
               </el-icon>
               添加配置
             </el-button>
-            <el-button type="success" @click="loadConnections" plain>
+            <el-button class="toolbar-btn refresh-btn" type="success" @click="loadConnections" plain>
               <el-icon>
                 <Refresh/>
               </el-icon>
@@ -596,6 +596,7 @@ onMounted(() => {
   justify-content: space-between;
   width: 100%;
   white-space: nowrap;
+  min-height: 42px;
 }
 
 /* 头部按钮组样式 */
@@ -605,5 +606,21 @@ onMounted(() => {
   justify-content: flex-end; /* 改为靠右对齐 */
   gap: 12px;
   margin-left: auto; /* 确保靠右 */
+  flex-shrink: 0;
+}
+
+.toolbar-btn {
+  height: 32px;
+  min-width: 96px;
+  padding: 0 12px;
+  transition: none !important;
+}
+
+.refresh-btn {
+  width: 108px;
+}
+
+.add-btn {
+  width: 108px;
 }
 </style>
