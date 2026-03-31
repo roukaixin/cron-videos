@@ -1,17 +1,17 @@
 <template>
-  <div>
-    <el-card>
+  <div class="auth-page">
+    <el-card class="auth-card" shadow="never">
       <template #header>
         <div class="card-header">
           <span class="header-title">网盘认证管理</span>
           <div class="operation-buttons">
-            <el-button type="primary" @click="handleAddAuth" plain>
+            <el-button class="toolbar-btn" type="primary" @click="handleAddAuth" plain>
               <el-icon>
                 <Plus/>
               </el-icon>
               添加认证
             </el-button>
-            <el-button type="success" @click="loadAuths" plain>
+            <el-button class="toolbar-btn" type="success" @click="loadAuths" plain>
               <el-icon>
                 <Refresh/>
               </el-icon>
@@ -28,7 +28,9 @@
               v-loading="loading"
               border
               stripe
+              empty-text="暂无认证数据"
               class="data-table"
+              height="100%"
           >
             <el-table-column
                 label="网盘类型"
@@ -358,9 +360,13 @@ const handleSubmit = async () => {
   })
 }
 
-const handleDelete = async (id: number) => {
+const handleDelete = async (row: CloudStorageAuth) => {
+  if (!row.id) {
+    ElMessage.error('认证ID无效')
+    return
+  }
   try {
-    const response = await cloudStorageAuthApi.deleteAuth(id)
+    const response = await cloudStorageAuthApi.deleteAuth(row.id)
     if (response.data.code === 200) {
       ElMessage.success('删除成功')
       await loadAuths()
@@ -380,6 +386,34 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.auth-page {
+  height: 100%;
+}
+
+.auth-card {
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
+:deep(.auth-card > .el-card__header) {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.auth-card > .el-card__body) {
+  height: calc(100% - 57px);
+  box-sizing: border-box;
+  padding: 12px 16px 16px;
+}
+
+.card-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .token-text {
   font-family: monospace;
   font-size: 13px;
@@ -426,22 +460,68 @@ onMounted(() => {
   width: 100%;
 }
 
-/* 卡片头部样式 */
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  white-space: nowrap;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* 头部按钮组样式 */
-.card-header > .operation-buttons {
+.header-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* 改为靠右对齐 */
-  gap: 12px;
-  margin-left: auto; /* 确保靠右 */
+  gap: 8px;
+
+  &::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--el-color-primary);
+    border-radius: 2px;
+  }
+}
+
+.operation-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  min-width: 92px;
+}
+
+.table-container {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--el-bg-color);
+}
+
+.data-table {
+  height: 100%;
+  width: 100%;
+}
+
+:deep(.el-table__header th) {
+  background-color: var(--el-fill-color-lighter) !important;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+  font-size: 14px;
+}
+
+:deep(.el-table__cell) {
+  padding: 10px 0;
 }
 
 .tag-wrapper {
@@ -450,58 +530,6 @@ onMounted(() => {
   justify-content: center;
   min-height: 32px;
   width: 100%;
-}
-
-.provider-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 80px;
-  height: 28px;
-  padding: 0 12px;
-  box-sizing: border-box;
-  transition: none;
-}
-
-.auth-operation {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.dialog-footer {
-  text-align: right;
-}
-
-.table-container {
-  position: relative;
-  min-height: 100px;
-  background: var(--el-bg-color);
-  overflow: hidden;
-}
-
-.data-table {
-  width: 100%;
-  transform: translateZ(0);
-  will-change: opacity;
-  background: var(--el-bg-color);
-}
-
-/* 确保表格内容正常显示 */
-
-/* 统一表格头部样式 */
-
-:deep(.el-table__header th) {
-  background-color: var(--el-fill-color-light) !important;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-  font-size: 14px;
-  padding: 8px !important;
-}
-
-.data-table {
-  width: 100% !important;
 }
 
 .provider-tag {
@@ -516,61 +544,39 @@ onMounted(() => {
   transform: none !important;
 }
 
-/* 添加标题样式 */
-.text-light {
-  color: var(--el-color-primary);
-  font-weight: 600;
-  font-size: 16px;
-  position: relative;
-  padding-left: 12px;
-}
-
-.text-light::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 16px;
-  background-color: var(--el-color-primary);
-  border-radius: 2px;
-}
-
-.header-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--el-color-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  &::before {
-    content: '';
-    width: 3px;
-    height: 16px;
-    background: var(--el-color-primary);
-    border-radius: 2px;
-  }
-}
-
-/* 操作按钮容器样式 */
-.operation-buttons {
+.auth-operation {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px; /* 增加按钮之间的间距 */
-  min-width: 340px; /* 确保有足够的最小宽度 */
-}
-
-/* 表格相关样式 */
-.table-container .operation-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end; /* 改为靠右对齐 */
   gap: 8px;
-  padding: 0 4px;
-  width: 100%;
 }
 
+.dialog-footer {
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  :deep(.auth-card > .el-card__header) {
+    padding: 10px 12px 8px;
+  }
+
+  :deep(.auth-card > .el-card__body) {
+    height: calc(100% - 50px);
+    padding: 8px 12px 12px;
+  }
+
+  .header-title {
+    font-size: 15px;
+  }
+
+  .operation-buttons {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .toolbar-btn {
+    min-width: 84px;
+  }
+}
 </style>

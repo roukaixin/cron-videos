@@ -1,45 +1,65 @@
 <template>
-  <div class="common-layout">
-    <el-container>
-      <el-header>
-        <el-card shadow="always">
-          <el-row>
-            <el-col :span="6">
-              <router-link to="/media" class="nav-item" active-class="active">
-                <i class="el-icon-video-camera"></i>
-                <span>影视管理</span>
-              </router-link>
-            </el-col>
-            <el-col :span="6">
-              <router-link to="/cloud-storage-auth" class="nav-item" active-class="active">
-                <i class="el-icon-cloudy"></i>
-                <span>网盘认证</span>
-              </router-link>
-            </el-col>
-            <el-col :span="6">
-              <router-link to="/downloader" class="nav-item" active-class="active">
-                <i class="el-icon-download"></i>
-                <span>下载器管理</span>
-              </router-link>
-            </el-col>
-            <el-col :span="6">
-              <router-link to="/download-task" class="nav-item" active-class="active">
-                <i class="el-icon-folder-opened"></i>
-                <span>下载任务管理</span>
-              </router-link>
-            </el-col>
-          </el-row>
-        </el-card>
-      </el-header>
-      <el-main>
-        <router-view v-slot="{ Component }">
-          <keep-alive>
-            <component :is="Component"/>
-          </keep-alive>
-        </router-view>
+  <el-container class="app-shell">
+    <el-card class="layout-card">
+      <template #header>
+        <div class="nav-shell">
+          <el-header class="nav-header">
+            <el-row class="nav-row" :gutter="12">
+              <el-col :span="6" class="nav-col">
+                <router-link
+                  :to="{ name: 'Media' }"
+                  class="nav-item"
+                  active-class="active"
+                  exact-active-class="active"
+                >
+                  <span>影视管理</span>
+                </router-link>
+              </el-col>
+              <el-col :span="6" class="nav-col">
+                <router-link
+                  :to="{ name: 'CloudStorageAuthManager' }"
+                  class="nav-item"
+                  active-class="active"
+                  exact-active-class="active"
+                >
+                  <span>网盘认证</span>
+                </router-link>
+              </el-col>
+              <el-col :span="6" class="nav-col">
+                <router-link
+                  :to="{ name: 'Downloader' }"
+                  class="nav-item"
+                  active-class="active"
+                  exact-active-class="active"
+                >
+                  <span>下载器管理</span>
+                </router-link>
+              </el-col>
+              <el-col :span="6" class="nav-col">
+                <router-link
+                  :to="{ name: 'DownloadTask' }"
+                  class="nav-item"
+                  active-class="active"
+                  exact-active-class="active"
+                >
+                  <span>下载任务管理</span>
+                </router-link>
+              </el-col>
+            </el-row>
+          </el-header>
+        </div>
+      </template>
+      <el-main class="app-main">
+        <div class="content-scroll">
+          <router-view v-slot="{ Component }">
+            <keep-alive>
+              <component :is="Component"/>
+            </keep-alive>
+          </router-view>
+        </div>
       </el-main>
-    </el-container>
-  </div>
+    </el-card>
+  </el-container>
 </template>
 
 <script lang="ts" setup>
@@ -51,106 +71,167 @@ defineOptions({
 </script>
 
 <style scoped>
-
-.el-card {
-  background-color: #f56c6c;
-  border-radius: 8px;
-}
-.header {
-  padding: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
-  z-index: 10;
+.app-shell {
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
-.custom-nav {
-  display: flex;
+.layout-card {
   width: 100%;
-  height: 70px;
-  background-color: #fff;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-card :deep(.el-card__header) {
+  padding: 12px;
   border-bottom: none;
-  justify-content: space-between;
+}
+
+.layout-card :deep(.el-card__body) {
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  min-height: 0;
+  padding: 0 12px 12px;
+}
+
+.content-scroll {
+  height: 100%;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+.nav-shell {
+  padding: 6px;
+  border-radius: 12px;
+  background: #f5f8fc;
+  border: 1px solid #dbe5f1;
+}
+
+.nav-header {
+  height: auto;
+  padding: 0;
+}
+
+.nav-row {
+  margin: 0 !important;
+}
+
+.nav-col {
+  min-width: 0;
 }
 
 .nav-item {
-  flex: 1;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: #606266;
+  color: #4e5969;
   text-decoration: none;
-  font-size: 18px;
-  transition: all 0.3s ease;
+  font-size: 16px;
+  transition: all 0.25s ease;
   position: relative;
-  padding: 10px 0;
-  overflow: hidden;
+  padding: 12px 14px;
+  border-radius: 8px;
+  min-height: 46px;
   text-align: center;
-}
-
-.nav-item i {
-  font-size: 28px;
-  margin-bottom: 8px;
-  transition: transform 0.3s ease;
+  border: 1px solid #dbe5f1;
+  background-color: #ffffff;
 }
 
 .nav-item span {
-  transition: transform 0.3s ease, opacity 0.2s ease;
   font-weight: 500;
   width: 100%;
   text-align: center;
   display: block;
+  letter-spacing: 0.3px;
 }
 
 .nav-item:hover {
-  color: #409EFF;
-  background-color: rgba(64, 158, 255, 0.05);
+  color: #3b82f6;
+  background-color: #f2f7ff;
+  border-color: #cfe0f7;
 }
 
-.nav-item:hover i {
-  transform: translateY(-2px) scale(1.1);
+.nav-item.active {
+  color: #2f72e8;
+  background-color: #eaf2ff;
+  border-color: #bcd3f3;
+  box-shadow: none;
 }
 
-.nav-item:hover span {
-  transform: translateY(2px);
+.nav-item.active span {
+  font-weight: 600;
 }
 
-.nav-item.active i {
-  transform: scale(1.1);
-}
-
-.nav-item:hover::after {
-  left: 15%;
-  width: 70%;
-}
-
-/* 添加波纹效果 */
-.nav-item::before {
+.nav-item::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
+  left: 0;
+  bottom: 0;
   width: 0;
-  height: 0;
-  background-color: rgba(64, 158, 255, 0.1);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-  z-index: -1;
+  height: 3px;
+  background-color: #409EFF;
+  border-radius: 999px;
+  transition: width 0.25s ease;
 }
 
-.nav-item:active::before {
-  width: 200px;
-  height: 200px;
+.nav-item:hover::after,
+.nav-item.active::after {
+  width: 100%;
 }
 
 @media (max-width: 768px) {
-  .nav-item i {
-    font-size: 22px;
+  .app-shell {
+    padding: 8px;
+  }
+
+  .layout-card :deep(.el-card__header) {
+    padding: 8px;
+  }
+
+  .app-main {
+    padding: 0 8px 8px;
+  }
+
+  .nav-shell {
+    padding: 0;
+    border-radius: 10px;
+  }
+
+  .nav-row {
+    row-gap: 8px;
+  }
+
+  .nav-item {
+    min-height: 40px;
+    padding: 8px 6px;
+    border-radius: 7px;
   }
 
   .nav-item span {
-    font-size: 16px;
+    font-size: 14px;
+    letter-spacing: 0;
   }
+}
+</style>
+
+<style>
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
 }
 </style>

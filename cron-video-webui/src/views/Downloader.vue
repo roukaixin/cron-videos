@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <el-card>
+    <el-card class="page-card">
       <template #header>
         <div class="card-header">
           <span class="header-title">Aria2 配置</span>
@@ -27,6 +27,7 @@
             border
             stripe
             class="data-table"
+            height="100%"
         >
           <el-table-column
               prop="type"
@@ -448,6 +449,59 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.page-container {
+  height: 100%;
+}
+
+.page-card {
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
+:deep(.page-card > .el-card__header) {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.page-card > .el-card__body) {
+  height: calc(100% - 57px);
+  box-sizing: border-box;
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-container {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--el-bg-color);
+}
+
+.data-table {
+  width: 100%;
+  height: 100%;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--el-color-primary);
+    border-radius: 2px;
+  }
+}
 
 .server-address,
 .port-text {

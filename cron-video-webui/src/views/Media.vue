@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <el-card>
+  <div class="page-container">
+    <el-card class="page-card">
       <template #header>
         <div class="card-header">
           <span class="header-title">影视管理</span>
@@ -28,6 +28,7 @@
             class="data-table"
             border
             stripe
+            height="100%"
         >
           <el-table-column
               prop="name"
@@ -1126,19 +1127,47 @@ function handleAddMedia() {
 </script>
 
 <style scoped>
+.page-container {
+  height: 100%;
+}
+
+.page-card {
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
+:deep(.page-card > .el-card__header) {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.page-card > .el-card__body) {
+  height: calc(100% - 57px);
+  box-sizing: border-box;
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
 /* 表格容器 */
 .table-container {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   margin-top: 0; /* 移除表格顶部间距 */
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  background: var(--el-bg-color);
 }
 
 /* 主页表格样式 */
 .data-table {
   width: 100%;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -1385,8 +1414,8 @@ function handleAddMedia() {
 
 .header-title {
   font-size: 16px;
-  font-weight: 600;
-  color: var(--el-color-primary);
+  font-weight: 500;
+  color: var(--el-text-color-primary);
   display: flex;
   align-items: center;
   gap: 8px;

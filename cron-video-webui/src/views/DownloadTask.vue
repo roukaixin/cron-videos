@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <el-card>
+  <div class="page-container">
+    <el-card class="page-card">
       <template #header>
         <div class="card-header">
           <span class="header-title">下载管理</span>
@@ -58,6 +58,8 @@
             v-loading="loading"
             border
             stripe
+            class="data-table"
+            height="100%"
             @selection-change="handleSelectionChange"
         >
           <el-table-column type="selection" width="50" align="center"/>
@@ -380,6 +382,33 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.page-container {
+  height: 100%;
+}
+
+.page-card {
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
+:deep(.page-card > .el-card__header) {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.page-card > .el-card__body) {
+  height: calc(100% - 57px);
+  box-sizing: border-box;
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-table {
+  flex: 1;
+  min-height: 0;
+}
 
 .save-path {
   color: var(--el-text-color-secondary);
@@ -430,8 +459,8 @@ onMounted(() => {
 
 .header-title {
   font-size: 16px;
-  font-weight: 600;
-  color: var(--el-color-primary);
+  font-weight: 500;
+  color: var(--el-text-color-primary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -457,10 +486,14 @@ onMounted(() => {
 /* 表格容器 */
 .table-container {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   margin-top: 0; /* 移除表格顶部间距 */
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  background: var(--el-bg-color);
 }
 
 /* 表格相关样式 */
@@ -476,8 +509,8 @@ onMounted(() => {
 .pagination-container {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
-  padding: 0 20px;
+  margin-top: 12px;
+  padding: 0 12px 4px;
 }
 
 </style>

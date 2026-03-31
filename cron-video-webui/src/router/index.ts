@@ -13,7 +13,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/downloader',
-    name: 'Downloader.vue',
+    name: 'Downloader',
     component: () => import('@/views/Downloader.vue'),
     meta: { keepAlive: true }
   },
