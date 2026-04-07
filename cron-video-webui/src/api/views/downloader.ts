@@ -6,5 +6,10 @@ export const downloaderApi = {
     getDownloaderList: () => api.get('/downloader/list'),
     addDownloader: (data: Partial<Downloader>) => api.post('/downloader/add', data),
     updateDownloader: (id: string, data: Partial<Downloader>) => api.put(`/downloader/update/${id}`, data),
+    changeStatus: (id: string, status: 0 | 1) => api.put(`/downloader/change-status/${id}`, null, {
+        params: {
+            status: status
+        }
+    }),
     deleteDownloader: (id: string) => api.delete(`/downloader/delete/${id}`)
 }

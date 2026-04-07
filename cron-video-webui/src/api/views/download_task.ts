@@ -1,7 +1,7 @@
 import {api, PageResponse, Response} from "@/api";
 
 
-export const aria2DownloadTaskApi = {
+export const downloadTaskApi = {
     // 获取下载任务列表
     getTasks(params: {
         page: number

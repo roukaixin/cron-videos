@@ -133,7 +133,7 @@
           </el-table-column>
 
           <el-table-column
-              label="状态"
+              label="在线状态"
               min-width="100"
               align="center"
           >
@@ -152,6 +152,26 @@
                   </span>
                 </el-tag>
               </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+              label="启用状态"
+              min-width="120"
+              align="center"
+          >
+            <template #default="{ row }">
+              <el-switch
+                  v-model="row.status"
+                  inline-prompt
+                  active-text="启动"
+                  inactive-text="禁用"
+                  :active-value="1"
+                  :inactive-value="0"
+                  :loading="statusLoadingMap[String(row.id)]"
+                  :disabled="statusLoadingMap[String(row.id)]"
+                  @change="handleToggleStatus(row, $event)"
+              />
             </template>
           </el-table-column>
 
@@ -290,18 +310,19 @@ defineOptions({
   name: "Downloader"
 })
 
+type DownloaderStatus = 0 | 1
 
-onMounted(() => {
-  loadConnections()
-})
-
-
-// 下载器列表
 const downloaderList = ref<Downloader[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref<FormInstance | null>(null)
+const statusLoadingMap = ref<Record<string, boolean>>({})
+
+const normalizeDownloader = (downloader: Downloader): Downloader => ({
+  ...downloader,
+  status: downloader.status === 0 ? 0 : 1
+})
 
 const connectionForm = ref<Partial<Downloader>>({
   type: 0,
@@ -325,7 +346,6 @@ const formRules = {
     {type: 'number', min: 1, max: 100, message: '权重范围1-100', trigger: 'blur'}
   ]
 }
-
 
 const handleAddConnection = () => {
   connectionForm.value = {
@@ -401,6 +421,27 @@ const handleDelete = async (row: Downloader) => {
   }
 }
 
+const handleToggleStatus = async (row: Downloader, status: DownloaderStatus) => {
+  const oldStatus: DownloaderStatus = status === 1 ? 0 : 1
+  const rowId = String(row.id)
+  statusLoadingMap.value[rowId] = true
+  try {
+    const response = await downloaderApi.changeStatus(rowId, status)
+    if (response.data.code === 200) {
+      ElMessage.success(status === 1 ? '下载器已启动' : '下载器已禁用')
+    } else {
+      row.status = oldStatus
+      ElMessage.error(response.data.message || '状态切换失败')
+    }
+  } catch (error) {
+    row.status = oldStatus
+    console.error('状态切换失败:', error)
+    ElMessage.error('状态切换失败')
+  } finally {
+    statusLoadingMap.value[rowId] = false
+  }
+}
+
 const copySecret = async (secret: string) => {
   try {
     await navigator.clipboard.writeText(secret)
@@ -422,7 +463,7 @@ const downloaderType = [
 ]
 
 const getDownloaderType = (type: number) => {
-  const item = downloaderType.find(item => item.value === type);
+  const item = downloaderType.find(item => item.value === type)
   return item ? item.label : '未知'
 }
 
@@ -431,7 +472,8 @@ const loadConnections = async () => {
   try {
     const response = await downloaderApi.getDownloaderList()
     if (response.data.code === 200) {
-      downloaderList.value = response.data.data
+      downloaderList.value = response.data.data.map((item: Downloader) => normalizeDownloader(item))
+      statusLoadingMap.value = {}
     } else {
       ElMessage.error(response.data.message || '加载连接列表失败')
     }

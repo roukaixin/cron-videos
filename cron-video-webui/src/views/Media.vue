@@ -703,7 +703,7 @@ import {dayjs, ElMessage} from 'element-plus'
 import {Delete, Download, Edit, Plus, QuestionFilled, Refresh, Share} from '@element-plus/icons-vue'
 import type {CloudShare, DownloadTask, Media} from '@/types'
 import {mediaApi} from "@/api/views/media";
-import {cloudShareApi} from "@/api/views/cloud_share";
+import {cloudApi} from "@/api/views/cloud";
 
 defineOptions({
   name: "Media"
@@ -908,7 +908,7 @@ const manageShares = async (media: Media) => {
     currentMediaId.value = media.id
     shareLoading.value = true
     try {
-      const response = await cloudShareApi.getShares(media.id)
+      const response = await cloudApi.getShares(media.id)
       if (response.data.code === 200) {
         shareList.value = response.data.data || []
       } else {
@@ -978,12 +978,12 @@ const submitShare = async () => {
 
     let response
     if (isEditShare.value && editingShareId.value) {
-      response = await cloudShareApi.updateShare(editingShareId.value, {
+      response = await cloudApi.updateShare(editingShareId.value, {
         ...newShare.value,
         mediaId: currentMediaId.value
       })
     } else {
-      response = await cloudShareApi.addShare({
+      response = await cloudApi.addShare({
         ...newShare.value,
         mediaId: currentMediaId.value
       })
@@ -1003,7 +1003,7 @@ const submitShare = async () => {
 
 const deleteShare = async (id: number) => {
   try {
-    const response = await cloudShareApi.deleteShare(id)
+    const response = await cloudApi.deleteShare(id)
     if (response.data.code === 200) {
       ElMessage.success('删除成功')
       if (currentMediaId.value) {

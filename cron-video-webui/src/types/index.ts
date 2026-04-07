@@ -22,6 +22,7 @@ export interface Downloader {
     port: number;
     secret: string | null;
     weight: number;
+    status?: 0 | 1;
     isOnline: number;
 }
 

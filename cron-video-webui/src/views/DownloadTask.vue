@@ -214,7 +214,7 @@ import {ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Refresh, Search, Delete, VideoPause, RefreshRight} from '@element-plus/icons-vue'
 import {Aria2DownloadTaskPage, DownloadTask} from '@/types'
-import {aria2DownloadTaskApi} from "@/api/views/aria2_download_task";
+import {downloadTaskApi} from "@/api/views/download_task";
 
 defineOptions({
   name: "DownloadTask"
@@ -274,7 +274,7 @@ const formatFileSize = (bytes: number) => {
 const loadDownloads = async () => {
   loading.value = true
   try {
-    const response = await aria2DownloadTaskApi.getTasks({
+    const response = await downloadTaskApi.getTasks({
       page: queryParams.value.page,
       pageSize: queryParams.value.pageSize,
       name: queryParams.value.name || "",
@@ -311,7 +311,7 @@ const handleCurrentChange = (val: number) => {
 
 const handleRetry = async (task: DownloadTask) => {
   try {
-    const response = await aria2DownloadTaskApi.updateTask(task.id, {status: 0})
+    const response = await downloadTaskApi.updateTask(task.id, {status: 0})
     if (response.data.code === 200) {
       ElMessage.success('重试任务已添加')
       await loadDownloads()
@@ -326,7 +326,7 @@ const handleRetry = async (task: DownloadTask) => {
 
 const handleDelete = async (id: string) => {
   try {
-    const response = await aria2DownloadTaskApi.deleteTask(id)
+    const response = await downloadTaskApi.deleteTask(id)
     if (response.data.code === 200) {
       ElMessage.success('删除成功')
       await loadDownloads()
@@ -358,7 +358,7 @@ const handleBatchDelete = async () => {
     )
 
     const deletePromises = selectedTasks.value.map((task: Aria2DownloadTaskPage) =>
-        aria2DownloadTaskApi.deleteTask(task.id)
+        downloadTaskApi.deleteTask(task.id)
     )
 
     await Promise.all(deletePromises)
