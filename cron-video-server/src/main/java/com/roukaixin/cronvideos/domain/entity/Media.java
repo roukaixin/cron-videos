@@ -1,7 +1,8 @@
-package com.roukaixin.cronvideos.domain;
+package com.roukaixin.cronvideos.domain.entity;
 
+import com.roukaixin.cronvideos.domain.entity.base.BaseEntity;
 import com.roukaixin.cronvideos.enums.MediaTypeEnum;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -9,8 +10,11 @@ import java.time.LocalDateTime;
  * 媒体列表
  *
  */
-@Data
-public class Media {
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Media extends BaseEntity {
 
     /**
      * id
@@ -59,19 +63,4 @@ public class Media {
      */
     private String tmdbId;
 
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updatedAt;
-
-    /**
-     * 逻辑删除字段（0未删除,1已删除）
-     */
-    private Integer isDeleted;
 }

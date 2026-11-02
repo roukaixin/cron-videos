@@ -1,11 +1,10 @@
-package com.roukaixin.cronvideos.domain;
+package com.roukaixin.cronvideos.domain.entity;
 
+import com.roukaixin.cronvideos.domain.entity.base.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 
 /**
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CloudStorageAuth {
+public class CloudStorageAuth extends BaseEntity {
 
     /**
      * 唯一 ID
@@ -46,18 +45,4 @@ public class CloudStorageAuth {
      */
     private String cookie;
 
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updatedAt;
-
-    /**
-     * 逻辑删除字段（0: 正常, 1: 已删除）
-     */
-    private Integer isDeleted;
 }

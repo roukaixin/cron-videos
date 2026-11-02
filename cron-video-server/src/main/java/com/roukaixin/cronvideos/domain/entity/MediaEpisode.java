@@ -1,5 +1,6 @@
-package com.roukaixin.cronvideos.domain;
+package com.roukaixin.cronvideos.domain.entity;
 
+import com.roukaixin.cronvideos.domain.entity.base.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MediaEpisode {
+public class MediaEpisode extends BaseEntity {
 
     /**
      * 主键id
@@ -48,13 +49,4 @@ public class MediaEpisode {
      */
     private Integer isUpdate;
 
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createDate;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateDate;
 }
