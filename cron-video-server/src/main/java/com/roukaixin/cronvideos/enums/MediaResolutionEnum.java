@@ -53,6 +53,13 @@ public enum MediaResolutionEnum {
 
     private final int shortNameNumber;
 
+    private final static List<MediaResolutionEnum> V;
+
+    static {
+        V = List.of(values());
+    }
+
+
     public static int shortNameNumber(int width, int height) {
         List<MediaResolutionEnum> list = aspectRatio(width, height);
 

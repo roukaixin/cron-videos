@@ -1,12 +1,11 @@
 package com.roukaixin.cronvideos.enums;
 
-import com.roukaixin.cronvideos.handler.BaseEnum;
 import lombok.AllArgsConstructor;
 
-import java.util.Locale;
+import java.util.List;
 
 @AllArgsConstructor
-public enum DownloaderProtocolEnum implements BaseEnum<String> {
+public enum DownloaderProtocolEnum {
 
     ws,
 
@@ -16,8 +15,9 @@ public enum DownloaderProtocolEnum implements BaseEnum<String> {
 
     https;
 
-    @Override
-    public String getCode() {
-        return this.name().toLowerCase(Locale.ROOT);
+    private final static List<DownloaderProtocolEnum> V;
+
+    static {
+        V = List.of(values());
     }
 }

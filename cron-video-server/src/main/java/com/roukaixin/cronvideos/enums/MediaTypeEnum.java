@@ -4,13 +4,21 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 public enum MediaTypeEnum {
 
-    tv("tv"),
-    movie("movie");
+    TV(1),
+    MOVIE(2);
 
     @JsonValue
-    private final String name;
+    private final int id;
+
+    private final static List<MediaTypeEnum> V;
+
+    static {
+        V = List.of(values());
+    }
 }

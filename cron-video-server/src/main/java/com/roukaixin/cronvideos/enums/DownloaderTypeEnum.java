@@ -1,25 +1,28 @@
 package com.roukaixin.cronvideos.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.roukaixin.cronvideos.handler.BaseEnum;
+import com.mybatisflex.annotation.EnumValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
-public enum DownloaderTypeEnum implements BaseEnum<Integer> {
+public enum DownloaderTypeEnum {
 
-    aria2(0, "aria2"),
+    ARIA2(0),
 
-    qbittorrent(1, "qbittorrent");
+    QBITTORRENT(1);
 
     @JsonValue
+    @EnumValue
     private final int id;
 
-    private final String name;
+    private final static List<DownloaderTypeEnum> V;
 
-    @Override
-    public Integer getCode() {
-        return id;
+    static {
+        V = List.of(values());
     }
+
 }
