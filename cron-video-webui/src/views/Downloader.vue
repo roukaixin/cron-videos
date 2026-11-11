@@ -81,14 +81,14 @@
           </el-table-column>
 
           <el-table-column
-              prop="secret"
+              prop="secretKey"
               label="密钥"
               min-width="120"
               align="center"
           >
             <template #default="{ row }">
               <el-popover
-                  v-if="row.secret"
+                  v-if="row.secretKey"
                   placement="top"
                   trigger="click"
                   :width="200"
@@ -98,12 +98,12 @@
                   <span class="secret-text cursor-pointer">••••••</span>
                 </template>
                 <div class="secret-content">
-                  <span class="secret-value">{{ row.secret }}</span>
+                  <span class="secret-value">{{ row.secretKey }}</span>
                   <el-button
                       type="primary"
                       link
                       size="small"
-                      @click="copySecret(row.secret)"
+                      @click="copySecret(row.secretKey)"
                   >复制
                   </el-button>
                 </div>
@@ -150,6 +150,28 @@
                     <el-icon v-else class="status-icon"><CircleClose/></el-icon>
                     <span class="status-text">{{ row.isOnline ? '在线' : '离线' }}</span>
                   </span>
+                </el-tag>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+              label="下载任务"
+              min-width="240"
+              align="center"
+          >
+            <template #default="{ row }">
+              <div class="task-stats">
+                <el-tag
+                    v-for="item in taskStats(row)"
+                    :key="item.status"
+                    size="small"
+                    :type="item.type"
+                    class="task-stat-badge"
+                    :class="{ 'is-zero': item.count === 0 }"
+                    @click="handleJumpTasks(row, item.status)"
+                >
+                  {{ item.label }} {{ item.count }}
                 </el-tag>
               </div>
             </template>
@@ -269,9 +291,9 @@
             ></el-input-number>
           </el-form-item>
 
-          <el-form-item label="密钥" prop="secret">
+          <el-form-item label="密钥" prop="secretKey">
             <el-input
-                v-model="connectionForm.secret"
+                v-model="connectionForm.secretKey"
                 placeholder="请输入RPC密钥（可选）"
                 type="password"
                 show-password
@@ -301,18 +323,21 @@
 
 <script lang="ts" setup>
 import {ref, onMounted} from 'vue'
+import {useRouter} from 'vue-router'
 import {ElMessage, type FormInstance} from 'element-plus'
 import {Plus, Refresh, Edit, Delete, CircleCheck, CircleClose} from '@element-plus/icons-vue'
-import {Downloader} from '@/types'
+import {Downloader, QueryDownloader} from '@/types'
 import {downloaderApi} from "@/api/views/downloader";
 
 defineOptions({
   name: "Downloader"
 })
 
+const router = useRouter()
+
 type DownloaderStatus = 0 | 1
 
-const downloaderList = ref<Downloader[]>([])
+const downloaderList = ref<QueryDownloader[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
@@ -329,7 +354,7 @@ const connectionForm = ref<Partial<Downloader>>({
   protocol: '',
   host: '',
   port: 6800,
-  secret: '',
+  secretKey: '',
   weight: 1
 })
 
@@ -353,7 +378,7 @@ const handleAddConnection = () => {
     protocol: '',
     host: '',
     port: 6800,
-    secret: '',
+    secretKey: '',
     weight: 1
   }
   isEdit.value = false
@@ -378,7 +403,7 @@ const handleSubmit = async () => {
           protocol: connectionForm.value.protocol!,
           host: connectionForm.value.host!,
           port: connectionForm.value.port!,
-          secret: connectionForm.value.secret!,
+          secretKey: connectionForm.value.secretKey!,
           weight: connectionForm.value.weight!
         })
       } else {
@@ -387,7 +412,7 @@ const handleSubmit = async () => {
           protocol: connectionForm.value.protocol!,
           host: connectionForm.value.host!,
           port: connectionForm.value.port!,
-          secret: connectionForm.value.secret!,
+          secretKey: connectionForm.value.secretKey!,
           weight: connectionForm.value.weight!
         })
       }
@@ -467,6 +492,23 @@ const getDownloaderType = (type: number) => {
   return item ? item.label : '未知'
 }
 
+const taskStats = (row: QueryDownloader) => [
+  {status: 0, label: '等待', count: row.taskCount.find(e => e.taskStatus === 0)?.total ?? 0, type: 'info'},
+  {status: 1, label: '下载中', count: row.taskCount.find(e => e.taskStatus === 1)?.total ?? 0, type: 'warning'},
+  {status: 2, label: '已完成', count: row.taskCount.find(e => e.taskStatus === 2)?.total ?? 0, type: 'success'},
+  {status: 3, label: '失败', count: row.taskCount.find(e => e.taskStatus === 3)?.total ?? 0, type: 'danger'}
+] as { status: number; label: string; count: number; type: string }[]
+
+const handleJumpTasks = (row: Downloader, status: number) => {
+  router.push({
+    path: '/download-task',
+    query: {
+      downloaderId: String(row.id),
+      status: status
+    }
+  })
+}
+
 const loadConnections = async () => {
   loading.value = true
   try {
@@ -499,19 +541,6 @@ onMounted(() => {
   height: 100%;
   border: none;
   border-radius: 8px;
-}
-
-:deep(.page-card > .el-card__header) {
-  padding: 12px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-:deep(.page-card > .el-card__body) {
-  height: calc(100% - 57px);
-  box-sizing: border-box;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 .table-container {
@@ -608,6 +637,22 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.task-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.task-stat-badge {
+  cursor: pointer;
+}
+
+.task-stat-badge.is-zero {
+  opacity: 0.5;
 }
 
 .weight-tag,

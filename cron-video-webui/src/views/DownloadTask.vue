@@ -31,10 +31,24 @@
               <el-option label="已完成" :value="2"/>
               <el-option label="已失败" :value="3"/>
             </el-select>
+            <el-select
+                v-model="queryParams.downloaderId"
+                placeholder="下载器筛选"
+                clearable
+                class="downloader-select"
+                @change="handleSearch"
+            >
+              <el-option
+                  v-for="item in downloaderList"
+                  :key="item.id"
+                  :label="`${item.host}:${item.port}`"
+                  :value="item.id"
+              />
+            </el-select>
             <el-button
                 class="toolbar-btn"
                 type="danger"
-                :disabled="!selectedTasks.length"
+                :disabled="!selectedTaskIdList.length"
                 @click="handleBatchDelete"
                 plain
             >
@@ -55,7 +69,7 @@
 
       <div class="table-container">
         <el-table
-            :data="aria2DownloadTaskPageList"
+            :data="downloadTaskPageList"
             v-loading="loading"
             border
             stripe
@@ -66,37 +80,15 @@
           <el-table-column type="selection" width="50" align="center"/>
 
           <el-table-column
-              label="媒体名称"
-              prop="name"
-              show-overflow-tooltip
-              align="center"
-          >
-            <template #default="{ row }">
-              <span class="media-title">{{ row.name }}</span>
-            </template>
-          </el-table-column>
-
-          <el-table-column
-              prop="gid"
+              prop="taskId"
               label="任务ID"
               width="180"
               align="center"
           >
             <template #default="{ row }">
-                  <span class="task-id" :title="row.gid">
-                    {{ row.gid }}
+                  <span class="task-id" :title="row.taskId">
+                    {{ row.taskId }}
                   </span>
-            </template>
-          </el-table-column>
-
-          <el-table-column
-              prop="episodeNumber"
-              label="集数"
-              width="80"
-              align="center"
-          >
-            <template #default="{ row }">
-              <span class="episode-number">第{{ row.episodeNumber }}集</span>
             </template>
           </el-table-column>
 
@@ -110,17 +102,10 @@
               <div class="file-path">
                 <span class="save-path">{{ row.savePath }}</span>
                 <span class="path-separator">/</span>
-                <span class="file-name">{{ row.outName }}</span>
+                <span class="file-name">{{ row.saveFileName }}</span>
               </div>
             </template>
           </el-table-column>
-
-          <el-table-column
-              prop="shortName"
-              label="分辨率"
-              width="120"
-              align="center"
-          ></el-table-column>
 
           <el-table-column
               label="文件大小"
@@ -139,10 +124,10 @@
           >
             <template #default="{ row }">
               <el-tag
-                  :type="getStatusType(row.status)"
+                  :type="getStatusType(row.finalStatus)"
                   class="status-tag"
               >
-                {{ getStatusText(row.status) }}
+                {{ getStatusText(row.finalStatus) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -168,7 +153,7 @@
                 </el-button>
                 <el-divider direction="vertical"/>
                 <el-button
-                    :disabled="row.status !== 3"
+                    :disabled="row.finalStatus !== 3"
                     @click="handleRetry(row)"
                     type="primary"
                     text
@@ -211,33 +196,40 @@
 
 <script lang="ts" setup>
 import {ref, onMounted} from 'vue'
+import {useRoute} from 'vue-router'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Refresh, Search, Delete, VideoPause, RefreshRight} from '@element-plus/icons-vue'
-import {Aria2DownloadTaskPage, DownloadTask} from '@/types'
+import {DownloadTaskPageVO, Downloader, DownloadTask} from '@/types'
 import {downloadTaskApi} from "@/api/views/download_task";
+import {downloaderApi} from "@/api/views/downloader";
 
 defineOptions({
   name: "DownloadTask"
 })
 
-const aria2DownloadTaskPageList = ref<Aria2DownloadTaskPage[]>([])
+const route = useRoute()
+
+const downloadTaskPageList = ref<DownloadTaskPageVO[]>([])
 const loading = ref(false)
 const total = ref(0)
-const selectedTasks = ref<Aria2DownloadTaskPage[]>([])
+const selectedTaskIdList = ref<string[]>([])
+const downloaderList = ref<Downloader[]>([])
 
 // 查询参数
 const queryParams = ref({
   page: 1,
   pageSize: 10,
   name: '',
-  status: undefined as number | undefined
+  status: undefined as number | undefined,
+  downloaderId: undefined as string | undefined
 })
 
 // 修改状态相关的类型定义
-type TaskStatus = 0 | 1 | 2 | 3
+type TaskStatus = -1 | 0 | 1 | 2 | 3
 
 const getStatusText = (status: TaskStatus) => {
   const statusMap: Record<TaskStatus, string> = {
+    '-1': '初始化',
     0: '等待中',
     1: '下载中',
     2: '已完成',
@@ -248,6 +240,7 @@ const getStatusText = (status: TaskStatus) => {
 
 const getStatusType = (status: TaskStatus) => {
   const typeMap: Record<TaskStatus, string> = {
+    '-1': '',
     0: 'info',
     1: 'warning',
     2: 'success',
@@ -278,10 +271,11 @@ const loadDownloads = async () => {
       page: queryParams.value.page,
       pageSize: queryParams.value.pageSize,
       name: queryParams.value.name || "",
-      status: queryParams.value.status
+      status: queryParams.value.status,
+      downloaderId: queryParams.value.downloaderId
     })
     if (response.data.code === 200) {
-      aria2DownloadTaskPageList.value = response.data.data.list
+      downloadTaskPageList.value = response.data.data.list
       total.value = response.data.data.total
     } else {
       ElMessage.error(response.data.message || '加载下载任务列表失败')
@@ -311,7 +305,9 @@ const handleCurrentChange = (val: number) => {
 
 const handleRetry = async (task: DownloadTask) => {
   try {
-    const response = await downloadTaskApi.updateTask(task.id, {status: 0})
+    let taskIdList = [];
+    taskIdList.push(task.id)
+    const response = await downloadTaskApi.downloadTaskRetry(taskIdList)
     if (response.data.code === 200) {
       ElMessage.success('重试任务已添加')
       await loadDownloads()
@@ -339,16 +335,17 @@ const handleDelete = async (id: string) => {
   }
 }
 
-const handleSelectionChange = (selection: Aria2DownloadTaskPage[]) => {
-  selectedTasks.value = selection
+const handleSelectionChange = (selection: DownloadTaskPageVO[]) => {
+  selectedTaskIdList.value = selection.map(e => e.id)
+  console.log(selectedTaskIdList.value)
 }
 
 const handleBatchDelete = async () => {
-  if (!selectedTasks.value.length) return
+  if (!selectedTaskIdList.value.length) return
 
   try {
     await ElMessageBox.confirm(
-        `确定要删除选中的 ${selectedTasks.value.length} 个任务吗？`,
+        `确定要删除选中的 ${selectedTaskIdList.value.length} 个任务吗？`,
         '批量删除',
         {
           confirmButtonText: '确定',
@@ -357,8 +354,8 @@ const handleBatchDelete = async () => {
         }
     )
 
-    const deletePromises = selectedTasks.value.map((task: Aria2DownloadTaskPage) =>
-        downloadTaskApi.deleteTask(task.id)
+    const deletePromises = selectedTaskIdList.value.map((id: string) =>
+        downloadTaskApi.deleteTask(id)
     )
 
     await Promise.all(deletePromises)
@@ -372,13 +369,33 @@ const handleBatchDelete = async () => {
   }
 }
 
+const loadDownloaders = async () => {
+  try {
+    const response = await downloaderApi.getDownloaderList()
+    if (response.data.code === 200) {
+      downloaderList.value = response.data.data
+    }
+  } catch (error) {
+    console.error('加载下载器列表失败:', error)
+  }
+}
+
 const handlePause = (task: DownloadTask) => {
   // 暂停
   console.log(task)
 }
 
-onMounted(() => {
-  loadDownloads()
+onMounted(async () => {
+  await loadDownloaders()
+  const downloaderId = route.query.downloaderId
+  const status = route.query.status
+  if (typeof downloaderId === 'string') {
+    queryParams.value.downloaderId = downloaderId
+  }
+  if (typeof status === 'string') {
+    queryParams.value.status = Number(status)
+  }
+  await loadDownloads()
 })
 </script>
 
@@ -391,19 +408,6 @@ onMounted(() => {
   height: 100%;
   border: none;
   border-radius: 8px;
-}
-
-:deep(.page-card > .el-card__header) {
-  padding: 12px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-:deep(.page-card > .el-card__body) {
-  height: calc(100% - 57px);
-  box-sizing: border-box;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 .save-path {
@@ -432,6 +436,12 @@ onMounted(() => {
 /* 状态选择器样式 */
 .status-select {
   width: 120px;
+  margin-right: 12px;
+}
+
+/* 下载器选择器样式 */
+.downloader-select {
+  width: 160px;
   margin-right: 12px;
 }
 
