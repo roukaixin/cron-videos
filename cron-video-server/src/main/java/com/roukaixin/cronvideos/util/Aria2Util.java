@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.utils;
+package com.roukaixin.cronvideos.util;
 
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +15,19 @@ import java.net.URI;
 import java.util.Base64;
 
 @Slf4j
-public class Aria2Utils {
+public class Aria2Util {
 
     private final static RestClient restClient = RestClient.builder()
             .requestFactory(new BufferingClientHttpRequestFactory(new JdkClientHttpRequestFactory()))
             .build();
+
+    public static String toGid(long id) {
+        return "%016x".formatted(id);
+    }
+
+    public static long fromGid(String gid) {
+        return Long.parseUnsignedLong(gid, 16);
+    }
 
     public static String getDir(String ip, Integer port, String secret) {
         ArrayNode params = JsonUtils.createArrayNode();
@@ -27,6 +35,20 @@ public class Aria2Utils {
             params.add("token:" + secret);
         }
         String body = exchange(ip, port, "aria2.getGlobalOption", params.toString());
+        String dir = "";
+        if (body != null) {
+            JsonNode jsonNode = JsonUtils.readTree(body);
+            dir = jsonNode.get("result").get("dir").asString();
+        }
+        return dir;
+    }
+
+    public static String getDir(String url, String secret) {
+        ArrayNode params = JsonUtils.createArrayNode();
+        if (secret != null && !secret.isEmpty()) {
+            params.add("token:" + secret);
+        }
+        String body = exchange(url, "aria2.getGlobalOption", params.toString());
         String dir = "";
         if (body != null) {
             JsonNode jsonNode = JsonUtils.readTree(body);
@@ -47,33 +69,94 @@ public class Aria2Utils {
         return removeDownloadResult(System.currentTimeMillis(), ip, port, paramsJsonString);
     }
 
+    public static String removeDownloadResult(String url, String paramsJsonString) {
+        return removeDownloadResult(System.currentTimeMillis(), url, paramsJsonString);
+    }
+
     public static String removeDownloadResult(Long id, String ip, Integer port, String paramsJsonString) {
         return exchange(id, ip, port, "aria2.removeDownloadResult", paramsJsonString);
+    }
+
+    public static String removeDownloadResult(Long id, String url, String paramsJsonString) {
+        return exchange(id, url, "aria2.removeDownloadResult", paramsJsonString);
     }
 
     public static String tellStatus(String ip, Integer port, String paramsJsonString) {
         return tellStatus(System.currentTimeMillis(), ip, port, paramsJsonString);
     }
 
+    public static String tellStatus(String url, String paramsJsonString) {
+        return tellStatus(System.currentTimeMillis(), url, paramsJsonString);
+    }
+
     public static String tellStatus(Long id, String ip, Integer port, String paramsJsonString) {
         return exchange(id, ip, port, "aria2.tellStatus", paramsJsonString);
+    }
+
+    public static String tellStatus(Long id, String url, String paramsJsonString) {
+        return exchange(id, url, "aria2.tellStatus", paramsJsonString);
     }
 
     public static String addUri(String ip, Integer port, String paramsJsonString) {
         return addUri(System.currentTimeMillis(), ip, port, paramsJsonString);
     }
 
+    public static String addUri(String url, String paramsJsonString) {
+        return addUri(System.currentTimeMillis(), url, paramsJsonString);
+    }
+
     public static String addUri(Long id, String ip, Integer port, String paramsJsonString) {
         return exchange(id, ip, port, "aria2.addUri", paramsJsonString);
+    }
+
+    public static String addUri(Long id, String url, String paramsJsonString) {
+        return exchange(id, url, "aria2.addUri", paramsJsonString);
     }
 
     public static String exchange(String ip, Integer port, String method, String paramsJsonString) {
         return exchange(System.currentTimeMillis(), ip, port, method, paramsJsonString);
     }
 
+    public static String exchange(String url, String method, String paramsJsonString) {
+        return exchange(System.currentTimeMillis(), url, method, paramsJsonString);
+    }
+
     public static String exchange(Long id, String ip, Integer port, String method, String paramsJsonString) {
         URI uri = UriComponentsBuilder
                 .fromUriString(getUri(ip, port))
+                .queryParam("id", "{id}")
+                .queryParam("method", "{method}")
+                .queryParam("params", "{params}")
+                .buildAndExpand(id, method, Base64.getEncoder().encodeToString(paramsJsonString.getBytes()))
+                .toUri();
+        return restClient
+                .get()
+                .uri(uri)
+                .exchange((clientRequest, clientResponse) -> {
+                    String response = "";
+                    if (clientResponse.getStatusCode().equals(HttpStatus.OK)) {
+                        response = clientResponse.bodyTo(String.class);
+                    }
+                    if (log.isDebugEnabled()) {
+                        ObjectNode params = JsonUtils.createObjectNode();
+                        params.put("id", id);
+                        params.put("method", method);
+                        params.put("params", paramsJsonString);
+                        log.debug("==================ARIA2=================");
+                        log.debug("请求 URL : {}", clientRequest.getURI());
+                        log.debug("请求方法 : {}", clientRequest.getMethod());
+                        log.debug("请求参数 : {}", params);
+                        log.debug("响应状态 : {}", clientResponse.getStatusCode());
+                        log.debug("响应结果 : {}", clientResponse.bodyTo(String.class));
+                        log.debug("========================================");
+                    }
+                    return response;
+                });
+    }
+
+    public static String exchange(Long id, String url, String method, String paramsJsonString) {
+        URI uri = UriComponentsBuilder
+                .fromUriString(url)
                 .queryParam("id", "{id}")
                 .queryParam("method", "{method}")
                 .queryParam("params", "{params}")

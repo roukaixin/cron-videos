@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.utils;
+package com.roukaixin.cronvideos.util;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -7,19 +7,19 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class EventUtils {
+public class EventUtil {
 
     private static ApplicationEventPublisher applicationEventPublisher;
 
     private final ApplicationEventPublisher ctx;
 
-    public EventUtils(ApplicationEventPublisher ctx) {
+    public EventUtil(ApplicationEventPublisher ctx) {
         this.ctx = ctx;
     }
 
     @PostConstruct
     public void init() {
-        EventUtils.applicationEventPublisher = ctx;
+        EventUtil.applicationEventPublisher = ctx;
     }
 
     public static <T> void publishEvent(T data) {

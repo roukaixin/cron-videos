@@ -1,4 +1,4 @@
-package com.roukaixin.cronvideos.utils;
+package com.roukaixin.cronvideos.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,20 +15,20 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class HttpUtils {
+public class HttpUtil {
 
-    private HttpUtils() {
+    private HttpUtil() {
 
     }
 
     public final static HttpClient HTTP_CLIENT = HttpClient.newBuilder().build();
 
 
-    public static HttpResponse<String> send(java.net.http.HttpRequest request) {
+    public static HttpResponse<byte[]> send(java.net.http.HttpRequest request) {
         try {
-            java.net.http.HttpResponse.BodyHandler<String> string = java.net.http.HttpResponse.BodyHandlers.ofString();
-            java.net.http.HttpResponse<String> send = HTTP_CLIENT.send(request, string);
-            return HttpResponse.<String>builder().statusCode(send.statusCode()).body(send.body()).build();
+            java.net.http.HttpResponse.BodyHandler<byte[]> string = java.net.http.HttpResponse.BodyHandlers.ofByteArray();
+            java.net.http.HttpResponse<byte[]> send = HTTP_CLIENT.send(request, string);
+            return HttpResponse.<byte[]>builder().statusCode(send.statusCode()).body(send.body()).build();
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }

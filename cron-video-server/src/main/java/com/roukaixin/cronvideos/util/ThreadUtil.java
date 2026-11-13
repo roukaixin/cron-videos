@@ -1,11 +1,11 @@
-package com.roukaixin.cronvideos.utils;
+package com.roukaixin.cronvideos.util;
 
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ThreadUtils {
+public class ThreadUtil {
 
 
     public static void sleep(TimeUnit timeUnit, long timeout) {
