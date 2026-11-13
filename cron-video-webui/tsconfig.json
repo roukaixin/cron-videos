@@ -8,7 +8,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -17,6 +17,8 @@
     "strict": true,
     "skipLibCheck": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 } 

@@ -1,12 +1,11 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': import.meta.dirname + '/src'
     }
   },
   server: {
@@ -14,18 +13,28 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:9080',
+        target: 'http://127.0.0.1:19080',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          'element-plus': ['element-plus'],
-          'vue-vendor': ['vue', 'vue-router', 'pinia']
+        codeSplitting: {
+          groups: [
+            {
+              name: 'element-plus',
+              test: /node_modules[\\/]element-plus[\\/]/,
+              priority: 20
+            },
+            {
+              name: 'vue-vendor',
+              test: /node_modules[\\/](vue|vue-router|pinia|@vue)[\\/]/,
+              priority: 10
+            }
+          ]
         }
       }
     },
